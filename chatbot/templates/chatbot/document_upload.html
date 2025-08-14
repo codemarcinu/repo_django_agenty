@@ -1,0 +1,374 @@
+{% extends 'chatbot/base.html' %}
+
+{% block title %}📤 Prześlij Dokument | {{ block.super }}{% endblock %}
+
+{% block extra_css %}
+<style>
+.upload-area {
+    transition: all 0.3s ease;
+    border: 2px dashed #d1d5db;
+}
+
+.upload-area.dragover {
+    border-color: #3b82f6;
+    background-color: #eff6ff;
+    transform: scale(1.02);
+}
+
+.upload-area.has-file {
+    border-color: #10b981;
+    background-color: #f0fdf4;
+}
+
+.file-preview {
+    animation: slideInUp 0.3s ease-out;
+}
+
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-6 max-w-4xl">
+    <!-- Header -->
+    <div class="text-center mb-8 animate-slide-up">
+        <h1 class="text-3xl font-bold gradient-text mb-3">📤 Prześlij Dokument</h1>
+        <p class="text-secondary-600 max-w-2xl mx-auto">
+            Dodaj nowy dokument do swojej bazy wiedzy. Obsługujemy pliki PDF, TXT, DOCX i inne formaty tekstowe.
+        </p>
+    </div>
+
+    <!-- Upload Form -->
+    <div class="bg-white rounded-xl shadow-lg overflow-hidden animate-slide-up">
+        <form method="post" enctype="multipart/form-data" id="uploadForm" class="p-8">
+            {% csrf_token %}
+            
+            <!-- Title Input -->
+            <div class="mb-8">
+                <label for="{{ form.title.id_for_label }}" class="block text-sm font-medium text-secondary-700 mb-3">
+                    <span class="flex items-center space-x-2">
+                        <svg class="w-5 h-5 text-secondary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a1.994 1.994 0 01-1.414.586H7a4 4 0 01-4-4V7a4 4 0 014-4z"></path>
+                        </svg>
+                        <span>Tytuł dokumentu</span>
+                    </span>
+                </label>
+                <input type="text" 
+                       name="{{ form.title.name }}" 
+                       id="{{ form.title.id_for_label }}"
+                       class="w-full px-4 py-3 border border-secondary-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-200"
+                       placeholder="Wpisz opisowy tytuł dla dokumentu..."
+                       required>
+                <p class="text-sm text-secondary-500 mt-2">
+                    💡 Dobrze opisany tytuł pomoże Ci później łatwiej odnaleźć dokument
+                </p>
+            </div>
+
+            <!-- File Upload Area -->
+            <div class="mb-8">
+                <label class="block text-sm font-medium text-secondary-700 mb-3">
+                    <span class="flex items-center space-x-2">
+                        <svg class="w-5 h-5 text-secondary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                        </svg>
+                        <span>Wybierz plik</span>
+                    </span>
+                </label>
+                
+                <div id="uploadArea" class="upload-area rounded-xl p-8 text-center cursor-pointer">
+                    <div id="uploadPrompt">
+                        <div class="text-6xl mb-4">📄</div>
+                        <h3 class="text-lg font-semibold text-secondary-700 mb-2">
+                            Przeciągnij i upuść plik tutaj
+                        </h3>
+                        <p class="text-secondary-500 mb-4">lub kliknij, aby wybrać plik</p>
+                        <div class="inline-flex items-center space-x-2 px-4 py-2 border border-primary-300 text-primary-700 bg-primary-50 rounded-lg text-sm font-medium">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                            </svg>
+                            <span>Wybierz Plik</span>
+                        </div>
+                    </div>
+                    
+                    <div id="filePreview" class="file-preview hidden">
+                        <div class="flex items-center justify-center space-x-4">
+                            <div id="fileIcon" class="w-12 h-12 rounded-lg flex items-center justify-center">
+                                <!-- File icon will be inserted here -->
+                            </div>
+                            <div class="text-left">
+                                <div id="fileName" class="font-semibold text-secondary-900"></div>
+                                <div id="fileSize" class="text-sm text-secondary-500"></div>
+                            </div>
+                            <button type="button" onclick="clearFile()" 
+                                    class="p-2 text-error-500 hover:text-error-700 hover:bg-error-50 rounded-lg transition-colors">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <input type="file" 
+                       name="{{ form.file.name }}" 
+                       id="{{ form.file.id_for_label }}"
+                       class="hidden"
+                       accept=".txt,.pdf,.docx,.doc,.md"
+                       required>
+                       
+                <div class="mt-4 text-sm text-secondary-600">
+                    <div class="flex items-center space-x-2 mb-2">
+                        <svg class="w-4 h-4 text-success-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                        <span>Obsługiwane formaty: PDF, TXT, DOCX, DOC, MD</span>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <svg class="w-4 h-4 text-warning-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L3.232 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                        </svg>
+                        <span>Maksymalny rozmiar pliku: 10 MB</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Info Panel -->
+            <div class="bg-primary-50 border border-primary-200 rounded-lg p-6 mb-8">
+                <div class="flex items-start space-x-3">
+                    <div class="flex-shrink-0">
+                        <svg class="w-6 h-6 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold text-primary-800 mb-2">Co się stanie po przesłaniu?</h4>
+                        <ul class="text-sm text-primary-700 space-y-1">
+                            <li>• Dokument zostanie przeanalizowany przez system AI</li>
+                            <li>• Treść zostanie dodana do Twojej bazy wiedzy</li>
+                            <li>• Będziesz mógł zadawać pytania dotyczące jego zawartości</li>
+                            <li>• Proces może potrwać od kilku sekund do kilku minut</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex flex-col sm:flex-row items-center justify-between space-y-4 sm:space-y-0 sm:space-x-4">
+                <a href="{% url 'chatbot:document_list' %}" 
+                   class="w-full sm:w-auto inline-flex items-center justify-center space-x-2 px-6 py-3 border border-secondary-300 text-secondary-700 bg-white rounded-lg font-medium hover:bg-secondary-50 focus:outline-none focus:ring-2 focus:ring-secondary-500 transition-all duration-200">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                    </svg>
+                    <span>Powrót do listy</span>
+                </a>
+                
+                <button type="submit" id="submitBtn"
+                        class="btn w-full sm:w-auto inline-flex items-center justify-center space-x-2 px-8 py-3 gradient-bg text-white rounded-lg font-medium hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                    </svg>
+                    <span>Prześlij Dokument</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+class DocumentUploader {
+    constructor() {
+        this.uploadArea = document.getElementById('uploadArea');
+        this.fileInput = document.getElementById('{{ form.file.id_for_label }}');
+        this.uploadPrompt = document.getElementById('uploadPrompt');
+        this.filePreview = document.getElementById('filePreview');
+        this.fileName = document.getElementById('fileName');
+        this.fileSize = document.getElementById('fileSize');
+        this.fileIcon = document.getElementById('fileIcon');
+        this.submitBtn = document.getElementById('submitBtn');
+        this.form = document.getElementById('uploadForm');
+        
+        this.initializeEventListeners();
+    }
+    
+    initializeEventListeners() {
+        // Click to upload
+        this.uploadArea.addEventListener('click', () => {
+            this.fileInput.click();
+        });
+        
+        // File input change
+        this.fileInput.addEventListener('change', (e) => {
+            this.handleFileSelect(e.target.files[0]);
+        });
+        
+        // Drag and drop
+        this.uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            this.uploadArea.classList.add('dragover');
+        });
+        
+        this.uploadArea.addEventListener('dragleave', () => {
+            this.uploadArea.classList.remove('dragover');
+        });
+        
+        this.uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            this.uploadArea.classList.remove('dragover');
+            const file = e.dataTransfer.files[0];
+            if (file) {
+                this.fileInput.files = e.dataTransfer.files;
+                this.handleFileSelect(file);
+            }
+        });
+        
+        // Form submission
+        this.form.addEventListener('submit', (e) => {
+            this.handleSubmit(e);
+        });
+    }
+    
+    handleFileSelect(file) {
+        if (!file) return;
+        
+        // Validate file
+        if (!this.validateFile(file)) return;
+        
+        // Show file preview
+        this.showFilePreview(file);
+    }
+    
+    validateFile(file) {
+        const allowedTypes = [
+            'text/plain',
+            'application/pdf',
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'application/msword',
+            'text/markdown'
+        ];
+        
+        const maxSize = 10 * 1024 * 1024; // 10MB
+        
+        if (!allowedTypes.some(type => file.type === type || file.name.toLowerCase().endsWith('.' + type.split('/')[1]))) {
+            UI.showToast('Nieprawidłowy format pliku. Obsługujemy: PDF, TXT, DOCX, DOC, MD', 'error');
+            return false;
+        }
+        
+        if (file.size > maxSize) {
+            UI.showToast('Plik jest za duży. Maksymalny rozmiar to 10 MB', 'error');
+            return false;
+        }
+        
+        return true;
+    }
+    
+    showFilePreview(file) {
+        this.fileName.textContent = file.name;
+        this.fileSize.textContent = this.formatFileSize(file.size);
+        
+        // Set file icon
+        const extension = file.name.split('.').pop().toLowerCase();
+        this.setFileIcon(extension);
+        
+        // Show preview, hide prompt
+        this.uploadPrompt.classList.add('hidden');
+        this.filePreview.classList.remove('hidden');
+        this.uploadArea.classList.add('has-file');
+    }
+    
+    setFileIcon(extension) {
+        const iconConfigs = {
+            pdf: { bg: 'bg-red-100', text: 'text-red-600', label: 'PDF' },
+            txt: { bg: 'bg-blue-100', text: 'text-blue-600', label: 'TXT' },
+            docx: { bg: 'bg-blue-100', text: 'text-blue-600', label: 'DOC' },
+            doc: { bg: 'bg-blue-100', text: 'text-blue-600', label: 'DOC' },
+            md: { bg: 'bg-green-100', text: 'text-green-600', label: 'MD' }
+        };
+        
+        const config = iconConfigs[extension] || { bg: 'bg-secondary-100', text: 'text-secondary-600', label: 'FILE' };
+        
+        this.fileIcon.className = `w-12 h-12 rounded-lg flex items-center justify-center ${config.bg}`;
+        this.fileIcon.innerHTML = `<span class="${config.text} font-bold text-xs">${config.label}</span>`;
+    }
+    
+    formatFileSize(bytes) {
+        if (bytes === 0) return '0 B';
+        const k = 1024;
+        const sizes = ['B', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+    }
+    
+    handleSubmit(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(this.form);
+        
+        if (!this.fileInput.files[0]) {
+            UI.showToast('Wybierz plik do przesłania', 'warning');
+            return;
+        }
+        
+        if (!formData.get('title').trim()) {
+            UI.showToast('Wpisz tytuł dokumentu', 'warning');
+            return;
+        }
+        
+        // Show loading state
+        UI.showLoading(this.submitBtn);
+        
+        // Submit form
+        fetch(this.form.action || window.location.href, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+            }
+        })
+        .then(response => {
+            if (response.ok) {
+                UI.showToast('Dokument został przesłany pomyślnie!', 'success');
+                setTimeout(() => {
+                    window.location.href = "{% url 'chatbot:document_list' %}";
+                }, 1000);
+            } else {
+                throw new Error('Błąd podczas przesyłania');
+            }
+        })
+        .catch(error => {
+            UI.showToast('Wystąpił błąd podczas przesyłania dokumentu', 'error');
+            UI.showLoading(this.submitBtn, false);
+        });
+    }
+}
+
+// Clear file function
+function clearFile() {
+    const uploader = window.documentUploader;
+    const uploadArea = document.getElementById('uploadArea');
+    const uploadPrompt = document.getElementById('uploadPrompt');
+    const filePreview = document.getElementById('filePreview');
+    const fileInput = document.getElementById('{{ form.file.id_for_label }}');
+    
+    fileInput.value = '';
+    uploadPrompt.classList.remove('hidden');
+    filePreview.classList.add('hidden');
+    uploadArea.classList.remove('has-file');
+}
+
+// Initialize uploader when page loads
+document.addEventListener('DOMContentLoaded', () => {
+    window.documentUploader = new DocumentUploader();
+});
+</script>
+{% endblock %}

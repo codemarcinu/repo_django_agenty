@@ -1,0 +1,9 @@
+django
+httpx
+ddgs
+fastapi
+python-dotenv
+# For receipt processing
+easyocr
+PyYAML
+PyMuPDF

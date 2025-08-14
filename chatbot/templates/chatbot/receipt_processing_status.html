@@ -1,0 +1,335 @@
+{% extends 'chatbot/base.html' %}
+
+{% block title %}Status Przetwarzania Paragonu{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="max-w-2xl mx-auto">
+        <!-- Header Section -->
+        <div class="text-center mb-8 animate-fade-in">
+            <div class="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full mb-4 shadow-lg">
+                <span class="text-3xl animate-pulse">⚡</span>
+            </div>
+            <h1 class="text-4xl font-bold gradient-text mb-2">Przetwarzanie Paragonu</h1>
+            <p class="text-secondary-600 text-lg">Paragon ID: <span class="font-semibold text-primary-600">#{{ receipt_id }}</span></p>
+        </div>
+
+        <!-- Status Card -->
+        <div class="bg-white rounded-2xl shadow-xl p-8 mb-6 border border-secondary-100 animate-slide-up">
+            <!-- Current Status -->
+            <div class="mb-6">
+                <div class="flex items-center justify-between mb-3">
+                    <h2 class="text-xl font-semibold text-secondary-800">Status</h2>
+                    <div id="status-indicator" class="w-3 h-3 bg-blue-500 rounded-full animate-pulse"></div>
+                </div>
+                <div id="status-message" class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4 border border-blue-200">
+                    <p class="text-lg font-medium text-blue-800" id="current-status">{{ status }}</p>
+                    <p class="text-sm text-blue-600 mt-1" id="status-description">Inicjalizacja przetwarzania...</p>
+                </div>
+                
+                <!-- Error Message -->
+                <div id="error-message" class="bg-gradient-to-r from-red-50 to-pink-50 rounded-xl p-4 border border-red-200 mt-4" style="display:none;">
+                    <div class="flex items-center">
+                        <span class="text-red-500 text-xl mr-3">❌</span>
+                        <div>
+                            <p class="font-semibold text-red-800">Wystąpił błąd</p>
+                            <p class="text-red-600" id="error-text"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="mb-6">
+                <div class="flex justify-between items-center mb-2">
+                    <span class="text-sm font-medium text-secondary-700">Postęp</span>
+                    <span class="text-sm font-medium text-secondary-700" id="progress-text">0%</span>
+                </div>
+                <div class="w-full bg-secondary-200 rounded-full h-3 overflow-hidden">
+                    <div id="progress-bar" class="bg-gradient-to-r from-blue-500 to-indigo-500 h-3 rounded-full transition-all duration-500 ease-out" style="width: 0%"></div>
+                </div>
+            </div>
+
+            <!-- Processing Steps -->
+            <div class="space-y-3">
+                <h3 class="text-lg font-semibold text-secondary-800 mb-4">Etapy przetwarzania</h3>
+                
+                <div class="processing-step" data-step="uploaded">
+                    <div class="flex items-center space-x-3">
+                        <div class="step-indicator w-8 h-8 rounded-full border-2 border-secondary-300 flex items-center justify-center">
+                            <span class="step-number text-sm font-semibold text-secondary-500">1</span>
+                            <span class="step-check text-green-500 hidden">✓</span>
+                        </div>
+                        <div>
+                            <p class="font-medium text-secondary-800">Przesłanie pliku</p>
+                            <p class="text-sm text-secondary-600">Plik został pomyślnie przesłany na serwer</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="processing-step" data-step="ocr_in_progress">
+                    <div class="flex items-center space-x-3">
+                        <div class="step-indicator w-8 h-8 rounded-full border-2 border-secondary-300 flex items-center justify-center">
+                            <span class="step-number text-sm font-semibold text-secondary-500">2</span>
+                            <span class="step-check text-green-500 hidden">✓</span>
+                            <span class="step-spinner hidden">
+                                <svg class="w-4 h-4 animate-spin text-blue-500" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                            </span>
+                        </div>
+                        <div>
+                            <p class="font-medium text-secondary-800">Rozpoznawanie tekstu (OCR)</p>
+                            <p class="text-sm text-secondary-600">Wyodrębnianie tekstu z obrazu paragonu</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="processing-step" data-step="llm_in_progress">
+                    <div class="flex items-center space-x-3">
+                        <div class="step-indicator w-8 h-8 rounded-full border-2 border-secondary-300 flex items-center justify-center">
+                            <span class="step-number text-sm font-semibold text-secondary-500">3</span>
+                            <span class="step-check text-green-500 hidden">✓</span>
+                            <span class="step-spinner hidden">
+                                <svg class="w-4 h-4 animate-spin text-blue-500" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                            </span>
+                        </div>
+                        <div>
+                            <p class="font-medium text-secondary-800">Analiza AI</p>
+                            <p class="text-sm text-secondary-600">Sztuczna inteligencja analizuje i wyodrębnia produkty</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="processing-step" data-step="ready_for_review">
+                    <div class="flex items-center space-x-3">
+                        <div class="step-indicator w-8 h-8 rounded-full border-2 border-secondary-300 flex items-center justify-center">
+                            <span class="step-number text-sm font-semibold text-secondary-500">4</span>
+                            <span class="step-check text-green-500 hidden">✓</span>
+                        </div>
+                        <div>
+                            <p class="font-medium text-secondary-800">Gotowe do weryfikacji</p>
+                            <p class="text-sm text-secondary-600">Sprawdź i zatwierdź wyodrębnione produkty</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Information Card -->
+        <div class="bg-white rounded-2xl shadow-lg p-6 border border-secondary-100 animate-slide-up">
+            <div class="flex items-center space-x-3 mb-3">
+                <span class="text-xl">💡</span>
+                <h3 class="text-lg font-semibold text-secondary-800">Co się dzieje?</h3>
+            </div>
+            <div class="text-secondary-600 space-y-2" id="process-info">
+                <p>Twój paragon jest obecnie przetwarzany przez nasz system AI. Proces składa się z kilku etapów, aby zapewnić najlepszą jakość rozpoznawania produktów.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const receiptId = {{ receipt_id }};
+    const currentStatusSpan = document.getElementById('current-status');
+    const statusDescription = document.getElementById('status-description');
+    const errorMessageDiv = document.getElementById('error-message');
+    const errorText = document.getElementById('error-text');
+    const progressBar = document.getElementById('progress-bar');
+    const progressText = document.getElementById('progress-text');
+    const statusIndicator = document.getElementById('status-indicator');
+    const processInfo = document.getElementById('process-info');
+
+    const statusMap = {
+        'uploaded': { 
+            text: 'Plik przesłany', 
+            description: 'Plik został pomyślnie przesłany na serwer',
+            progress: 15,
+            info: 'Twój paragon został bezpiecznie przesłany na nasz serwer. Rozpoczynamy proces analizy.',
+            color: 'blue'
+        },
+        'ocr_in_progress': { 
+            text: 'Rozpoznawanie tekstu', 
+            description: 'Trwa wyodrębnianie tekstu z obrazu paragonu...',
+            progress: 35,
+            info: 'Używamy zaawansowanej technologii OCR do rozpoznania tekstu z Twojego paragonu. Ten proces może potrwać kilka sekund w zależności od jakości obrazu.',
+            color: 'blue'
+        },
+        'ocr_done': { 
+            text: 'Tekst rozpoznany', 
+            description: 'Tekst został pomyślnie wyodrębniony z paragonu',
+            progress: 55,
+            info: 'Tekst z paragonu został pomyślnie rozpoznany. Teraz przekazujemy go do analizy przez sztuczną inteligencję.',
+            color: 'blue'
+        },
+        'llm_in_progress': { 
+            text: 'Analiza przez AI', 
+            description: 'Sztuczna inteligencja analizuje tekst i wyodrębnia produkty...',
+            progress: 75,
+            info: 'Nasz zaawansowany model AI analizuje rozpoznany tekst, aby wyodrębnić nazwy produktów, ich ilości i jednostki. To najważniejszy etap procesu.',
+            color: 'blue'
+        },
+        'llm_done': { 
+            text: 'Analiza zakończona', 
+            description: 'AI zakończyła analizę i wyodrębniła produkty',
+            progress: 90,
+            info: 'Analiza została zakończona! AI wyodrębniła produkty z Twojego paragonu. Przygotowujemy dane do weryfikacji.',
+            color: 'blue'
+        },
+        'ready_for_review': { 
+            text: 'Gotowe do weryfikacji', 
+            description: 'Sprawdź i zatwierdź wyodrębnione produkty',
+            progress: 100,
+            info: 'Proces analizy został zakończony! Teraz możesz sprawdzić wyodrębnione produkty i je zatwierdzić.',
+            color: 'green'
+        },
+        'completed': { 
+            text: 'Zakończone', 
+            description: 'Produkty zostały dodane do Twojej spiżarni',
+            progress: 100,
+            info: 'Gratulacje! Wszystkie produkty zostały pomyślnie dodane do Twojej spiżarni.',
+            color: 'green'
+        },
+        'error': { 
+            text: 'Wystąpił błąd', 
+            description: 'Podczas przetwarzania wystąpił błąd',
+            progress: 0,
+            info: 'Niestety, podczas przetwarzania paragonu wystąpił błąd. Spróbuj ponownie lub skontaktuj się z pomocą techniczną.',
+            color: 'red'
+        }
+    };
+
+    function updateStepVisual(stepElement, status) {
+        const indicator = stepElement.querySelector('.step-indicator');
+        const numberSpan = stepElement.querySelector('.step-number');
+        const checkSpan = stepElement.querySelector('.step-check');
+        const spinnerSpan = stepElement.querySelector('.step-spinner');
+
+        // Reset all states
+        indicator.className = 'step-indicator w-8 h-8 rounded-full border-2 flex items-center justify-center';
+        if (numberSpan) numberSpan.classList.remove('hidden');
+        if (checkSpan) checkSpan.classList.add('hidden');
+        if (spinnerSpan) spinnerSpan.classList.add('hidden');
+
+        if (status === 'completed') {
+            // Completed step
+            indicator.classList.add('border-green-500', 'bg-green-500');
+            if (numberSpan) numberSpan.classList.add('hidden');
+            if (checkSpan) checkSpan.classList.remove('hidden');
+        } else if (status === 'active') {
+            // Currently active step
+            indicator.classList.add('border-blue-500', 'bg-blue-50');
+            if (numberSpan) numberSpan.classList.add('hidden');
+            if (spinnerSpan) spinnerSpan.classList.remove('hidden');
+        } else {
+            // Pending step
+            indicator.classList.add('border-secondary-300');
+        }
+    }
+
+    function updateAllSteps(currentStatus) {
+        const steps = ['uploaded', 'ocr_in_progress', 'llm_in_progress', 'ready_for_review'];
+        const statusOrder = {
+            'uploaded': 0,
+            'ocr_in_progress': 1,
+            'ocr_done': 1,
+            'llm_in_progress': 2,
+            'llm_done': 2,
+            'ready_for_review': 3,
+            'completed': 4
+        };
+
+        const currentIndex = statusOrder[currentStatus] || 0;
+
+        steps.forEach((step, index) => {
+            const stepElement = document.querySelector(`[data-step="${step}"]`);
+            if (stepElement) {
+                if (index < currentIndex) {
+                    updateStepVisual(stepElement, 'completed');
+                } else if (index === currentIndex && (currentStatus.includes('in_progress') || currentStatus === step)) {
+                    updateStepVisual(stepElement, 'active');
+                } else {
+                    updateStepVisual(stepElement, 'pending');
+                }
+            }
+        });
+    }
+
+    function updateStatus(status, error_message = null) {
+        const mapped = statusMap[status] || { 
+            text: status, 
+            description: 'Status nieznany',
+            progress: 0,
+            info: 'Trwa przetwarzanie...',
+            color: 'blue'
+        };
+
+        // Update status text and description
+        currentStatusSpan.textContent = mapped.text;
+        statusDescription.textContent = mapped.description;
+        
+        // Update progress bar
+        progressBar.style.width = mapped.progress + '%';
+        progressText.textContent = mapped.progress + '%';
+        
+        // Update process info
+        processInfo.innerHTML = `<p>${mapped.info}</p>`;
+        
+        // Update status indicator color
+        statusIndicator.className = `w-3 h-3 rounded-full animate-pulse bg-${mapped.color}-500`;
+        
+        // Update step visuals
+        updateAllSteps(status);
+
+        // Handle errors
+        if (error_message) {
+            errorText.textContent = error_message;
+            errorMessageDiv.style.display = 'block';
+            statusIndicator.className = 'w-3 h-3 rounded-full bg-red-500';
+            progressBar.classList.add('bg-red-500');
+        } else if (status === 'error') {
+            errorText.textContent = 'Wystąpił nieznany błąd podczas przetwarzania paragonu.';
+            errorMessageDiv.style.display = 'block';
+            statusIndicator.className = 'w-3 h-3 rounded-full bg-red-500';
+            progressBar.classList.add('bg-red-500');
+        } else {
+            errorMessageDiv.style.display = 'none';
+        }
+    }
+
+    async function checkStatus() {
+        try {
+            const response = await fetch(`/api/receipts/${receiptId}/status/`);
+            const data = await response.json();
+
+            updateStatus(data.status, data.error_message);
+
+            if (data.status === 'ready_for_review' && data.redirect_url) {
+                setTimeout(() => {
+                    window.location.href = data.redirect_url;
+                }, 2000); // Wait 2 seconds to show completed state
+            } else if (data.status === 'error') {
+                // Stay on this page and show error
+            } else {
+                setTimeout(checkStatus, 2000); // Poll every 2 seconds
+            }
+        } catch (error) {
+            console.error('Error checking status:', error);
+            errorText.textContent = 'Wystąpił błąd podczas komunikacji z serwerem.';
+            errorMessageDiv.style.display = 'block';
+            statusIndicator.className = 'w-3 h-3 rounded-full bg-red-500';
+            progressBar.classList.add('bg-red-500');
+        }
+    }
+
+    // Initial status update and start polling
+    updateStatus('{{ status }}', '{{ error_message }}');
+    if ('{{ status }}' !== 'ready_for_review' && '{{ status }}' !== 'completed' && '{{ status }}' !== 'error') {
+        setTimeout(checkStatus, 2000);
+    }
+</script>
+{% endblock %}

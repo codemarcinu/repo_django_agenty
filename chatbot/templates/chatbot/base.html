@@ -1,0 +1,293 @@
+{# templates/chatbot/base.html #}
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Twój Asystent AI{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // Custom Tailwind configuration
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            200: '#bfdbfe',
+                            300: '#93c5fd',
+                            400: '#60a5fa',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                            800: '#1e40af',
+                            900: '#1e3a8a'
+                        },
+                        secondary: {
+                            50: '#f8fafc',
+                            100: '#f1f5f9',
+                            200: '#e2e8f0',
+                            300: '#cbd5e1',
+                            400: '#94a3b8',
+                            500: '#64748b',
+                            600: '#475569',
+                            700: '#334155',
+                            800: '#1e293b',
+                            900: '#0f172a'
+                        },
+                        success: {
+                            50: '#f0fdf4',
+                            500: '#10b981',
+                            600: '#059669'
+                        },
+                        warning: {
+                            50: '#fffbeb',
+                            500: '#f59e0b',
+                            600: '#d97706'
+                        },
+                        error: {
+                            50: '#fef2f2',
+                            500: '#ef4444',
+                            600: '#dc2626'
+                        }
+                    },
+                    fontFamily: {
+                        'sans': ['Inter', 'system-ui', 'sans-serif']
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 0.5s ease-in-out',
+                        'slide-up': 'slideUp 0.4s ease-out',
+                        'bounce-gentle': 'bounceGentle 0.6s ease-in-out',
+                        'pulse-gentle': 'pulseGentle 2s cubic-bezier(0.4, 0, 0.6, 1) infinite'
+                    },
+                    keyframes: {
+                        fadeIn: {
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' }
+                        },
+                        slideUp: {
+                            '0%': { transform: 'translateY(20px)', opacity: '0' },
+                            '100%': { transform: 'translateY(0)', opacity: '1' }
+                        },
+                        bounceGentle: {
+                            '0%, 20%, 53%, 80%, 100%': { transform: 'translate3d(0,0,0)' },
+                            '40%, 43%': { transform: 'translate3d(0, -5px, 0)' },
+                            '70%': { transform: 'translate3d(0, -2px, 0)' },
+                            '90%': { transform: 'translate3d(0, -1px, 0)' }
+                        },
+                        pulseGentle: {
+                            '0%, 100%': { opacity: '1' },
+                            '50%': { opacity: '0.8' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        .glass-effect {
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .card-hover {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .card-hover:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .gradient-text {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="bg-gradient-to-br from-slate-50 to-slate-100 font-sans min-h-screen">
+    <nav class="gradient-bg text-white shadow-2xl backdrop-blur-sm">
+        <div class="container mx-auto px-4 py-4">
+            <div class="flex flex-wrap items-center justify-between">
+                <a href="{% url 'chatbot:dashboard' %}" class="flex items-center space-x-2 font-bold text-xl hover:text-blue-200 transition-all duration-300 transform hover:scale-105">
+                    <span class="text-2xl animate-bounce-gentle">🤖</span>
+                    <span>Twój Asystent AI</span>
+                </a>
+                <div class="flex flex-wrap gap-1 lg:gap-2 text-sm lg:text-base">
+                    <a href="{% url 'chatbot:dashboard' %}" class="nav-item flex items-center space-x-1 px-3 py-2 rounded-lg hover:bg-white/20 transition-all duration-300 transform hover:scale-105 glass-effect">
+                        <span>🏠</span><span class="hidden sm:inline">Dashboard</span>
+                    </a>
+                    <a href="{% url 'chatbot:chat' %}" class="nav-item flex items-center space-x-1 px-3 py-2 rounded-lg hover:bg-white/20 transition-all duration-300 transform hover:scale-105 glass-effect">
+                        <span>💬</span><span class="hidden sm:inline">Chat</span>
+                    </a>
+                    <a href="{% url 'chatbot:document_list' %}" class="nav-item flex items-center space-x-1 px-3 py-2 rounded-lg hover:bg-white/20 transition-all duration-300 transform hover:scale-105 glass-effect">
+                        <span>📄</span><span class="hidden sm:inline">Dokumenty</span>
+                    </a>
+                    <a href="{% url 'chatbot:receipt_upload' %}" class="nav-item flex items-center space-x-1 px-3 py-2 rounded-lg hover:bg-white/20 transition-all duration-300 transform hover:scale-105 glass-effect">
+                        <span>🧾</span><span class="hidden sm:inline">Paragony</span>
+                    </a>
+                    <a href="{% url 'chatbot:pantry_list' %}" class="nav-item flex items-center space-x-1 px-3 py-2 rounded-lg hover:bg-white/20 transition-all duration-300 transform hover:scale-105 glass-effect">
+                        <span>🏪</span><span class="hidden sm:inline">Spiżarnia</span>
+                    </a>
+                    <a href="/admin" class="nav-item flex items-center space-x-1 px-3 py-2 rounded-lg hover:bg-white/20 transition-all duration-300 transform hover:scale-105 glass-effect">
+                        <span>⚙️</span><span class="hidden sm:inline">Admin</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+    <main class="min-h-screen">
+        {% block content %}
+        {% endblock %}
+    </main>
+
+    <footer class="mt-auto bg-secondary-800 text-secondary-300 py-6">
+        <div class="container mx-auto px-4 text-center">
+            <div class="flex flex-col md:flex-row justify-between items-center space-y-2 md:space-y-0">
+                <div class="flex items-center space-x-2">
+                    <span class="text-lg">🤖</span>
+                    <span class="font-medium">Twój Osobisty Asystent AI</span>
+                </div>
+                <div class="flex items-center space-x-4 text-sm">
+                    <span>Wersja 2.0</span>
+                    <span>•</span>
+                    <span>Sierpień 2025</span>
+                    <span>•</span>
+                    <span class="flex items-center space-x-1">
+                        <span>🚀</span>
+                        <span>GPU Enabled</span>
+                    </span>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Global JavaScript -->
+    <script>
+        // Global utilities
+        window.UI = {
+            // Show toast notification
+            showToast(message, type = 'info') {
+                const toast = document.createElement('div');
+                const bgColor = {
+                    'success': 'bg-success-500',
+                    'error': 'bg-error-500',
+                    'warning': 'bg-warning-500',
+                    'info': 'bg-primary-500'
+                }[type];
+                
+                toast.className = `fixed top-4 right-4 ${bgColor} text-white px-6 py-3 rounded-lg shadow-lg z-50 transform translate-x-full transition-transform duration-300`;
+                toast.textContent = message;
+                
+                document.body.appendChild(toast);
+                
+                // Slide in
+                setTimeout(() => {
+                    toast.classList.remove('translate-x-full');
+                }, 100);
+                
+                // Slide out and remove
+                setTimeout(() => {
+                    toast.classList.add('translate-x-full');
+                    setTimeout(() => {
+                        document.body.removeChild(toast);
+                    }, 300);
+                }, 3000);
+            },
+
+            // Show loading state
+            showLoading(element, show = true) {
+                if (show) {
+                    element.classList.add('opacity-50', 'pointer-events-none');
+                    element.dataset.originalText = element.textContent;
+                    element.innerHTML = '<span class="animate-spin">⏳</span> Przetwarzanie...';
+                } else {
+                    element.classList.remove('opacity-50', 'pointer-events-none');
+                    element.textContent = element.dataset.originalText || element.textContent;
+                }
+            },
+
+            // Animate element on scroll
+            animateOnScroll() {
+                const observer = new IntersectionObserver((entries) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            entry.target.classList.add('animate-slide-up');
+                        }
+                    });
+                });
+
+                document.querySelectorAll('.animate-on-scroll').forEach(el => {
+                    observer.observe(el);
+                });
+            }
+        };
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            UI.animateOnScroll();
+            
+            // Add smooth scroll behavior
+            document.documentElement.style.scrollBehavior = 'smooth';
+            
+            // Add click ripple effect to buttons
+            document.querySelectorAll('button, .btn').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    const ripple = document.createElement('span');
+                    const rect = this.getBoundingClientRect();
+                    const size = Math.max(rect.width, rect.height);
+                    const x = e.clientX - rect.left - size / 2;
+                    const y = e.clientY - rect.top - size / 2;
+                    
+                    ripple.style.cssText = `
+                        position: absolute;
+                        width: ${size}px;
+                        height: ${size}px;
+                        left: ${x}px;
+                        top: ${y}px;
+                        background: rgba(255,255,255,0.3);
+                        border-radius: 50%;
+                        transform: scale(0);
+                        animation: ripple 0.6s linear;
+                        pointer-events: none;
+                    `;
+                    
+                    this.style.position = 'relative';
+                    this.style.overflow = 'hidden';
+                    this.appendChild(ripple);
+                    
+                    setTimeout(() => {
+                        if (ripple.parentNode) {
+                            ripple.parentNode.removeChild(ripple);
+                        }
+                    }, 600);
+                });
+            });
+        });
+
+        // Add ripple keyframes
+        const rippleStyles = document.createElement('style');
+        rippleStyles.textContent = `
+            @keyframes ripple {
+                to {
+                    transform: scale(2);
+                    opacity: 0;
+                }
+            }
+        `;
+        document.head.appendChild(rippleStyles);
+    </script>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

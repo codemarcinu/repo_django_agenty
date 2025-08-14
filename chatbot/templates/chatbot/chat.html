@@ -1,0 +1,474 @@
+{% extends 'chatbot/base.html' %}
+
+{% block title %}💬 Chat z Asystentem | {{ block.super }}{% endblock %}
+
+{% block extra_css %}
+<style>
+.message-fade-in {
+    animation: messageSlideIn 0.5s ease-out;
+}
+
+@keyframes messageSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.chat-bubble-user {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 20px 20px 5px 20px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.chat-bubble-assistant {
+    background: white;
+    border-radius: 20px 20px 20px 5px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.typing-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.typing-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: #94a3b8;
+    animation: typing 1.4s infinite;
+}
+
+.typing-dot:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.typing-dot:nth-child(3) {
+    animation-delay: 0.4s;
+}
+
+@keyframes typing {
+    0%, 60%, 100% {
+        transform: translateY(0);
+        opacity: 0.4;
+    }
+    30% {
+        transform: translateY(-10px);
+        opacity: 1;
+    }
+}
+
+.agent-status {
+    transition: all 0.3s ease;
+}
+
+.agent-status.connected {
+    background: linear-gradient(45deg, #10b981, #059669);
+    color: white;
+    box-shadow: 0 0 20px rgba(16, 185, 129, 0.3);
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-6 max-w-6xl">
+    <!-- Chat Header -->
+    <div class="bg-white rounded-xl shadow-lg mb-6 p-6 animate-slide-up">
+        <div class="text-center mb-6">
+            <h1 class="text-3xl font-bold gradient-text mb-2">💬 Chat z Asystentem AI</h1>
+            <p class="text-secondary-600">Porozmawiaj z inteligentnym asystentem. Wybierz agenta i rozpocznij konwersację.</p>
+        </div>
+
+        <!-- Agent Selection -->
+        <div class="agent-selector bg-secondary-50 rounded-lg p-4">
+            <label class="block text-sm font-medium text-secondary-700 mb-2">
+                🤖 Wybierz swojego asystenta:
+            </label>
+            <div class="relative">
+                <select id="agentSelect" class="w-full px-4 py-3 bg-white border border-secondary-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-200">
+                    <option value="">-- Wybierz agenta --</option>
+                    {% for agent in agents %}
+                        <option value="{{ agent.name }}" data-type="{{ agent.agent_type }}" 
+                                data-description="{{ agent.persona_prompt|slice:":100" }}">
+                            {{ agent.name }} ({{ agent.get_agent_type_display }})
+                        </option>
+                    {% endfor %}
+                </select>
+                <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                    <svg class="h-5 w-5 text-secondary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                    </svg>
+                </div>
+            </div>
+            
+            <!-- Agent Status -->
+            <div id="agentStatus" class="mt-3 px-4 py-2 rounded-lg text-sm text-center agent-status bg-secondary-200 text-secondary-600">
+                <span class="inline-flex items-center space-x-2">
+                    <span class="w-2 h-2 bg-secondary-400 rounded-full"></span>
+                    <span>Nie wybrano agenta</span>
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chat Container -->
+    <div class="bg-white rounded-xl shadow-lg overflow-hidden animate-slide-up" style="height: 500px;">
+        <!-- Chat Messages -->
+        <div id="chatMessages" class="h-full overflow-y-auto p-6 bg-gradient-to-b from-secondary-50/30 to-white">
+            <div id="welcomeMessage" class="text-center py-12">
+                <div class="text-6xl mb-4 animate-bounce-gentle">🤖</div>
+                <h3 class="text-xl font-semibold text-secondary-700 mb-2">Witaj w czacie!</h3>
+                <p class="text-secondary-500">Wybierz agenta powyżej, aby rozpocząć konwersację</p>
+            </div>
+        </div>
+
+        <!-- Typing Indicator -->
+        <div id="typingIndicator" class="px-6 py-2 border-t border-secondary-100 bg-secondary-50/50" style="display: none;">
+            <div class="flex items-center space-x-2 text-secondary-500 text-sm">
+                <div class="typing-indicator">
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                </div>
+                <span>Asystent pisze...</span>
+            </div>
+        </div>
+
+        <!-- Message Input -->
+        <div class="border-t border-secondary-200 bg-white p-4">
+            <form id="chatForm" class="flex space-x-3">
+                <div class="flex-1 relative">
+                    <input 
+                        type="text" 
+                        id="messageInput" 
+                        placeholder="Wpisz swoją wiadomość..." 
+                        class="w-full px-4 py-3 border border-secondary-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-200 pr-12"
+                        disabled
+                    >
+                    <div class="absolute inset-y-0 right-0 flex items-center pr-3">
+                        <svg class="h-5 w-5 text-secondary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
+                        </svg>
+                    </div>
+                </div>
+                <button 
+                    type="submit" 
+                    id="sendButton" 
+                    class="btn px-6 py-3 gradient-bg text-white rounded-lg font-medium hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                    disabled
+                >
+                    <span class="flex items-center space-x-2">
+                        <span>Wyślij</span>
+                        <span>🚀</span>
+                    </span>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="mt-6 grid grid-cols-2 md:grid-cols-4 gap-4 animate-slide-up">
+        <button class="quick-action-btn p-3 bg-white rounded-lg shadow-md hover:shadow-lg transition-all duration-300 card-hover text-center border border-secondary-200">
+            <div class="text-2xl mb-1">📄</div>
+            <div class="text-xs text-secondary-600">Zapytaj o dokumenty</div>
+        </button>
+        <button class="quick-action-btn p-3 bg-white rounded-lg shadow-md hover:shadow-lg transition-all duration-300 card-hover text-center border border-secondary-200">
+            <div class="text-2xl mb-1">🏪</div>
+            <div class="text-xs text-secondary-600">Co mam w spiżarni?</div>
+        </button>
+        <button class="quick-action-btn p-3 bg-white rounded-lg shadow-md hover:shadow-lg transition-all duration-300 card-hover text-center border border-secondary-200">
+            <div class="text-2xl mb-1">☀️</div>
+            <div class="text-xs text-secondary-600">Jaka jest pogoda?</div>
+        </button>
+        <button class="quick-action-btn p-3 bg-white rounded-lg shadow-md hover:shadow-lg transition-all duration-300 card-hover text-center border border-secondary-200">
+            <div class="text-2xl mb-1">🔍</div>
+            <div class="text-xs text-secondary-600">Szukaj w internecie</div>
+        </button>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+class ModernChatInterface {
+    constructor() {
+        this.sessionId = null;
+        this.currentAgent = null;
+        this.isTyping = false;
+        this.initializeElements();
+        this.attachEventListeners();
+    }
+    
+    initializeElements() {
+        this.agentSelect = document.getElementById('agentSelect');
+        this.agentStatus = document.getElementById('agentStatus');
+        this.chatMessages = document.getElementById('chatMessages');
+        this.messageInput = document.getElementById('messageInput');
+        this.sendButton = document.getElementById('sendButton');
+        this.chatForm = document.getElementById('chatForm');
+        this.typingIndicator = document.getElementById('typingIndicator');
+        this.welcomeMessage = document.getElementById('welcomeMessage');
+    }
+    
+    attachEventListeners() {
+        this.agentSelect.addEventListener('change', (e) => {
+            this.selectAgent(e.target.value);
+        });
+        
+        this.chatForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            this.sendMessage();
+        });
+        
+        this.messageInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                this.sendMessage();
+            }
+        });
+
+        // Quick action buttons
+        document.querySelectorAll('.quick-action-btn').forEach((btn, index) => {
+            const messages = [
+                'Jakie dokumenty mam przesłane?',
+                'Co mam w spiżarni?',
+                'Jaka jest dzisiaj pogoda?',
+                'Wyszukaj najnowsze wiadomości'
+            ];
+            
+            btn.addEventListener('click', () => {
+                if (this.currentAgent && !this.isTyping) {
+                    this.messageInput.value = messages[index];
+                    this.sendMessage();
+                } else {
+                    UI.showToast('Najpierw wybierz agenta!', 'warning');
+                }
+            });
+        });
+    }
+    
+    async selectAgent(agentName) {
+        if (!agentName) {
+            this.sessionId = null;
+            this.currentAgent = null;
+            this.messageInput.disabled = true;
+            this.sendButton.disabled = true;
+            this.updateAgentStatus('disconnected', 'Nie wybrano agenta');
+            this.showWelcomeMessage();
+            return;
+        }
+        
+        this.updateAgentStatus('connecting', 'Łączenie...');
+        
+        try {
+            const response = await fetch('/api/conversations/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    agent_name: agentName,
+                    user_id: 'web_user',
+                    title: `Chat z ${agentName}`
+                })
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                this.sessionId = data.session_id;
+                this.currentAgent = agentName;
+                this.messageInput.disabled = false;
+                this.sendButton.disabled = false;
+                this.messageInput.focus();
+                this.updateAgentStatus('connected', `Połączono z ${agentName}`);
+                this.clearMessages();
+                this.addSystemMessage(`Witaj! Jestem ${agentName}, Twój asystent AI. Jak mogę Ci pomóc? ✨`);
+                
+                UI.showToast(`Połączono z ${agentName}`, 'success');
+            } else {
+                this.updateAgentStatus('error', 'Błąd połączenia');
+                UI.showToast(`Błąd: ${data.error}`, 'error');
+            }
+        } catch (error) {
+            this.updateAgentStatus('error', 'Błąd połączenia');
+            UI.showToast(`Błąd połączenia: ${error.message}`, 'error');
+        }
+    }
+    
+    updateAgentStatus(status, message) {
+        const statusIcons = {
+            'disconnected': '⚫',
+            'connecting': '🟡',
+            'connected': '🟢',
+            'error': '🔴'
+        };
+        
+        const statusColors = {
+            'disconnected': 'bg-secondary-200 text-secondary-600',
+            'connecting': 'bg-warning-100 text-warning-700',
+            'connected': 'bg-success-100 text-success-700 connected',
+            'error': 'bg-error-100 text-error-700'
+        };
+        
+        this.agentStatus.className = `mt-3 px-4 py-2 rounded-lg text-sm text-center agent-status ${statusColors[status]}`;
+        this.agentStatus.innerHTML = `
+            <span class="inline-flex items-center space-x-2">
+                <span class="w-2 h-2 ${status === 'connected' ? 'bg-success-500' : status === 'error' ? 'bg-error-500' : status === 'connecting' ? 'bg-warning-500' : 'bg-secondary-400'} rounded-full ${status === 'connecting' ? 'animate-pulse' : ''}"></span>
+                <span>${statusIcons[status]} ${message}</span>
+            </span>
+        `;
+    }
+    
+    async sendMessage() {
+        const message = this.messageInput.value.trim();
+        if (!message || !this.sessionId || this.isTyping) return;
+        
+        this.addMessage('user', message);
+        this.messageInput.value = '';
+        this.setTyping(true);
+        
+        try {
+            const response = await fetch('/api/chat/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    session_id: this.sessionId,
+                    message: message
+                })
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                // Simulate typing delay for better UX
+                setTimeout(() => {
+                    this.addMessage('assistant', data.response);
+                    this.setTyping(false);
+                }, 800);
+            } else {
+                this.setTyping(false);
+                this.addErrorMessage(`Błąd agenta: ${data.error}`);
+                UI.showToast('Wystąpił błąd podczas przetwarzania wiadomości', 'error');
+            }
+        } catch (error) {
+            this.setTyping(false);
+            this.addErrorMessage(`Błąd połączenia: ${error.message}`);
+            UI.showToast('Problem z połączeniem', 'error');
+        }
+    }
+    
+    addMessage(role, content) {
+        this.hideWelcomeMessage();
+        
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `mb-6 message-fade-in ${role === 'user' ? 'flex justify-end' : 'flex justify-start'}`;
+        
+        const now = new Date();
+        const timeStr = now.toLocaleTimeString('pl-PL', {
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+        
+        const bubbleClass = role === 'user' ? 'chat-bubble-user text-white' : 'chat-bubble-assistant text-secondary-800';
+        
+        messageDiv.innerHTML = `
+            <div class="max-w-xs lg:max-w-md px-6 py-4 ${bubbleClass}">
+                <div class="flex items-start space-x-2">
+                    <div class="flex-shrink-0">
+                        ${role === 'user' ? '👤' : '🤖'}
+                    </div>
+                    <div class="flex-1">
+                        <div class="font-medium text-sm opacity-75 mb-1">
+                            ${role === 'user' ? 'Ty' : this.currentAgent || 'Asystent'}
+                        </div>
+                        <div class="whitespace-pre-wrap">${content}</div>
+                        <div class="text-xs opacity-60 mt-2">${timeStr}</div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        this.chatMessages.appendChild(messageDiv);
+        this.scrollToBottom();
+    }
+    
+    addSystemMessage(content) {
+        this.hideWelcomeMessage();
+        
+        const messageDiv = document.createElement('div');
+        messageDiv.className = 'mb-6 message-fade-in flex justify-center';
+        
+        messageDiv.innerHTML = `
+            <div class="max-w-md px-4 py-2 bg-primary-100 text-primary-800 rounded-full text-sm text-center">
+                ${content}
+            </div>
+        `;
+        
+        this.chatMessages.appendChild(messageDiv);
+        this.scrollToBottom();
+    }
+    
+    addErrorMessage(content) {
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'mb-4 message-fade-in';
+        errorDiv.innerHTML = `
+            <div class="bg-error-50 border border-error-200 text-error-800 px-4 py-3 rounded-lg">
+                <div class="flex items-center">
+                    <span class="mr-2">⚠️</span>
+                    <span>${content}</span>
+                </div>
+            </div>
+        `;
+        
+        this.chatMessages.appendChild(errorDiv);
+        this.scrollToBottom();
+    }
+    
+    setTyping(typing) {
+        this.isTyping = typing;
+        this.typingIndicator.style.display = typing ? 'block' : 'none';
+        this.sendButton.disabled = typing || !this.sessionId;
+        this.messageInput.disabled = typing;
+        
+        if (typing) {
+            this.scrollToBottom();
+        }
+    }
+    
+    showWelcomeMessage() {
+        this.welcomeMessage.style.display = 'block';
+        this.clearMessages();
+    }
+    
+    hideWelcomeMessage() {
+        this.welcomeMessage.style.display = 'none';
+    }
+    
+    clearMessages() {
+        const messages = this.chatMessages.querySelectorAll('.mb-6:not(#welcomeMessage)');
+        messages.forEach(msg => msg.remove());
+    }
+    
+    scrollToBottom() {
+        setTimeout(() => {
+            this.chatMessages.scrollTop = this.chatMessages.scrollHeight;
+        }, 100);
+    }
+}
+
+// Initialize chat interface when page loads
+document.addEventListener('DOMContentLoaded', () => {
+    new ModernChatInterface();
+});
+</script>
+{% endblock %}

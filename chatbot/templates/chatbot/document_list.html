@@ -1,0 +1,199 @@
+{% extends 'chatbot/base.html' %}
+
+{% block title %}📄 Dokumenty RAG | {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-6 max-w-7xl">
+    <!-- Header -->
+    <div class="text-center mb-8 animate-slide-up">
+        <h1 class="text-3xl font-bold gradient-text mb-3">📄 Moje Dokumenty</h1>
+        <p class="text-secondary-600 max-w-2xl mx-auto">
+            Zarządzaj swoją bazą wiedzy. Przesłane dokumenty będą dostępne dla asystenta AI podczas rozmów.
+        </p>
+    </div>
+
+    <!-- Action Bar -->
+    <div class="bg-white rounded-xl shadow-lg p-6 mb-8 animate-slide-up">
+        <div class="flex flex-col sm:flex-row items-center justify-between space-y-4 sm:space-y-0">
+            <div class="flex items-center space-x-3">
+                <div class="bg-primary-100 p-3 rounded-lg">
+                    <svg class="w-6 h-6 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                    </svg>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold text-secondary-900">Baza Wiedzy</h3>
+                    <p class="text-sm text-secondary-500">{{ documents|length }} dokumentów w systemie</p>
+                </div>
+            </div>
+            <a href="{% url 'chatbot:document_upload' %}" 
+               class="btn inline-flex items-center space-x-2 px-6 py-3 gradient-bg text-white rounded-lg font-medium hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-all duration-200 transform hover:scale-105">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                </svg>
+                <span>Prześlij Dokument</span>
+            </a>
+        </div>
+    </div>
+
+    {% if documents %}
+    <!-- Documents Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% for doc in documents %}
+        <div class="bg-white rounded-xl shadow-lg overflow-hidden card-hover animate-on-scroll">
+            <!-- Document Header -->
+            <div class="p-6 border-b border-secondary-100">
+                <div class="flex items-start justify-between">
+                    <div class="flex-1">
+                        <h3 class="text-lg font-semibold text-secondary-900 mb-2 truncate" title="{{ doc.title }}">
+                            {{ doc.title }}
+                        </h3>
+                        <p class="text-sm text-secondary-500 mb-3 truncate" title="{{ doc.file.name }}">
+                            📎 {{ doc.file.name|slice:":30" }}{% if doc.file.name|length > 30 %}...{% endif %}
+                        </p>
+                    </div>
+                    <div class="ml-4 flex-shrink-0">
+                        {% if doc.file.name|slice:"-4:" == ".pdf" %}
+                            <div class="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
+                                <span class="text-red-600 font-bold text-xs">PDF</span>
+                            </div>
+                        {% elif doc.file.name|slice:"-4:" == ".txt" %}
+                            <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                                <span class="text-blue-600 font-bold text-xs">TXT</span>
+                            </div>
+                        {% elif doc.file.name|slice:"-5:" == ".docx" %}
+                            <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                                <span class="text-blue-600 font-bold text-xs">DOC</span>
+                            </div>
+                        {% else %}
+                            <div class="w-12 h-12 bg-secondary-100 rounded-lg flex items-center justify-center">
+                                <svg class="w-6 h-6 text-secondary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                </svg>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Status Badge -->
+                <div class="flex items-center space-x-2">
+                    {% if doc.status == 'ready' %}
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-success-100 text-success-800">
+                            <span class="w-2 h-2 bg-success-500 rounded-full mr-2"></span>
+                            Gotowy
+                        </span>
+                    {% elif doc.status == 'processing' %}
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-warning-100 text-warning-800">
+                            <span class="w-2 h-2 bg-warning-500 rounded-full mr-2 animate-pulse"></span>
+                            Przetwarzanie
+                        </span>
+                    {% elif doc.status == 'error' %}
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-error-100 text-error-800">
+                            <span class="w-2 h-2 bg-error-500 rounded-full mr-2"></span>
+                            Błąd
+                        </span>
+                    {% else %}
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-secondary-100 text-secondary-800">
+                            <span class="w-2 h-2 bg-secondary-500 rounded-full mr-2"></span>
+                            {{ doc.get_status_display }}
+                        </span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Document Info -->
+            <div class="p-6">
+                <div class="space-y-3">
+                    <div class="flex items-center text-sm text-secondary-600">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3a2 2 0 012-2h4a2 2 0 012 2v4m3 0V5a2 2 0 00-2-2H9a2 2 0 00-2 2v2m12 0a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2V9a2 2 0 012-2h14z"></path>
+                        </svg>
+                        Dodano: {{ doc.uploaded_at|date:"d.m.Y" }}
+                    </div>
+                    
+                    <div class="flex items-center text-sm text-secondary-600">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        {{ doc.uploaded_at|date:"H:i" }}
+                    </div>
+
+                    {% if doc.file.size %}
+                    <div class="flex items-center text-sm text-secondary-600">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                        </svg>
+                        {% if doc.file.size < 1024 %}
+                            {{ doc.file.size }} B
+                        {% elif doc.file.size < 1048576 %}
+                            {{ doc.file.size|floatformat:1|add:" KB"|filesizeformat }}
+                        {% else %}
+                            {{ doc.file.size|filesizeformat }}
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Action Button -->
+                {% if doc.status == 'ready' %}
+                <div class="mt-4 pt-4 border-t border-secondary-100">
+                    <button onclick="askAboutDocument('{{ doc.title }}')" 
+                            class="w-full inline-flex items-center justify-center space-x-2 px-4 py-2 border border-primary-300 text-primary-700 bg-primary-50 rounded-lg text-sm font-medium hover:bg-primary-100 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all duration-200">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-3.582 8-8 8a8.955 8.955 0 01-4.906-1.471c-1.08.067-2.171.167-3.282.287a1 1 0 01-.928-1.515l.875-1.968A8.001 8.001 0 0121 12z"></path>
+                        </svg>
+                        <span>Zapytaj o dokument</span>
+                    </button>
+                </div>
+                {% elif doc.status == 'error' %}
+                <div class="mt-4 pt-4 border-t border-secondary-100">
+                    <div class="text-sm text-error-600 bg-error-50 p-3 rounded-lg">
+                        ⚠️ Wystąpił problem podczas przetwarzania dokumentu
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    {% else %}
+    <!-- Empty State -->
+    <div class="bg-white rounded-xl shadow-lg p-12 text-center animate-slide-up">
+        <div class="text-6xl mb-6">📄</div>
+        <h3 class="text-xl font-semibold text-secondary-700 mb-3">Brak dokumentów</h3>
+        <p class="text-secondary-500 mb-6 max-w-md mx-auto">
+            Nie masz jeszcze żadnych dokumentów w bazie wiedzy. Prześlij pierwszy dokument, aby rozpocząć!
+        </p>
+        <a href="{% url 'chatbot:document_upload' %}" 
+           class="btn inline-flex items-center space-x-2 px-6 py-3 gradient-bg text-white rounded-lg font-medium hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-all duration-200 transform hover:scale-105">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+            </svg>
+            <span>Prześlij Pierwszy Dokument</span>
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function askAboutDocument(title) {
+    UI.showToast(`Przechodzę do czatu z pytaniem o: ${title}`, 'info');
+    setTimeout(() => {
+        window.location.href = '/chat/?message=' + encodeURIComponent(`Opowiedz mi o dokumencie: ${title}`);
+    }, 1000);
+}
+
+// Add file size formatting
+document.addEventListener('DOMContentLoaded', () => {
+    // Add loading states to action buttons
+    document.querySelectorAll('button[onclick^="askAboutDocument"]').forEach(btn => {
+        btn.addEventListener('click', function() {
+            UI.showLoading(this);
+        });
+    });
+});
+</script>
+{% endblock %}
