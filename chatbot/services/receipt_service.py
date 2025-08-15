@@ -538,6 +538,20 @@ class ReceiptService:
                     logger.error(f"Error creating line item for product '{parsed_product.name}': {e}")
                     continue
             
+            # Process inventory updates
+            from .inventory_service import get_inventory_service
+            inventory_service = get_inventory_service()
+            
+            inventory_success, inventory_message = inventory_service.process_receipt_for_inventory(receipt_id)
+            
+            if not inventory_success:
+                logger.warning(f"Inventory update failed for receipt {receipt_id}: {inventory_message}")
+                # Don't fail the whole process, just log the warning
+                receipt.processing_notes += f"\nInventory update warning: {inventory_message}"
+            else:
+                logger.info(f"Inventory updated successfully for receipt {receipt_id}: {inventory_message}")
+                receipt.processing_notes += f"\nInventory update: {inventory_message}"
+            
             # Update receipt with matching results
             receipt.status = 'completed'
             
