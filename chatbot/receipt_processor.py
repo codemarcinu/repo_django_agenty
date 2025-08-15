@@ -10,7 +10,7 @@ from django.db import transaction
 from django.utils import timezone
 from asgiref.sync import sync_to_async
 from .models import PantryItem, ReceiptProcessing
-from .agents import OllamaAgent # Assuming OllamaAgent can be used for extraction
+from .services.agents import OllamaAgent # Assuming OllamaAgent can be used for extraction
 from .validators import get_file_type
 
 logger = logging.getLogger(__name__)

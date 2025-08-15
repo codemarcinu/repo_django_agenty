@@ -7,10 +7,9 @@ import uuid
 from typing import Any, Dict, List, Optional
 
 from django.utils import timezone
-from asgiref.sync import sync_to_async
-
 from .interfaces import ConversationManagerInterface
 from .models import Agent, Conversation, Message
+from .services.async_services import AsyncConversationService
 
 logger = logging.getLogger(__name__)
 
@@ -22,83 +21,28 @@ class ConversationManager(ConversationManagerInterface):
     
     async def create_conversation(self, agent_name: str, user_id: Optional[str] = None, title: Optional[str] = None) -> str:
         """Create new conversation and return session_id"""
-        try:
-            # Get agent from database
-            agent = await Agent.objects.aget(name=agent_name, is_active=True)
-            
-            # Create conversation
-            conversation = await Conversation.objects.acreate(
-                agent=agent,
-                user_id=user_id or "",
-                title=title or f"Konwersacja z {agent_name}",
-                metadata={"created_by": "system", "agent_name": agent_name}
-            )
-            
-            logger.info(f"Created conversation {conversation.session_id} with agent {agent_name}")
-            return str(conversation.session_id)
-            
-        except Agent.DoesNotExist:
-            logger.error(f"Agent not found: {agent_name}")
-            raise ValueError(f"Agent not found: {agent_name}")
-        except Exception as e:
-            logger.error(f"Error creating conversation: {str(e)}")
-            raise
+        return await AsyncConversationService.create_conversation_with_agent(
+            agent_name=agent_name,
+            user_id=user_id,
+            title=title
+        )
     
     async def add_message(self, session_id: str, role: str, content: str, metadata: Optional[Dict] = None):
         """Add message to conversation"""
-        try:
-            # Get conversation
-            conversation = await Conversation.objects.aget(session_id=session_id)
-            
-            # Create message
-            message = await Message.objects.acreate(
-                conversation=conversation,
-                role=role,
-                content=content,
-                metadata=metadata or {}
-            )
-            
-            # Update conversation timestamp
-            conversation.updated_at = timezone.now()
-            await conversation.asave()
-            
-            logger.info(f"Added {role} message to conversation {session_id}")
-            return message
-            
-        except Conversation.DoesNotExist:
-            logger.error(f"Conversation not found: {session_id}")
-            raise ValueError(f"Conversation not found: {session_id}")
-        except Exception as e:
-            logger.error(f"Error adding message: {str(e)}")
-            raise
+        return await AsyncConversationService.add_message_to_conversation(
+            session_id=session_id,
+            role=role,
+            content=content,
+            metadata=metadata
+        )
     
     async def get_conversation_history(self, session_id: str, limit: int = 50) -> List[Dict]:
         """Get conversation history"""
-        try:
-            conversation = await Conversation.objects.aget(session_id=session_id)
-            
-            # Get messages with limit
-            messages = []
-            async for message in Message.objects.filter(conversation=conversation).order_by('-created_at')[:limit]:
-                messages.append({
-                    'id': message.id,
-                    'role': message.role,
-                    'content': message.content,
-                    'created_at': message.created_at.isoformat(),
-                    'metadata': message.metadata
-                })
-            
-            # Reverse to get chronological order
-            messages.reverse()
-            
-            return messages
-            
-        except Conversation.DoesNotExist:
-            logger.error(f"Conversation not found: {session_id}")
-            return []
-        except Exception as e:
-            logger.error(f"Error getting conversation history: {str(e)}")
-            return []
+        return await AsyncConversationService.get_conversation_messages(
+            session_id=session_id,
+            limit=limit,
+            format_for_ai=False
+        )
     
     async def get_conversation_info(self, session_id: str) -> Optional[Dict]:
         """Get conversation information"""
@@ -213,8 +157,12 @@ class ConversationManager(ConversationManagerInterface):
             if not conversation_info:
                 return {}
             
-            # Get recent messages for context
-            recent_messages = await self.get_conversation_history(session_id, limit=context_window)
+            # Get recent messages formatted for AI
+            recent_messages = await AsyncConversationService.get_conversation_messages(
+                session_id=session_id,
+                limit=context_window,
+                format_for_ai=True
+            )
             
             return {
                 'conversation': conversation_info,
