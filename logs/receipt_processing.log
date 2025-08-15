@@ -64,3 +64,541 @@
 [2025-08-15 17:40:39] INFO in chatbot.services.receipt_service: Starting synchronous OCR processing for receipt 12
 [2025-08-15 17:40:39] INFO in chatbot.services.receipt_service: ✅ Completed synchronous processing for receipt 12
 [2025-08-15 17:40:39] INFO in chatbot.services.receipt_service: ✅ Processing workflow completed for receipt 12
+[2025-08-15 17:46:43] INFO in chatbot.services.receipt_service: Created receipt processing record: 13
+[2025-08-15 17:46:43] INFO in chatbot.services.receipt_service: 🔄 Starting processing for receipt ID: 13
+[2025-08-15 17:46:43] DEBUG in chatbot.services.receipt_service: Found receipt: Paragon 13 - Status: Plik przesłany, current status: uploaded
+[2025-08-15 17:46:43] INFO in chatbot.services.receipt_service: Marking receipt 13 as processing...
+[2025-08-15 17:46:43] DEBUG in chatbot.services.receipt_service: Receipt 13 status updated to: ocr_in_progress
+[2025-08-15 17:46:43] INFO in chatbot.services.receipt_service: Attempting to start Celery task for receipt 13
+[2025-08-15 17:46:43] DEBUG in chatbot.services.receipt_service: Celery task imported successfully
+[2025-08-15 17:47:02] WARNING in chatbot.services.receipt_service: ⚠️ Celery task failed for receipt 13: Error 111 connecting to localhost:6379. Connection refused.
+[2025-08-15 17:47:02] INFO in chatbot.services.receipt_service: Falling back to synchronous processing for receipt 13
+[2025-08-15 17:47:02] DEBUG in chatbot.services.receipt_service: Receipt processor imported successfully
+[2025-08-15 17:47:02] INFO in chatbot.services.receipt_service: Starting synchronous OCR processing for receipt 13
+[2025-08-15 17:47:02] INFO in chatbot.receipt_processor: 🔄 STARTING OCR PROCESSING for receipt ID: 13
+[2025-08-15 17:47:02] DEBUG in chatbot.receipt_processor: Fetching receipt record from database...
+[2025-08-15 17:47:02] INFO in chatbot.receipt_processor: ✅ Found receipt record: 13, current status: ocr_in_progress
+[2025-08-15 17:47:02] INFO in chatbot.receipt_processor: Updating receipt 13 status to 'ocr_in_progress'
+[2025-08-15 17:47:02] DEBUG in chatbot.receipt_processor: Receipt 13 status updated successfully
+[2025-08-15 17:47:02] INFO in chatbot.receipt_processor: Processing file: /home/marcin/PycharmProjects/agenty/media/receipt_files/2508020118133218_BzSm5Ds.pdf
+[2025-08-15 17:47:02] INFO in chatbot.receipt_processor: File size: 655865 bytes
+[2025-08-15 17:47:02] ERROR in chatbot.receipt_processor: ❌ CRITICAL ERROR during receipt processing for ID 13: 'str' object has no attribute 'name'
+Traceback (most recent call last):
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/redis/connection.py", line 389, in connect_check_health
+    sock = self.retry.call_with_retry(
+        lambda: self._connect(), lambda error: self.disconnect(error)
+    )
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/redis/retry.py", line 105, in call_with_retry
+    return do()
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/redis/connection.py", line 390, in <lambda>
+    lambda: self._connect(), lambda error: self.disconnect(error)
+            ~~~~~~~~~~~~~^^
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/redis/connection.py", line 803, in _connect
+    raise err
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/redis/connection.py", line 787, in _connect
+    sock.connect(socket_address)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+ConnectionRefusedError: [Errno 111] Connection refused
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/celery/backends/redis.py", line 127, in reconnect_on_error
+    yield
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/celery/backends/redis.py", line 177, in _consume_from
+    self._pubsub.subscribe(key)
+    ~~~~~~~~~~~~~~~~~~~~~~^^^^^
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/redis/client.py", line 1030, in subscribe
+    ret_val = self.execute_command("SUBSCRIBE", *new_channels.keys())
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/redis/client.py", line 860, in execute_command
+    self.connection = self.connection_pool.get_connection()
+                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/redis/utils.py", line 195, in wrapper
+    return func(*args, **kwargs)
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/redis/connection.py", line 1533, in get_connection
+    connection.connect()
+    ~~~~~~~~~~~~~~~~~~^^
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/redis/connection.py", line 380, in connect
+    self.connect_check_health(check_health=True)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/redis/connection.py", line 397, in connect_check_health
+    raise ConnectionError(self._error_message(e))
+redis.exceptions.ConnectionError: Error 111 connecting to localhost:6379. Connection refused.
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/redis/connection.py", line 389, in connect_check_health
+    sock = self.retry.call_with_retry(
+        lambda: self._connect(), lambda error: self.disconnect(error)
+    )
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/redis/retry.py", line 105, in call_with_retry
+    return do()
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/redis/connection.py", line 390, in <lambda>
+    lambda: self._connect(), lambda error: self.disconnect(error)
+            ~~~~~~~~~~~~~^^
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/redis/connection.py", line 803, in _connect
+    raise err
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/redis/connection.py", line 787, in _connect
+    sock.connect(socket_address)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+ConnectionRefusedError: [Errno 111] Connection refused
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/kombu/connection.py", line 472, in _reraise_as_library_errors
+    yield
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/celery/app/base.py", line 929, in send_task
+    self.backend.on_task_call(P, task_id)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/celery/backends/redis.py", line 378, in on_task_call
+    self.result_consumer.consume_from(task_id)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/celery/backends/redis.py", line 169, in consume_from
+    return self.start(task_id)
+           ~~~~~~~~~~^^^^^^^^^
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/celery/backends/redis.py", line 147, in start
+    self._consume_from(initial_task_id)
+    ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/celery/backends/redis.py", line 176, in _consume_from
+    with self.reconnect_on_error():
+         ~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/lib/python3.13/contextlib.py", line 162, in __exit__
+    self.gen.throw(value)
+    ~~~~~~~~~~~~~~^^^^^^^
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/celery/backends/redis.py", line 130, in reconnect_on_error
+    self._ensure(self._reconnect_pubsub, ())
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/celery/backends/redis.py", line 389, in ensure
+    return retry_over_time(
+        fun, self.connection_errors, args, {},
+        partial(self.on_connection_error, max_retries),
+        **retry_policy)
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/kombu/utils/functional.py", line 318, in retry_over_time
+    return fun(*args, **kwargs)
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/celery/backends/redis.py", line 106, in _reconnect_pubsub
+    metas = self.backend.client.mget(self.subscribed_to)
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/redis/commands/core.py", line 1994, in mget
+    return self.execute_command("MGET", *args, **options)
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/redis/client.py", line 621, in execute_command
+    return self._execute_command(*args, **options)
+           ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/redis/client.py", line 627, in _execute_command
+    conn = self.connection or pool.get_connection()
+                              ~~~~~~~~~~~~~~~~~~~^^
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/redis/utils.py", line 195, in wrapper
+    return func(*args, **kwargs)
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/redis/connection.py", line 1533, in get_connection
+    connection.connect()
+    ~~~~~~~~~~~~~~~~~~^^
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/redis/connection.py", line 380, in connect
+    self.connect_check_health(check_health=True)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/redis/connection.py", line 397, in connect_check_health
+    raise ConnectionError(self._error_message(e))
+redis.exceptions.ConnectionError: Error 111 connecting to localhost:6379. Connection refused.
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/asgiref/sync.py", line 489, in thread_handler
+    raise exc_info[1]
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/asgiref/sync.py", line 489, in thread_handler
+    raise exc_info[1]
+  File "/home/marcin/PycharmProjects/agenty/chatbot/services/receipt_service.py", line 74, in start_processing
+    task_result = process_receipt_task.delay(receipt_id)
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/celery/app/task.py", line 444, in delay
+    return self.apply_async(args, kwargs)
+           ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/celery/app/task.py", line 601, in apply_async
+    return app.send_task(
+           ~~~~~~~~~~~~~^
+        self.name, args, kwargs, task_id=task_id, producer=producer,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<2 lines>...
+        **options
+        ^^^^^^^^^
+    )
+    ^
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/celery/app/base.py", line 927, in send_task
+    with P.connection._reraise_as_library_errors():
+         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/lib/python3.13/contextlib.py", line 162, in __exit__
+    self.gen.throw(value)
+    ~~~~~~~~~~~~~~^^^^^^^
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/kombu/connection.py", line 476, in _reraise_as_library_errors
+    raise ConnectionError(str(exc)) from exc
+kombu.exceptions.OperationalError: Error 111 connecting to localhost:6379. Connection refused.
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/marcin/PycharmProjects/agenty/chatbot/receipt_processor.py", line 200, in process_receipt
+    file_type = get_file_type(file_path)
+  File "/home/marcin/PycharmProjects/agenty/chatbot/validators.py", line 53, in get_file_type
+    file_extension = os.path.splitext(file.name)[1].lower()
+                                      ^^^^^^^^^
+AttributeError: 'str' object has no attribute 'name'
+[2025-08-15 17:47:02] INFO in chatbot.receipt_processor: Marked receipt 13 as error in database
+[2025-08-15 17:47:02] INFO in chatbot.services.receipt_service: ✅ Completed synchronous processing for receipt 13
+[2025-08-15 17:47:02] INFO in chatbot.services.receipt_service: ✅ Processing workflow completed for receipt 13
+[2025-08-15 17:47:45] INFO in chatbot.services.receipt_service: Created receipt processing record: 14
+[2025-08-15 17:47:45] INFO in chatbot.services.receipt_service: 🔄 Starting processing for receipt ID: 14
+[2025-08-15 17:47:45] DEBUG in chatbot.services.receipt_service: Found receipt: Paragon 14 - Status: Plik przesłany, current status: uploaded
+[2025-08-15 17:47:45] INFO in chatbot.services.receipt_service: Marking receipt 14 as processing...
+[2025-08-15 17:47:45] DEBUG in chatbot.services.receipt_service: Receipt 14 status updated to: ocr_in_progress
+[2025-08-15 17:47:45] INFO in chatbot.services.receipt_service: Attempting to start Celery task for receipt 14
+[2025-08-15 17:47:45] DEBUG in chatbot.services.receipt_service: Celery task imported successfully
+[2025-08-15 17:48:04] WARNING in chatbot.services.receipt_service: ⚠️ Celery task failed for receipt 14: Error 111 connecting to localhost:6379. Connection refused.
+[2025-08-15 17:48:04] INFO in chatbot.services.receipt_service: Falling back to synchronous processing for receipt 14
+[2025-08-15 17:48:04] DEBUG in chatbot.services.receipt_service: Receipt processor imported successfully
+[2025-08-15 17:48:04] INFO in chatbot.services.receipt_service: Starting synchronous OCR processing for receipt 14
+[2025-08-15 17:48:04] INFO in chatbot.receipt_processor: 🔄 STARTING OCR PROCESSING for receipt ID: 14
+[2025-08-15 17:48:04] DEBUG in chatbot.receipt_processor: Fetching receipt record from database...
+[2025-08-15 17:48:04] INFO in chatbot.receipt_processor: ✅ Found receipt record: 14, current status: ocr_in_progress
+[2025-08-15 17:48:04] INFO in chatbot.receipt_processor: Updating receipt 14 status to 'ocr_in_progress'
+[2025-08-15 17:48:04] DEBUG in chatbot.receipt_processor: Receipt 14 status updated successfully
+[2025-08-15 17:48:04] INFO in chatbot.receipt_processor: Processing file: /home/marcin/PycharmProjects/agenty/media/receipt_files/2508020118133218_M79Vh6J.pdf
+[2025-08-15 17:48:04] INFO in chatbot.receipt_processor: File size: 655865 bytes
+[2025-08-15 17:48:04] ERROR in chatbot.receipt_processor: ❌ CRITICAL ERROR during receipt processing for ID 14: 'str' object has no attribute 'name'
+Traceback (most recent call last):
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/redis/connection.py", line 389, in connect_check_health
+    sock = self.retry.call_with_retry(
+        lambda: self._connect(), lambda error: self.disconnect(error)
+    )
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/redis/retry.py", line 105, in call_with_retry
+    return do()
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/redis/connection.py", line 390, in <lambda>
+    lambda: self._connect(), lambda error: self.disconnect(error)
+            ~~~~~~~~~~~~~^^
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/redis/connection.py", line 803, in _connect
+    raise err
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/redis/connection.py", line 787, in _connect
+    sock.connect(socket_address)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+ConnectionRefusedError: [Errno 111] Connection refused
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/celery/backends/redis.py", line 127, in reconnect_on_error
+    yield
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/celery/backends/redis.py", line 177, in _consume_from
+    self._pubsub.subscribe(key)
+    ~~~~~~~~~~~~~~~~~~~~~~^^^^^
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/redis/client.py", line 1030, in subscribe
+    ret_val = self.execute_command("SUBSCRIBE", *new_channels.keys())
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/redis/client.py", line 860, in execute_command
+    self.connection = self.connection_pool.get_connection()
+                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/redis/utils.py", line 195, in wrapper
+    return func(*args, **kwargs)
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/redis/connection.py", line 1533, in get_connection
+    connection.connect()
+    ~~~~~~~~~~~~~~~~~~^^
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/redis/connection.py", line 380, in connect
+    self.connect_check_health(check_health=True)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/redis/connection.py", line 397, in connect_check_health
+    raise ConnectionError(self._error_message(e))
+redis.exceptions.ConnectionError: Error 111 connecting to localhost:6379. Connection refused.
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/redis/connection.py", line 389, in connect_check_health
+    sock = self.retry.call_with_retry(
+        lambda: self._connect(), lambda error: self.disconnect(error)
+    )
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/redis/retry.py", line 105, in call_with_retry
+    return do()
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/redis/connection.py", line 390, in <lambda>
+    lambda: self._connect(), lambda error: self.disconnect(error)
+            ~~~~~~~~~~~~~^^
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/redis/connection.py", line 803, in _connect
+    raise err
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/redis/connection.py", line 787, in _connect
+    sock.connect(socket_address)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+ConnectionRefusedError: [Errno 111] Connection refused
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/kombu/connection.py", line 472, in _reraise_as_library_errors
+    yield
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/celery/app/base.py", line 929, in send_task
+    self.backend.on_task_call(P, task_id)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/celery/backends/redis.py", line 378, in on_task_call
+    self.result_consumer.consume_from(task_id)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/celery/backends/redis.py", line 169, in consume_from
+    return self.start(task_id)
+           ~~~~~~~~~~^^^^^^^^^
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/celery/backends/redis.py", line 147, in start
+    self._consume_from(initial_task_id)
+    ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/celery/backends/redis.py", line 176, in _consume_from
+    with self.reconnect_on_error():
+         ~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/lib/python3.13/contextlib.py", line 162, in __exit__
+    self.gen.throw(value)
+    ~~~~~~~~~~~~~~^^^^^^^
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/celery/backends/redis.py", line 130, in reconnect_on_error
+    self._ensure(self._reconnect_pubsub, ())
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/celery/backends/redis.py", line 389, in ensure
+    return retry_over_time(
+        fun, self.connection_errors, args, {},
+        partial(self.on_connection_error, max_retries),
+        **retry_policy)
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/kombu/utils/functional.py", line 318, in retry_over_time
+    return fun(*args, **kwargs)
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/celery/backends/redis.py", line 106, in _reconnect_pubsub
+    metas = self.backend.client.mget(self.subscribed_to)
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/redis/commands/core.py", line 1994, in mget
+    return self.execute_command("MGET", *args, **options)
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/redis/client.py", line 621, in execute_command
+    return self._execute_command(*args, **options)
+           ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/redis/client.py", line 627, in _execute_command
+    conn = self.connection or pool.get_connection()
+                              ~~~~~~~~~~~~~~~~~~~^^
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/redis/utils.py", line 195, in wrapper
+    return func(*args, **kwargs)
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/redis/connection.py", line 1533, in get_connection
+    connection.connect()
+    ~~~~~~~~~~~~~~~~~~^^
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/redis/connection.py", line 380, in connect
+    self.connect_check_health(check_health=True)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/redis/connection.py", line 397, in connect_check_health
+    raise ConnectionError(self._error_message(e))
+redis.exceptions.ConnectionError: Error 111 connecting to localhost:6379. Connection refused.
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/asgiref/sync.py", line 489, in thread_handler
+    raise exc_info[1]
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/asgiref/sync.py", line 489, in thread_handler
+    raise exc_info[1]
+  File "/home/marcin/PycharmProjects/agenty/chatbot/services/receipt_service.py", line 74, in start_processing
+    task_result = process_receipt_task.delay(receipt_id)
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/celery/app/task.py", line 444, in delay
+    return self.apply_async(args, kwargs)
+           ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/celery/app/task.py", line 601, in apply_async
+    return app.send_task(
+           ~~~~~~~~~~~~~^
+        self.name, args, kwargs, task_id=task_id, producer=producer,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<2 lines>...
+        **options
+        ^^^^^^^^^
+    )
+    ^
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/celery/app/base.py", line 927, in send_task
+    with P.connection._reraise_as_library_errors():
+         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/lib/python3.13/contextlib.py", line 162, in __exit__
+    self.gen.throw(value)
+    ~~~~~~~~~~~~~~^^^^^^^
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/kombu/connection.py", line 476, in _reraise_as_library_errors
+    raise ConnectionError(str(exc)) from exc
+kombu.exceptions.OperationalError: Error 111 connecting to localhost:6379. Connection refused.
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/marcin/PycharmProjects/agenty/chatbot/receipt_processor.py", line 200, in process_receipt
+    file_type = get_file_type(file_path)
+  File "/home/marcin/PycharmProjects/agenty/chatbot/validators.py", line 53, in get_file_type
+    file_extension = os.path.splitext(file.name)[1].lower()
+                                      ^^^^^^^^^
+AttributeError: 'str' object has no attribute 'name'
+[2025-08-15 17:48:04] INFO in chatbot.receipt_processor: Marked receipt 14 as error in database
+[2025-08-15 17:48:04] INFO in chatbot.services.receipt_service: ✅ Completed synchronous processing for receipt 14
+[2025-08-15 17:48:04] INFO in chatbot.services.receipt_service: ✅ Processing workflow completed for receipt 14
+[2025-08-15 17:56:30] INFO in chatbot.services.receipt_service: Created receipt processing record: 15
+[2025-08-15 17:56:30] INFO in chatbot.services.receipt_service: 🔄 Starting processing for receipt ID: 15
+[2025-08-15 17:56:30] DEBUG in chatbot.services.receipt_service: Found receipt: Paragon 15 - Status: Plik przesłany, current status: uploaded
+[2025-08-15 17:56:30] INFO in chatbot.services.receipt_service: Marking receipt 15 as processing...
+[2025-08-15 17:56:30] DEBUG in chatbot.services.receipt_service: Receipt 15 status updated to: ocr_in_progress
+[2025-08-15 17:56:30] INFO in chatbot.services.receipt_service: Attempting to start Celery task for receipt 15
+[2025-08-15 17:56:30] DEBUG in chatbot.services.receipt_service: Celery task imported successfully
+[2025-08-15 17:56:30] INFO in chatbot.services.receipt_service: ✅ Celery task started successfully for receipt 15, task ID: bcd3e206-26c9-41d1-8a31-a804ca111b52
+[2025-08-15 17:56:30] INFO in chatbot.services.receipt_service: ✅ Processing workflow completed for receipt 15
+[2025-08-15 17:57:38] INFO in chatbot.tasks: Receipt 15 processed successfully by Celery task.
+[2025-08-15 17:58:30] INFO in chatbot.services.receipt_service: Created receipt processing record: 16
+[2025-08-15 17:58:30] INFO in chatbot.services.receipt_service: 🔄 Starting processing for receipt ID: 16
+[2025-08-15 17:58:30] DEBUG in chatbot.services.receipt_service: Found receipt: Paragon 16 - Status: Plik przesłany, current status: uploaded
+[2025-08-15 17:58:30] INFO in chatbot.services.receipt_service: Marking receipt 16 as processing...
+[2025-08-15 17:58:30] DEBUG in chatbot.services.receipt_service: Receipt 16 status updated to: ocr_in_progress
+[2025-08-15 17:58:30] INFO in chatbot.services.receipt_service: Attempting to start Celery task for receipt 16
+[2025-08-15 17:58:30] DEBUG in chatbot.services.receipt_service: Celery task imported successfully
+[2025-08-15 17:58:30] INFO in chatbot.services.receipt_service: ✅ Celery task started successfully for receipt 16, task ID: fed3c6ea-60ce-4ba4-8118-9caa6b6e56d1
+[2025-08-15 17:58:30] INFO in chatbot.services.receipt_service: ✅ Processing workflow completed for receipt 16
+[2025-08-15 17:58:30] INFO in chatbot.tasks: Receipt 16 processed successfully by Celery task.
+[2025-08-15 17:59:38] INFO in chatbot.receipt_processor: 🔄 STARTING OCR PROCESSING for receipt ID: 16
+[2025-08-15 17:59:38] DEBUG in chatbot.receipt_processor: Fetching receipt record from database...
+[2025-08-15 17:59:38] INFO in chatbot.receipt_processor: ✅ Found receipt record: 16, current status: ocr_in_progress
+[2025-08-15 17:59:38] INFO in chatbot.receipt_processor: Updating receipt 16 status to 'ocr_in_progress'
+[2025-08-15 17:59:38] DEBUG in chatbot.receipt_processor: Receipt 16 status updated successfully
+[2025-08-15 17:59:38] INFO in chatbot.receipt_processor: Processing file: /home/marcin/PycharmProjects/agenty/media/receipt_files/2508020118133218_kFdBItf.pdf
+[2025-08-15 17:59:38] INFO in chatbot.receipt_processor: File size: 655865 bytes
+[2025-08-15 17:59:38] INFO in chatbot.receipt_processor: Detected file type: pdf
+[2025-08-15 17:59:38] INFO in chatbot.receipt_processor: 🔍 Starting text extraction from pdf file...
+[2025-08-15 17:59:38] INFO in chatbot.receipt_processor: PDF page 0 has no text, using OCR
+[2025-08-15 17:59:38] INFO in chatbot.receipt_processor: 📷 Starting OCR text extraction from image: /tmp/tmpagh1tw_x.png
+[2025-08-15 17:59:38] DEBUG in chatbot.receipt_processor: Initializing EasyOCR reader for image processing...
+[2025-08-15 17:59:40] INFO in chatbot.receipt_processor: EasyOCR detected 102 text regions
+[2025-08-15 17:59:40] DEBUG in chatbot.receipt_processor: Region 1: 'Biedronka' (confidence: 0.99)
+[2025-08-15 17:59:40] DEBUG in chatbot.receipt_processor: Region 2: 'Codziennie niskie ceny' (confidence: 0.95)
+[2025-08-15 17:59:40] DEBUG in chatbot.receipt_processor: Region 3: 'Sklep 3218 TARGOWA' (confidence: 0.57)
+[2025-08-15 17:59:40] DEBUG in chatbot.receipt_processor: Region 4: 'Jeronimo Martins Polska 5. A.' (confidence: 0.78)
+[2025-08-15 17:59:40] DEBUG in chatbot.receipt_processor: Region 5: 'ul. Żniwna 5, 62-025 Kostrzyn' (confidence: 0.79)
+[2025-08-15 17:59:40] DEBUG in chatbot.receipt_processor: Region 6: 'NIP 779-10-11-327' (confidence: 0.68)
+[2025-08-15 17:59:40] DEBUG in chatbot.receipt_processor: Region 7: '02.08.2025 18:18' (confidence: 0.71)
+[2025-08-15 17:59:40] DEBUG in chatbot.receipt_processor: Region 8: 'NIEFISKALNY' (confidence: 1.00)
+[2025-08-15 17:59:40] DEBUG in chatbot.receipt_processor: Region 9: 'Nazwa' (confidence: 1.00)
+[2025-08-15 17:59:40] DEBUG in chatbot.receipt_processor: Region 10: 'PTU' (confidence: 1.00)
+[2025-08-15 17:59:40] DEBUG in chatbot.receipt_processor: Region 11: 'Ilość' (confidence: 0.63)
+[2025-08-15 17:59:40] DEBUG in chatbot.receipt_processor: Region 12: 'Cena' (confidence: 1.00)
+[2025-08-15 17:59:40] DEBUG in chatbot.receipt_processor: Region 13: 'Wartość' (confidence: 1.00)
+[2025-08-15 17:59:40] DEBUG in chatbot.receipt_processor: Region 14: 'PiwoOkoRadLimMię0 ,' (confidence: 0.53)
+[2025-08-15 17:59:40] DEBUG in chatbot.receipt_processor: Region 15: '1.000' (confidence: 1.00)
+[2025-08-15 17:59:40] DEBUG in chatbot.receipt_processor: Region 16: '3,69' (confidence: 0.65)
+[2025-08-15 17:59:40] DEBUG in chatbot.receipt_processor: Region 17: '3,69' (confidence: 1.00)
+[2025-08-15 17:59:40] DEBUG in chatbot.receipt_processor: Region 18: 'PiwoOkoRadLimMięO, :' (confidence: 0.50)
+[2025-08-15 17:59:40] DEBUG in chatbot.receipt_processor: Region 19: '1.000' (confidence: 1.00)
+[2025-08-15 17:59:40] DEBUG in chatbot.receipt_processor: Region 20: '3,69' (confidence: 1.00)
+[2025-08-15 17:59:40] DEBUG in chatbot.receipt_processor: Region 21: '3,69' (confidence: 1.00)
+[2025-08-15 17:59:40] DEBUG in chatbot.receipt_processor: Region 22: 'GranolaOchVitane5oo' (confidence: 0.77)
+[2025-08-15 17:59:40] DEBUG in chatbot.receipt_processor: Region 23: '1.000' (confidence: 0.68)
+[2025-08-15 17:59:40] DEBUG in chatbot.receipt_processor: Region 24: '11,99' (confidence: 0.98)
+[2025-08-15 17:59:40] DEBUG in chatbot.receipt_processor: Region 25: '11,99' (confidence: 0.73)
+[2025-08-15 17:59:40] DEBUG in chatbot.receipt_processor: Region 26: 'ŻelOldSpic4oomIMix' (confidence: 0.55)
+[2025-08-15 17:59:40] DEBUG in chatbot.receipt_processor: Region 27: '1.000 x' (confidence: 0.94)
+[2025-08-15 17:59:40] DEBUG in chatbot.receipt_processor: Region 28: '19,99' (confidence: 1.00)
+[2025-08-15 17:59:40] DEBUG in chatbot.receipt_processor: Region 29: '19,99' (confidence: 1.00)
+[2025-08-15 17:59:40] DEBUG in chatbot.receipt_processor: Region 30: 'Rabat' (confidence: 1.00)
+[2025-08-15 17:59:40] DEBUG in chatbot.receipt_processor: Region 31: '-6,00' (confidence: 0.50)
+[2025-08-15 17:59:40] DEBUG in chatbot.receipt_processor: Region 32: '13,99' (confidence: 0.90)
+[2025-08-15 17:59:40] DEBUG in chatbot.receipt_processor: Region 33: 'ŻelOldSpic4OOmIMix' (confidence: 0.58)
+[2025-08-15 17:59:40] DEBUG in chatbot.receipt_processor: Region 34: '1.000 x' (confidence: 0.92)
+[2025-08-15 17:59:40] DEBUG in chatbot.receipt_processor: Region 35: '19,99' (confidence: 1.00)
+[2025-08-15 17:59:40] DEBUG in chatbot.receipt_processor: Region 36: '19,99' (confidence: 1.00)
+[2025-08-15 17:59:40] DEBUG in chatbot.receipt_processor: Region 37: 'Rabat' (confidence: 1.00)
+[2025-08-15 17:59:40] DEBUG in chatbot.receipt_processor: Region 38: '+6,00' (confidence: 0.55)
+[2025-08-15 17:59:40] DEBUG in chatbot.receipt_processor: Region 39: '13,99' (confidence: 1.00)
+[2025-08-15 17:59:40] DEBUG in chatbot.receipt_processor: Region 40: 'ŚwPodudzieKurczkg' (confidence: 0.98)
+[2025-08-15 17:59:40] DEBUG in chatbot.receipt_processor: Region 41: '0.450' (confidence: 1.00)
+[2025-08-15 17:59:40] DEBUG in chatbot.receipt_processor: Region 42: '13,49' (confidence: 0.96)
+[2025-08-15 17:59:40] DEBUG in chatbot.receipt_processor: Region 43: '6,07' (confidence: 1.00)
+[2025-08-15 17:59:40] DEBUG in chatbot.receipt_processor: Region 44: 'Par zFil z kur250g' (confidence: 0.92)
+[2025-08-15 17:59:40] DEBUG in chatbot.receipt_processor: Region 45: '1.000 x' (confidence: 0.93)
+[2025-08-15 17:59:40] DEBUG in chatbot.receipt_processor: Region 46: '5,99' (confidence: 1.00)
+[2025-08-15 17:59:40] DEBUG in chatbot.receipt_processor: Region 47: '5,99' (confidence: 1.00)
+[2025-08-15 17:59:40] DEBUG in chatbot.receipt_processor: Region 48: 'Rabat' (confidence: 1.00)
+[2025-08-15 17:59:40] DEBUG in chatbot.receipt_processor: Region 49: '-2,20' (confidence: 0.58)
+[2025-08-15 17:59:40] DEBUG in chatbot.receipt_processor: Region 50: '3,79' (confidence: 0.84)
+[2025-08-15 17:59:40] DEBUG in chatbot.receipt_processor: Region 51: 'Par zFil z kur250g' (confidence: 0.92)
+[2025-08-15 17:59:40] DEBUG in chatbot.receipt_processor: Region 52: '1.000' (confidence: 0.98)
+[2025-08-15 17:59:40] DEBUG in chatbot.receipt_processor: Region 53: '5,99' (confidence: 1.00)
+[2025-08-15 17:59:40] DEBUG in chatbot.receipt_processor: Region 54: '5,99' (confidence: 1.00)
+[2025-08-15 17:59:40] DEBUG in chatbot.receipt_processor: Region 55: 'Rabat' (confidence: 1.00)
+[2025-08-15 17:59:40] DEBUG in chatbot.receipt_processor: Region 56: '-2,20' (confidence: 0.84)
+[2025-08-15 17:59:40] DEBUG in chatbot.receipt_processor: Region 57: '3,79' (confidence: 1.00)
+[2025-08-15 17:59:40] DEBUG in chatbot.receipt_processor: Region 58: 'Surówka z pora450g' (confidence: 0.92)
+[2025-08-15 17:59:40] DEBUG in chatbot.receipt_processor: Region 59: '1.000 x' (confidence: 0.97)
+[2025-08-15 17:59:40] DEBUG in chatbot.receipt_processor: Region 60: '4,59' (confidence: 1.00)
+[2025-08-15 17:59:40] DEBUG in chatbot.receipt_processor: Region 61: '4,59' (confidence: 1.00)
+[2025-08-15 17:59:40] DEBUG in chatbot.receipt_processor: Region 62: 'JogurtGreckiFru 400g' (confidence: 0.78)
+[2025-08-15 17:59:40] DEBUG in chatbot.receipt_processor: Region 63: '1.000' (confidence: 0.99)
+[2025-08-15 17:59:40] DEBUG in chatbot.receipt_processor: Region 64: '2,85' (confidence: 0.73)
+[2025-08-15 17:59:40] DEBUG in chatbot.receipt_processor: Region 65: '2,85' (confidence: 1.00)
+[2025-08-15 17:59:40] DEBUG in chatbot.receipt_processor: Region 66: 'Rabat' (confidence: 1.00)
+[2025-08-15 17:59:40] DEBUG in chatbot.receipt_processor: Region 67: '-0,36' (confidence: 0.65)
+[2025-08-15 17:59:40] DEBUG in chatbot.receipt_processor: Region 68: '2,49' (confidence: 0.69)
+[2025-08-15 17:59:40] DEBUG in chatbot.receipt_processor: Region 69: 'JogurtGreckiFru 400g' (confidence: 0.78)
+[2025-08-15 17:59:40] DEBUG in chatbot.receipt_processor: Region 70: '1.000 x' (confidence: 0.83)
+[2025-08-15 17:59:40] DEBUG in chatbot.receipt_processor: Region 71: '2,85' (confidence: 0.87)
+[2025-08-15 17:59:40] DEBUG in chatbot.receipt_processor: Region 72: '2,85' (confidence: 1.00)
+[2025-08-15 17:59:40] DEBUG in chatbot.receipt_processor: Region 73: 'Rabat' (confidence: 1.00)
+[2025-08-15 17:59:40] DEBUG in chatbot.receipt_processor: Region 74: '-0,36' (confidence: 0.79)
+[2025-08-15 17:59:40] DEBUG in chatbot.receipt_processor: Region 75: '2,49' (confidence: 0.70)
+[2025-08-15 17:59:40] DEBUG in chatbot.receipt_processor: Region 76: 'JogurtGreckiFru 400g' (confidence: 0.81)
+[2025-08-15 17:59:40] DEBUG in chatbot.receipt_processor: Region 77: '1.000' (confidence: 0.98)
+[2025-08-15 17:59:40] DEBUG in chatbot.receipt_processor: Region 78: '2,85' (confidence: 0.99)
+[2025-08-15 17:59:40] DEBUG in chatbot.receipt_processor: Region 79: '2,85' (confidence: 0.98)
+[2025-08-15 17:59:40] DEBUG in chatbot.receipt_processor: Region 80: 'Rabat' (confidence: 1.00)
+[2025-08-15 17:59:40] DEBUG in chatbot.receipt_processor: Region 81: '-0,36' (confidence: 0.71)
+[2025-08-15 17:59:40] DEBUG in chatbot.receipt_processor: Region 82: '2,49' (confidence: 1.00)
+[2025-08-15 17:59:40] DEBUG in chatbot.receipt_processor: Region 83: 'Win' (confidence: 1.00)
+[2025-08-15 17:59:40] DEBUG in chatbot.receipt_processor: Region 84: 'op 500g' (confidence: 0.91)
+[2025-08-15 17:59:40] DEBUG in chatbot.receipt_processor: Region 85: '1.000' (confidence: 0.87)
+[2025-08-15 17:59:40] DEBUG in chatbot.receipt_processor: Region 86: '9,99' (confidence: 0.99)
+[2025-08-15 17:59:40] DEBUG in chatbot.receipt_processor: Region 87: '9,99' (confidence: 1.00)
+[2025-08-15 17:59:40] DEBUG in chatbot.receipt_processor: Region 88: 'Rabat' (confidence: 1.00)
+[2025-08-15 17:59:40] DEBUG in chatbot.receipt_processor: Region 89: '-5,00' (confidence: 0.77)
+[2025-08-15 17:59:40] DEBUG in chatbot.receipt_processor: Region 90: '4,99' (confidence: 1.00)
+[2025-08-15 17:59:40] DEBUG in chatbot.receipt_processor: Region 91: 'Pizza z kurcz' (confidence: 0.92)
+[2025-08-15 17:59:40] DEBUG in chatbot.receipt_processor: Region 92: '1.000' (confidence: 0.60)
+[2025-08-15 17:59:40] DEBUG in chatbot.receipt_processor: Region 93: '12,79' (confidence: 1.00)
+[2025-08-15 17:59:40] DEBUG in chatbot.receipt_processor: Region 94: '12,79' (confidence: 1.00)
+[2025-08-15 17:59:40] DEBUG in chatbot.receipt_processor: Region 95: 'GulaszNS4OOg' (confidence: 0.90)
+[2025-08-15 17:59:40] DEBUG in chatbot.receipt_processor: Region 96: '1.000' (confidence: 1.00)
+[2025-08-15 17:59:40] DEBUG in chatbot.receipt_processor: Region 97: '11,99' (confidence: 1.00)
+[2025-08-15 17:59:40] DEBUG in chatbot.receipt_processor: Region 98: '11,99' (confidence: 0.80)
+[2025-08-15 17:59:40] DEBUG in chatbot.receipt_processor: Region 99: '3218/13/118/02.08.2025' (confidence: 0.68)
+[2025-08-15 17:59:40] DEBUG in chatbot.receipt_processor: Region 100: 'Strona 1 z 2' (confidence: 0.98)
+[2025-08-15 17:59:40] DEBUG in chatbot.receipt_processor: Region 101: 'bezp' (confidence: 1.00)
+[2025-08-15 17:59:40] DEBUG in chatbot.receipt_processor: Region 102: '400g' (confidence: 0.63)
+[2025-08-15 17:59:40] INFO in chatbot.receipt_processor: ✅ OCR extraction completed. Total text length: 908 characters
+[2025-08-15 17:59:40] DEBUG in chatbot.receipt_processor: OCR extracted text: Biedronka Codziennie niskie ceny Sklep 3218 TARGOWA Jeronimo Martins Polska 5. A. ul. Żniwna 5, 62-025 Kostrzyn NIP 779-10-11-327 02.08.2025 18:18 NIEFISKALNY Nazwa PTU Ilość Cena Wartość PiwoOkoRadLimMię0 , 1.000 3,69 3,69 PiwoOkoRadLimMięO, : 1.000 3,69 3,69 GranolaOchVitane5oo 1.000 11,99 11,99 ŻelOldSpic4oomIMix 1.000 x 19,99 19,99 Rabat -6,00 13,99 ŻelOldSpic4OOmIMix 1.000 x 19,99 19,99 Rabat +6,00 13,99 ŚwPodudzieKurczkg 0.450 13,49 6,07 Par zFil z kur250g 1.000 x 5,99 5,99 Rabat -2,20 3,79 Par zFil z kur250g 1.000 5,99 5,99 Rabat -2,20 3,79 Surówka z pora450g 1.000 x 4,59 4,59 JogurtGreckiFru 400g 1.000 2,85 2,85 Rabat -0,36 2,49 JogurtGreckiFru 400g 1.000 x 2,85 2,85 Rabat -0,36 2,49 JogurtGreckiFru 400g 1.000 2,85 2,85 Rabat -0,36 2,49 Win op 500g 1.000 9,99 9,99 Rabat -5,00 4,99 Pizza z kurcz 1.000 12,79 12,79 GulaszNS4OOg 1.000 11,99 11,99 3218/13/118/02.08.2025 Strona 1 z 2 bezp 400g
+[2025-08-15 17:59:40] INFO in chatbot.receipt_processor: PDF page 1 has no text, using OCR
+[2025-08-15 17:59:40] INFO in chatbot.receipt_processor: 📷 Starting OCR text extraction from image: /tmp/tmpea17dz25.png
+[2025-08-15 17:59:40] DEBUG in chatbot.receipt_processor: Initializing EasyOCR reader for image processing...
+[2025-08-15 17:59:40] INFO in chatbot.receipt_processor: EasyOCR detected 20 text regions
+[2025-08-15 17:59:40] DEBUG in chatbot.receipt_processor: Region 1: 'Sprzedaż opodatkowana C' (confidence: 0.64)
+[2025-08-15 17:59:40] DEBUG in chatbot.receipt_processor: Region 2: '74,85' (confidence: 1.00)
+[2025-08-15 17:59:40] DEBUG in chatbot.receipt_processor: Region 3: 'PTU C 5%' (confidence: 0.84)
+[2025-08-15 17:59:40] DEBUG in chatbot.receipt_processor: Region 4: '3,56' (confidence: 1.00)
+[2025-08-15 17:59:40] DEBUG in chatbot.receipt_processor: Region 5: 'Sprzedaż opodatkowana' (confidence: 0.68)
+[2025-08-15 17:59:40] DEBUG in chatbot.receipt_processor: Region 6: '27,98' (confidence: 0.99)
+[2025-08-15 17:59:40] DEBUG in chatbot.receipt_processor: Region 7: 'PTU A 23%' (confidence: 0.79)
+[2025-08-15 17:59:40] DEBUG in chatbot.receipt_processor: Region 8: '5,23' (confidence: 0.82)
+[2025-08-15 17:59:40] DEBUG in chatbot.receipt_processor: Region 9: 'Suma PTU' (confidence: 0.92)
+[2025-08-15 17:59:40] DEBUG in chatbot.receipt_processor: Region 10: '8,79' (confidence: 0.99)
+[2025-08-15 17:59:40] DEBUG in chatbot.receipt_processor: Region 11: 'Suma PLN' (confidence: 0.87)
+[2025-08-15 17:59:40] DEBUG in chatbot.receipt_processor: Region 12: '102,83' (confidence: 1.00)
+[2025-08-15 17:59:40] DEBUG in chatbot.receipt_processor: Region 13: 'Kasa 13 Kasjer' (confidence: 0.97)
+[2025-08-15 17:59:40] DEBUG in chatbot.receipt_processor: Region 14: '1000032180118204013106' (confidence: 0.94)
+[2025-08-15 17:59:40] DEBUG in chatbot.receipt_processor: Region 15: 'Inna BLIK' (confidence: 0.98)
+[2025-08-15 17:59:40] DEBUG in chatbot.receipt_processor: Region 16: '102,83' (confidence: 1.00)
+[2025-08-15 17:59:40] DEBUG in chatbot.receipt_processor: Region 17: 'Numer transakcji' (confidence: 0.90)
+[2025-08-15 17:59:40] DEBUG in chatbot.receipt_processor: Region 18: '118' (confidence: 1.00)
+[2025-08-15 17:59:40] DEBUG in chatbot.receipt_processor: Region 19: '3218/13/118/02.08.2025' (confidence: 0.68)
+[2025-08-15 17:59:40] DEBUG in chatbot.receipt_processor: Region 20: 'Strona 2 z 2' (confidence: 0.99)
+[2025-08-15 17:59:40] INFO in chatbot.receipt_processor: ✅ OCR extraction completed. Total text length: 228 characters
+[2025-08-15 17:59:40] DEBUG in chatbot.receipt_processor: OCR extracted text: Sprzedaż opodatkowana C 74,85 PTU C 5% 3,56 Sprzedaż opodatkowana 27,98 PTU A 23% 5,23 Suma PTU 8,79 Suma PLN 102,83 Kasa 13 Kasjer 1000032180118204013106 Inna BLIK 102,83 Numer transakcji 118 3218/13/118/02.08.2025 Strona 2 z 2
+[2025-08-15 17:59:40] INFO in chatbot.receipt_processor: PDF text extracted: Biedronka Codziennie niskie ceny Sklep 3218 TARGOWA Jeronimo Martins Polska 5. A. ul. Żniwna 5, 62-025 Kostrzyn NIP 779-10-11-327 02.08.2025 18:18 NIEFISKALNY Nazwa PTU Ilość Cena Wartość PiwoOkoRadLimMię0 , 1.000 3,69 3,69 PiwoOkoRadLimMięO, : 1.000 3,69 3,69 GranolaOchVitane5oo 1.000 11,99 11,99 ŻelOldSpic4oomIMix 1.000 x 19,99 19,99 Rabat -6,00 13,99 ŻelOldSpic4OOmIMix 1.000 x 19,99 19,99 Rabat +6,00 13,99 ŚwPodudzieKurczkg 0.450 13,49 6,07 Par zFil z kur250g 1.000 x 5,99 5,99 Rabat -2,20 3,79 Par zFil z kur250g 1.000 5,99 5,99 Rabat -2,20 3,79 Surówka z pora450g 1.000 x 4,59 4,59 JogurtGreckiFru 400g 1.000 2,85 2,85 Rabat -0,36 2,49 JogurtGreckiFru 400g 1.000 x 2,85 2,85 Rabat -0,36 2,49 JogurtGreckiFru 400g 1.000 2,85 2,85 Rabat -0,36 2,49 Win op 500g 1.000 9,99 9,99 Rabat -5,00 4,99 Pizza z kurcz 1.000 12,79 12,79 GulaszNS4OOg 1.000 11,99 11,99 3218/13/118/02.08.2025 Strona 1 z 2 bezp 400g
+Sprzedaż opodatkowana C 74,85 PTU C 5% 3,56 Sprzedaż opodatkowana 27,98 PTU A 23% 5,23 Suma PTU 8,79 Suma PLN 102,83 Kasa 13 Kasjer 1000032180118204013106 Inna BLIK 102,83 Numer transakcji 118 3218/13/118/02.08.2025 Strona 2 z 2
+
+[2025-08-15 17:59:40] INFO in chatbot.receipt_processor: ✅ OCR text extraction completed. Extracted 1137 characters
+[2025-08-15 17:59:40] DEBUG in chatbot.receipt_processor: Extracted text preview: Biedronka Codziennie niskie ceny Sklep 3218 TARGOWA Jeronimo Martins Polska 5. A. ul. Żniwna 5, 62-025 Kostrzyn NIP 779-10-11-327 02.08.2025 18:18 NIEFISKALNY Nazwa PTU Ilość Cena Wartość PiwoOkoRadLi...
+[2025-08-15 17:59:40] INFO in chatbot.receipt_processor: Receipt 16 status updated to 'ocr_done'
+[2025-08-15 17:59:40] INFO in chatbot.receipt_processor: 🤖 Starting LLM product extraction for receipt 16
+[2025-08-15 17:59:40] DEBUG in chatbot.receipt_processor: Receipt 16 status updated to 'llm_in_progress'
+[2025-08-15 17:59:40] INFO in chatbot.receipt_processor: 🤖 Starting LLM product extraction...
+[2025-08-15 17:59:40] DEBUG in chatbot.receipt_processor: Input text length: 1137 characters
+[2025-08-15 17:59:40] DEBUG in chatbot.receipt_processor: Input text preview: Biedronka Codziennie niskie ceny Sklep 3218 TARGOWA Jeronimo Martins Polska 5. A. ul. Żniwna 5, 62-025 Kostrzyn NIP 779-10-11-327 02.08.2025 18:18 NIEFISKALNY Nazwa PTU Ilość Cena Wartość PiwoOkoRadLimMię0 , 1.000 3,69 3,69 PiwoOkoRadLimMięO, : 1.000 3,69 3,69 GranolaOchVitane5oo 1.000 11,99 11,99 Ż...
+[2025-08-15 17:59:40] DEBUG in chatbot.receipt_processor: Prepared LLM prompt (length: 807 chars)
+[2025-08-15 17:59:40] INFO in chatbot.receipt_processor: Sending request to LLM model...
+[2025-08-15 17:59:40] DEBUG in chatbot.receipt_processor: Initializing OllamaAgent for product extraction...
+[2025-08-15 17:59:40] INFO in chatbot.receipt_processor: Calling LLM to process receipt text...

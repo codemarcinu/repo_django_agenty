@@ -570,3 +570,81 @@ WARNING 2025-08-15 17:45:41,259 log 71287 140662292870848 Bad Request: /api/rece
 WARNING 2025-08-15 17:45:41,259 basehttp 71287 140662292870848 "POST /api/receipts/upload/ HTTP/1.1" 400 94
 WARNING 2025-08-15 17:45:45,992 log 71287 140662292870848 Not Found: /api/receipts/1/status/
 WARNING 2025-08-15 17:45:45,992 basehttp 71287 140662292870848 "GET /api/receipts/1/status/ HTTP/1.1" 404 29
+INFO 2025-08-15 17:46:32,191 basehttp 71287 140662292870848 "GET / HTTP/1.1" 200 27351
+INFO 2025-08-15 17:46:39,237 basehttp 71287 140662292870848 "GET /receipts/upload/ HTTP/1.1" 200 21255
+INFO 2025-08-15 17:46:43,902 views 71287 140662292870848 === STARTING RECEIPT UPLOAD PROCESS ===
+INFO 2025-08-15 17:46:43,902 views 71287 140662292870848 === STARTING RECEIPT UPLOAD PROCESS ===
+DEBUG 2025-08-15 17:46:43,902 views 71287 140662292870848 Form data: {'receipt_file': <InMemoryUploadedFile: 2508020118133218.pdf (application/pdf)>}
+DEBUG 2025-08-15 17:46:43,902 views 71287 140662292870848 Form data: {'receipt_file': <InMemoryUploadedFile: 2508020118133218.pdf (application/pdf)>}
+INFO 2025-08-15 17:46:43,902 views 71287 140662292870848 Uploaded file: 2508020118133218.pdf, size: 655865 bytes, content_type: application/pdf
+INFO 2025-08-15 17:46:43,902 views 71287 140662292870848 Uploaded file: 2508020118133218.pdf, size: 655865 bytes, content_type: application/pdf
+INFO 2025-08-15 17:46:43,902 views 71287 140662292870848 Creating receipt record...
+INFO 2025-08-15 17:46:43,902 views 71287 140662292870848 Creating receipt record...
+INFO 2025-08-15 17:46:43,909 views 71287 140662292870848 ✅ Receipt record created successfully with ID: 13
+INFO 2025-08-15 17:46:43,909 views 71287 140662292870848 ✅ Receipt record created successfully with ID: 13
+DEBUG 2025-08-15 17:46:43,909 views 71287 140662292870848 Receipt record details: status=uploaded, file_path=receipt_files/2508020118133218_BzSm5Ds.pdf
+DEBUG 2025-08-15 17:46:43,909 views 71287 140662292870848 Receipt record details: status=uploaded, file_path=receipt_files/2508020118133218_BzSm5Ds.pdf
+INFO 2025-08-15 17:46:43,910 views 71287 140662292870848 Starting processing for receipt ID: 13
+INFO 2025-08-15 17:46:43,910 views 71287 140662292870848 Starting processing for receipt ID: 13
+INFO 2025-08-15 17:47:02,978 views 71287 140662292870848 ✅ Processing started successfully for receipt 13
+INFO 2025-08-15 17:47:02,978 views 71287 140662292870848 ✅ Processing started successfully for receipt 13
+INFO 2025-08-15 17:47:02,978 views 71287 140662292870848 Success URL set to: /receipts/13/status/
+INFO 2025-08-15 17:47:02,978 views 71287 140662292870848 Success URL set to: /receipts/13/status/
+INFO 2025-08-15 17:47:02,978 views 71287 140662292870848 === RECEIPT UPLOAD PROCESS COMPLETED ===
+INFO 2025-08-15 17:47:02,978 views 71287 140662292870848 === RECEIPT UPLOAD PROCESS COMPLETED ===
+INFO 2025-08-15 17:47:02,979 basehttp 71287 140662292870848 "POST /receipts/upload/ HTTP/1.1" 302 0
+INFO 2025-08-15 17:47:02,983 basehttp 71287 140662292870848 "GET /receipts/13/status/ HTTP/1.1" 200 29337
+WARNING 2025-08-15 17:47:05,155 log 71287 140662292870848 Not Found: /api/receipts/13/status/
+WARNING 2025-08-15 17:47:05,155 basehttp 71287 140662292870848 "GET /api/receipts/13/status/ HTTP/1.1" 404 29
+INFO 2025-08-15 17:47:24,766 autoreload 71748 139667118967744 Watching for file changes with StatReloader
+INFO 2025-08-15 17:47:41,087 basehttp 71748 139659619333824 "GET /receipts/upload/ HTTP/1.1" 200 21255
+INFO 2025-08-15 17:47:45,096 views 71748 139659619333824 === STARTING RECEIPT UPLOAD PROCESS ===
+INFO 2025-08-15 17:47:45,096 views 71748 139659619333824 === STARTING RECEIPT UPLOAD PROCESS ===
+DEBUG 2025-08-15 17:47:45,096 views 71748 139659619333824 Form data: {'receipt_file': <InMemoryUploadedFile: 2508020118133218.pdf (application/pdf)>}
+DEBUG 2025-08-15 17:47:45,096 views 71748 139659619333824 Form data: {'receipt_file': <InMemoryUploadedFile: 2508020118133218.pdf (application/pdf)>}
+INFO 2025-08-15 17:47:45,096 views 71748 139659619333824 Uploaded file: 2508020118133218.pdf, size: 655865 bytes, content_type: application/pdf
+INFO 2025-08-15 17:47:45,096 views 71748 139659619333824 Uploaded file: 2508020118133218.pdf, size: 655865 bytes, content_type: application/pdf
+INFO 2025-08-15 17:47:45,096 views 71748 139659619333824 Creating receipt record...
+INFO 2025-08-15 17:47:45,096 views 71748 139659619333824 Creating receipt record...
+INFO 2025-08-15 17:47:45,104 views 71748 139659619333824 ✅ Receipt record created successfully with ID: 14
+INFO 2025-08-15 17:47:45,104 views 71748 139659619333824 ✅ Receipt record created successfully with ID: 14
+DEBUG 2025-08-15 17:47:45,104 views 71748 139659619333824 Receipt record details: status=uploaded, file_path=receipt_files/2508020118133218_M79Vh6J.pdf
+DEBUG 2025-08-15 17:47:45,104 views 71748 139659619333824 Receipt record details: status=uploaded, file_path=receipt_files/2508020118133218_M79Vh6J.pdf
+INFO 2025-08-15 17:47:45,104 views 71748 139659619333824 Starting processing for receipt ID: 14
+INFO 2025-08-15 17:47:45,104 views 71748 139659619333824 Starting processing for receipt ID: 14
+INFO 2025-08-15 17:48:04,296 views 71748 139659619333824 ✅ Processing started successfully for receipt 14
+INFO 2025-08-15 17:48:04,296 views 71748 139659619333824 ✅ Processing started successfully for receipt 14
+INFO 2025-08-15 17:48:04,296 views 71748 139659619333824 Success URL set to: /receipts/14/status/
+INFO 2025-08-15 17:48:04,296 views 71748 139659619333824 Success URL set to: /receipts/14/status/
+INFO 2025-08-15 17:48:04,296 views 71748 139659619333824 === RECEIPT UPLOAD PROCESS COMPLETED ===
+INFO 2025-08-15 17:48:04,296 views 71748 139659619333824 === RECEIPT UPLOAD PROCESS COMPLETED ===
+INFO 2025-08-15 17:48:04,296 basehttp 71748 139659619333824 "POST /receipts/upload/ HTTP/1.1" 302 0
+INFO 2025-08-15 17:48:04,301 basehttp 71748 139659619333824 "GET /receipts/14/status/ HTTP/1.1" 200 29337
+WARNING 2025-08-15 17:48:06,462 log 71748 139659619333824 Not Found: /api/receipts/14/status/
+WARNING 2025-08-15 17:48:06,463 basehttp 71748 139659619333824 "GET /api/receipts/14/status/ HTTP/1.1" 404 29
+INFO 2025-08-15 17:50:23,299 autoreload 71748 139667118967744 /home/marcin/PycharmProjects/agenty/chatbot/validators.py changed, reloading.
+INFO 2025-08-15 17:50:24,661 autoreload 72370 139965718145984 Watching for file changes with StatReloader
+INFO 2025-08-15 17:51:05,285 autoreload 72536 140536715267008 Watching for file changes with StatReloader
+INFO 2025-08-15 17:51:48,936 autoreload 72744 140265344068544 Watching for file changes with StatReloader
+INFO 2025-08-15 17:52:24,906 basehttp 72744 140258014394048 "POST /api/receipts/upload/ HTTP/1.1" 201 240
+INFO 2025-08-15 17:52:29,563 basehttp 72744 140258014394048 "GET /api/receipts/1/status/ HTTP/1.1" 200 309
+INFO 2025-08-15 17:54:23,178 autoreload 72744 140265344068544 /home/marcin/PycharmProjects/agenty/chatbot/api/receipt_views.py changed, reloading.
+INFO 2025-08-15 17:54:24,729 autoreload 73016 140300857019328 Watching for file changes with StatReloader
+INFO 2025-08-15 17:54:43,976 autoreload 73016 140300857019328 /home/marcin/PycharmProjects/agenty/chatbot/api/receipt_views.py changed, reloading.
+INFO 2025-08-15 17:54:44,722 autoreload 73077 140151567084480 Watching for file changes with StatReloader
+INFO 2025-08-15 17:54:58,902 autoreload 73077 140151567084480 /home/marcin/PycharmProjects/agenty/chatbot/api/receipt_views.py changed, reloading.
+INFO 2025-08-15 17:54:59,687 autoreload 73130 140229801438144 Watching for file changes with StatReloader
+INFO 2025-08-15 17:55:17,926 autoreload 73130 140229801438144 /home/marcin/PycharmProjects/agenty/chatbot/api/receipt_views.py changed, reloading.
+INFO 2025-08-15 17:55:18,662 autoreload 73179 140015561137088 Watching for file changes with StatReloader
+INFO 2025-08-15 17:55:52,086 autoreload 73179 140015561137088 /home/marcin/PycharmProjects/agenty/chatbot/api/receipt_views.py changed, reloading.
+INFO 2025-08-15 17:55:53,151 autoreload 73241 139837199670208 Watching for file changes with StatReloader
+INFO 2025-08-15 17:56:06,902 autoreload 73241 139837199670208 /home/marcin/PycharmProjects/agenty/chatbot/api/receipt_views.py changed, reloading.
+INFO 2025-08-15 17:56:08,280 autoreload 73303 140005206891456 Watching for file changes with StatReloader
+INFO 2025-08-15 17:56:30,135 basehttp 73303 139997705402048 "POST /api/receipts/upload/ HTTP/1.1" 201 222
+INFO 2025-08-15 17:56:39,986 basehttp 73303 139997705402048 "GET /api/receipts/15/status/ HTTP/1.1" 200 216
+INFO 2025-08-15 17:56:58,809 basehttp 73303 139997705402048 "GET /api/receipts/15/status/ HTTP/1.1" 200 216
+INFO 2025-08-15 17:57:51,095 basehttp 73303 139997705402048 "GET /api/receipts/15/status/ HTTP/1.1" 200 216
+INFO 2025-08-15 17:58:17,978 autoreload 73303 140005206891456 /home/marcin/PycharmProjects/agenty/chatbot/tasks.py changed, reloading.
+INFO 2025-08-15 17:58:19,569 autoreload 73623 139740215241664 Watching for file changes with StatReloader
+INFO 2025-08-15 17:58:30,811 basehttp 73623 139732881241792 "POST /api/receipts/upload/ HTTP/1.1" 201 222
+INFO 2025-08-15 17:58:43,431 basehttp 73623 139732881241792 "GET /api/receipts/16/status/ HTTP/1.1" 200 216

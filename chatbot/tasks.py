@@ -19,7 +19,8 @@ def process_document_task(document_id):
 @shared_task
 def process_receipt_task(receipt_id):
     try:
-        receipt_processor.process_receipt(receipt_id)
+        import asyncio
+        asyncio.run(receipt_processor.process_receipt(receipt_id))
         logger.info(f"Receipt {receipt_id} processed successfully by Celery task.")
     except Exception as e:
         logger.error(f"Error processing receipt {receipt_id} by Celery task: {e}", exc_info=True)

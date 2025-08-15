@@ -48,9 +48,21 @@ def validate_receipt_file(file):
 def get_file_type(file):
     """
     Determine if uploaded file is image or PDF.
+    Accepts both file objects (with .name attribute) and file paths (strings).
     Returns: 'image' or 'pdf'
     """
-    file_extension = os.path.splitext(file.name)[1].lower()
+    # Handle both file objects and string paths
+    if hasattr(file, 'name'):
+        # File object with .name attribute
+        filename = file.name
+    elif isinstance(file, str):
+        # String path
+        filename = file
+    else:
+        # Fallback - convert to string
+        filename = str(file)
+    
+    file_extension = os.path.splitext(filename)[1].lower()
     
     if file_extension == '.pdf':
         return 'pdf'

@@ -15,6 +15,8 @@ from rest_framework.response import Response
 from drf_spectacular.utils import extend_schema, OpenApiResponse
 
 from inventory.models import Receipt
+from chatbot.models import ReceiptProcessing
+from chatbot.services.receipt_service import ReceiptService
 from .serializers import ReceiptUploadSerializer, ReceiptUploadResponseSerializer
 
 
@@ -85,32 +87,28 @@ def upload_receipt(request):
     try:
         uploaded_file = serializer.validated_data['file']
         
-        # Generate unique file path
-        file_path = get_upload_path(uploaded_file.name)
+        # Use ReceiptService to create and start processing
+        receipt_service = ReceiptService()
+        receipt_processing = receipt_service.create_receipt_record(uploaded_file)
         
-        # Save file to storage
-        saved_path = default_storage.save(file_path, uploaded_file)
+        # Start processing (this will trigger OCR)
+        processing_started = receipt_service.start_processing(receipt_processing.id)
         
-        # Get absolute path for storage
-        absolute_path = default_storage.path(saved_path) if hasattr(default_storage, 'path') else saved_path
-        
-        # Create Receipt record
-        receipt = Receipt.objects.create(
-            purchased_at=timezone.now(),  # Set upload time as default
-            total=0.00,  # Will be updated after OCR processing
-            source_file_path=absolute_path,
-            status='pending_ocr',
-            processing_notes=f"File uploaded: {uploaded_file.name} ({uploaded_file.size} bytes)"
-        )
+        if processing_started:
+            status_msg = 'Receipt uploaded successfully. Processing started.'
+            processing_status = 'processing'
+        else:
+            status_msg = 'Receipt uploaded but processing failed to start.'
+            processing_status = 'error'
         
         # Prepare response
         response_data = {
-            'receipt_id': receipt.id,
-            'status': receipt.status,
-            'message': 'Receipt uploaded successfully. Queued for OCR processing.',
-            'file_path': saved_path,
+            'receipt_id': receipt_processing.id,
+            'status': processing_status,
+            'message': status_msg,
+            'file_path': receipt_processing.receipt_file.name,
             'file_size': uploaded_file.size,
-            'uploaded_at': receipt.created_at
+            'uploaded_at': receipt_processing.created_at if hasattr(receipt_processing, 'created_at') else timezone.now()
         }
         
         response_serializer = ReceiptUploadResponseSerializer(data=response_data)
@@ -158,24 +156,23 @@ def receipt_status(request, receipt_id):
         Receipt status information
     """
     try:
-        receipt = Receipt.objects.get(id=receipt_id)
+        receipt_processing = ReceiptProcessing.objects.get(id=receipt_id)
         
         data = {
-            'receipt_id': receipt.id,
-            'status': receipt.status,
-            'store_name': receipt.store_name,
-            'total': str(receipt.total) if receipt.total else None,
-            'currency': receipt.currency,
-            'purchased_at': receipt.purchased_at,
-            'processing_notes': receipt.processing_notes,
-            'line_items_count': receipt.line_items.count(),
-            'created_at': receipt.created_at,
-            'updated_at': receipt.updated_at
+            'receipt_id': receipt_processing.id,
+            'status': receipt_processing.status,
+            'file_path': receipt_processing.receipt_file.name if receipt_processing.receipt_file else None,
+            'raw_ocr_text': receipt_processing.raw_ocr_text[:200] + '...' if receipt_processing.raw_ocr_text and len(receipt_processing.raw_ocr_text) > 200 else receipt_processing.raw_ocr_text,
+            'extracted_data': receipt_processing.extracted_data,
+            'error_message': receipt_processing.error_message,
+            'processed_at': receipt_processing.processed_at,
+            'created_at': getattr(receipt_processing, 'created_at', None),
+            'updated_at': getattr(receipt_processing, 'updated_at', None)
         }
         
         return Response(data, status=status.HTTP_200_OK)
         
-    except Receipt.DoesNotExist:
+    except ReceiptProcessing.DoesNotExist:
         return Response(
             {"error": "Receipt not found"},
             status=status.HTTP_404_NOT_FOUND
