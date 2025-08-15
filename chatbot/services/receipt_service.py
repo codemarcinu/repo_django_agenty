@@ -428,6 +428,153 @@ class ReceiptService:
                 pass
             return False
     
+    def process_receipt_matching(self, receipt_id: int) -> bool:
+        """
+        Process product matching from parsed data to catalog products.
+        
+        Args:
+            receipt_id: ID of the Receipt to match products
+            
+        Returns:
+            True if matching succeeded, False otherwise
+        """
+        try:
+            receipt = Receipt.objects.get(id=receipt_id)
+            
+            if receipt.status != 'parsing_completed':
+                logger.warning(f"Receipt {receipt_id} is not in parsing_completed status: {receipt.status}")
+                return False
+            
+            # Check if we have parsed data
+            if not receipt.parsed_data or not isinstance(receipt.parsed_data, dict):
+                error_msg = "No valid parsed data"
+                logger.error(f"Receipt {receipt_id} has no valid parsed data")
+                receipt.status = 'error'
+                receipt.processing_notes = f"Matching failed: {error_msg}"
+                receipt.save()
+                return False
+            
+            products_data = receipt.parsed_data.get('products', [])
+            if not products_data:
+                error_msg = "No products in parsed data"
+                logger.error(f"Receipt {receipt_id} has no products in parsed data")
+                receipt.status = 'error'
+                receipt.processing_notes = f"Matching failed: {error_msg}"
+                receipt.save()
+                return False
+            
+            # Update status to matching
+            receipt.status = 'matching'
+            receipt.save()
+            
+            logger.info(f"Starting product matching for receipt {receipt_id}: {len(products_data)} products")
+            
+            # Convert parsed data to ParsedProduct objects
+            from .receipt_parser import ParsedProduct
+            from .product_matcher import get_product_matcher
+            from decimal import Decimal
+            
+            parsed_products = []
+            for product_data in products_data:
+                parsed_product = ParsedProduct(
+                    name=product_data.get('name', ''),
+                    quantity=product_data.get('quantity'),
+                    unit_price=Decimal(product_data['unit_price']) if product_data.get('unit_price') else None,
+                    total_price=Decimal(product_data['total_price']) if product_data.get('total_price') else None,
+                    unit=product_data.get('unit'),
+                    category=product_data.get('category'),
+                    confidence=product_data.get('confidence', 0.0),
+                    raw_line=product_data.get('raw_line')
+                )
+                parsed_products.append(parsed_product)
+            
+            # Get matcher and match products
+            matcher = get_product_matcher()
+            match_results = matcher.batch_match_products(parsed_products)
+            
+            if not match_results:
+                error_msg = "Product matching returned no results"
+                logger.error(f"Matching failed for receipt {receipt_id}: {error_msg}")
+                receipt.status = 'error'
+                receipt.processing_notes = f"Matching failed: {error_msg}"
+                receipt.save()
+                return False
+            
+            # Create ReceiptLineItem records for matched products
+            from inventory.models import ReceiptLineItem
+            from decimal import Decimal
+            
+            line_items_created = 0
+            total_calculated = Decimal('0.00')
+            
+            for i, (parsed_product, match_result) in enumerate(zip(parsed_products, match_results)):
+                try:
+                    # Create line item
+                    line_item = ReceiptLineItem.objects.create(
+                        receipt=receipt,
+                        product_name=parsed_product.name,
+                        quantity=Decimal(str(parsed_product.quantity or 1.0)),
+                        unit_price=parsed_product.unit_price or Decimal('0.00'),
+                        line_total=parsed_product.total_price or Decimal('0.00'),
+                        matched_product=match_result.product,
+                        meta={
+                            'match_confidence': match_result.confidence,
+                            'match_type': match_result.match_type,
+                            'normalized_name': match_result.normalized_name,
+                            'similarity_score': match_result.similarity_score,
+                            'original_line': parsed_product.raw_line,
+                            'line_number': i + 1
+                        }
+                    )
+                    
+                    line_items_created += 1
+                    total_calculated += line_item.line_total
+                    
+                    # Add alias to matched product if it's a good match
+                    if match_result.product and match_result.confidence >= 0.8:
+                        matcher.update_product_aliases(match_result.product, parsed_product.name)
+                    
+                except Exception as e:
+                    logger.error(f"Error creating line item for product '{parsed_product.name}': {e}")
+                    continue
+            
+            # Update receipt with matching results
+            receipt.status = 'completed'
+            
+            # Calculate matching statistics
+            exact_matches = sum(1 for r in match_results if r.match_type == 'exact')
+            fuzzy_matches = sum(1 for r in match_results if r.match_type == 'fuzzy')
+            alias_matches = sum(1 for r in match_results if r.match_type == 'alias')
+            ghost_created = sum(1 for r in match_results if r.match_type == 'created')
+            
+            # Update processing notes
+            receipt.processing_notes += f"\nMatching completed: {line_items_created} line items created. "
+            receipt.processing_notes += f"Exact: {exact_matches}, Fuzzy: {fuzzy_matches}, Alias: {alias_matches}, New: {ghost_created}. "
+            receipt.processing_notes += f"Calculated total: {total_calculated}"
+            
+            # Update total if we calculated one and original is missing
+            if receipt.total == Decimal('0.00') and total_calculated > Decimal('0.00'):
+                receipt.total = total_calculated
+            
+            receipt.save()
+            
+            logger.info(f"Matching completed for receipt {receipt_id}: {line_items_created} line items created")
+            return True
+            
+        except Receipt.DoesNotExist:
+            logger.error(f"Receipt {receipt_id} not found")
+            return False
+        except Exception as e:
+            logger.error(f"Error during matching for receipt {receipt_id}: {e}", exc_info=True)
+            try:
+                receipt = Receipt.objects.get(id=receipt_id)
+                receipt.status = 'error'
+                receipt.processing_notes = f"Matching error: {str(e)}"
+                receipt.save()
+            except:
+                pass
+            return False
+    
     def get_recent_receipts(self, limit: int = 10) -> List[ReceiptProcessing]:
         """
         Get recent receipt processing records.
