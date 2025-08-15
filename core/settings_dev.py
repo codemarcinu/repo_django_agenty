@@ -287,3 +287,13 @@ import os
 logs_dir = BASE_DIR / 'logs'
 if not os.path.exists(logs_dir):
     os.makedirs(logs_dir)
+
+# OCR Configuration
+OCR_CONFIG = {
+    'enable_easyocr': True,
+    'enable_tesseract': True,
+    'easyocr_languages': ['pl', 'en'],
+    'tesseract_language': 'pol+eng',
+    'fallback_enabled': True,
+    'confidence_threshold': 0.5,  # Minimum confidence to accept results
+}

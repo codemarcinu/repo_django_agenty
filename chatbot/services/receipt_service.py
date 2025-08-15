@@ -9,7 +9,9 @@ from django.db import transaction
 from django.utils import timezone
 
 from ..models import ReceiptProcessing
+from inventory.models import Receipt
 from .pantry_service import PantryService
+from .ocr_service import get_ocr_service
 
 logger = logging.getLogger(__name__)
 
@@ -267,6 +269,81 @@ class ReceiptService:
                 pass
                 
             return False, error_msg
+    
+    def process_receipt_ocr(self, receipt_id: int, use_fallback: bool = True) -> bool:
+        """
+        Process receipt with OCR using the new inventory Receipt model.
+        
+        Args:
+            receipt_id: ID of the Receipt to process
+            use_fallback: Whether to use fallback OCR backends
+            
+        Returns:
+            True if OCR processing succeeded, False otherwise
+        """
+        try:
+            receipt = Receipt.objects.get(id=receipt_id)
+            
+            if receipt.status != 'pending_ocr':
+                logger.warning(f"Receipt {receipt_id} is not in pending_ocr status: {receipt.status}")
+                return False
+            
+            # Update status to processing
+            receipt.status = 'processing_ocr'
+            receipt.save()
+            
+            logger.info(f"Starting OCR processing for receipt {receipt_id}: {receipt.source_file_path}")
+            
+            # Get OCR service
+            ocr_service = get_ocr_service()
+            
+            if not ocr_service.is_available():
+                error_msg = "No OCR backends available"
+                logger.error(error_msg)
+                receipt.status = 'error'
+                receipt.processing_notes = error_msg
+                receipt.save()
+                return False
+            
+            # Process file with OCR
+            ocr_result = ocr_service.process_file(
+                receipt.source_file_path, 
+                use_fallback=use_fallback
+            )
+            
+            if ocr_result.success and ocr_result.text.strip():
+                # OCR succeeded
+                receipt.raw_text = ocr_result.to_dict()
+                receipt.status = 'ocr_completed'
+                receipt.processing_notes = f"OCR completed with {ocr_result.backend} (confidence: {ocr_result.confidence:.2f})"
+                receipt.save()
+                
+                logger.info(f"OCR completed for receipt {receipt_id}: {len(ocr_result.text)} characters extracted")
+                return True
+            else:
+                # OCR failed
+                error_msg = ocr_result.error_message or "OCR failed to extract text"
+                receipt.status = 'error'
+                receipt.processing_notes = f"OCR failed: {error_msg}"
+                receipt.raw_text = ocr_result.to_dict()  # Store result even if failed for debugging
+                receipt.save()
+                
+                logger.error(f"OCR failed for receipt {receipt_id}: {error_msg}")
+                return False
+                
+        except Receipt.DoesNotExist:
+            logger.error(f"Receipt {receipt_id} not found")
+            return False
+        except Exception as e:
+            logger.error(f"Error during OCR processing for receipt {receipt_id}: {e}", exc_info=True)
+            try:
+                receipt = Receipt.objects.get(id=receipt_id)
+                receipt.status = 'error'
+                receipt.processing_notes = f"OCR processing error: {str(e)}"
+                receipt.save()
+            except:
+                pass
+            return False
     
     def get_recent_receipts(self, limit: int = 10) -> List[ReceiptProcessing]:
         """

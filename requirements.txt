@@ -22,6 +22,7 @@ easyocr==1.7.1
 PyYAML==6.0.1
 PyMuPDF==1.23.14
 python-magic==0.4.27
+pytesseract==0.3.10
 
 # API documentation
 drf-spectacular==0.27.0
