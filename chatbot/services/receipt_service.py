@@ -12,6 +12,7 @@ from ..models import ReceiptProcessing
 from inventory.models import Receipt
 from .pantry_service import PantryService
 from .ocr_service import get_ocr_service
+from .receipt_parser import get_receipt_parser
 
 logger = logging.getLogger(__name__)
 
@@ -340,6 +341,88 @@ class ReceiptService:
                 receipt = Receipt.objects.get(id=receipt_id)
                 receipt.status = 'error'
                 receipt.processing_notes = f"OCR processing error: {str(e)}"
+                receipt.save()
+            except:
+                pass
+            return False
+    
+    def process_receipt_parsing(self, receipt_id: int) -> bool:
+        """
+        Process receipt parsing from OCR text to structured data.
+        
+        Args:
+            receipt_id: ID of the Receipt to parse
+            
+        Returns:
+            True if parsing succeeded, False otherwise
+        """
+        try:
+            receipt = Receipt.objects.get(id=receipt_id)
+            
+            if receipt.status != 'ocr_completed':
+                logger.warning(f"Receipt {receipt_id} is not in ocr_completed status: {receipt.status}")
+                return False
+            
+            # Check if we have OCR text
+            if not receipt.raw_text or not isinstance(receipt.raw_text, dict):
+                error_msg = "No valid OCR text data"
+                logger.error(f"Receipt {receipt_id} has no valid OCR text data")
+                receipt.status = 'error'
+                receipt.processing_notes = f"Parsing failed: {error_msg}"
+                receipt.save()
+                return False
+            
+            ocr_text = receipt.raw_text.get('text', '')
+            if not ocr_text.strip():
+                error_msg = "Empty OCR text"
+                logger.error(f"Receipt {receipt_id} has empty OCR text")
+                receipt.status = 'error'
+                receipt.processing_notes = f"Parsing failed: {error_msg}"
+                receipt.save()
+                return False
+            
+            # Update status to processing
+            receipt.status = 'processing_parsing'
+            receipt.save()
+            
+            logger.info(f"Starting parsing for receipt {receipt_id}: {len(ocr_text)} characters")
+            
+            # Get parser and parse the text
+            parser = get_receipt_parser()
+            parsed_receipt = parser.parse(ocr_text)
+            
+            if not parsed_receipt:
+                error_msg = "Parser returned empty result"
+                logger.error(f"Parsing failed for receipt {receipt_id}: {error_msg}")
+                receipt.status = 'error'
+                receipt.processing_notes = f"Parsing failed: {error_msg}"
+                receipt.save()
+                return False
+            
+            # Store parsed data
+            receipt.parsed_data = parsed_receipt.to_dict()
+            receipt.status = 'parsing_completed'
+            
+            # Add processing notes with parsing summary
+            products_count = len(parsed_receipt.products)
+            store_info = f"Store: {parsed_receipt.store_name}" if parsed_receipt.store_name else "Store: Unknown"
+            total_info = f"Total: {parsed_receipt.total_amount}" if parsed_receipt.total_amount else "Total: Unknown"
+            
+            receipt.processing_notes = f"Parsing completed: {products_count} products found. {store_info}, {total_info}"
+            receipt.save()
+            
+            logger.info(f"Parsing completed for receipt {receipt_id}: {products_count} products extracted")
+            return True
+            
+        except Receipt.DoesNotExist:
+            logger.error(f"Receipt {receipt_id} not found")
+            return False
+        except Exception as e:
+            logger.error(f"Error during parsing for receipt {receipt_id}: {e}", exc_info=True)
+            try:
+                receipt = Receipt.objects.get(id=receipt_id)
+                receipt.status = 'error'
+                receipt.processing_notes = f"Parsing error: {str(e)}"
                 receipt.save()
             except:
                 pass

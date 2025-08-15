@@ -180,9 +180,10 @@ class Receipt(models.Model):
     
     STATUS_CHOICES = [
         ('pending_ocr', 'Pending OCR'),
-        ('ocr_processing', 'OCR in Progress'),
+        ('processing_ocr', 'OCR in Progress'),
         ('ocr_completed', 'OCR Completed'),
-        ('parsing', 'Parsing Items'),
+        ('processing_parsing', 'Processing Parsing'),
+        ('parsing_completed', 'Parsing Completed'),
         ('matching', 'Matching Products'),
         ('completed', 'Completed'),
         ('error', 'Error'),
@@ -204,6 +205,11 @@ class Receipt(models.Model):
         default=dict, 
         blank=True,
         help_text="Raw OCR output with confidence scores and metadata"
+    )
+    parsed_data = JSONField(
+        default=dict, 
+        blank=True,
+        help_text="Parsed structured data from receipt text"
     )
     source_file_path = models.CharField(
         max_length=500,

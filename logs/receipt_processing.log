@@ -1,0 +1,53 @@
+[2025-08-15 12:30:45] DEBUG in chatbot.services.receipt_service: DEBUG test message from chatbot.services.receipt_service
+[2025-08-15 12:30:45] INFO in chatbot.services.receipt_service: INFO test message from chatbot.services.receipt_service
+[2025-08-15 12:30:45] WARNING in chatbot.services.receipt_service: WARNING test message from chatbot.services.receipt_service
+[2025-08-15 12:30:45] ERROR in chatbot.services.receipt_service: ERROR test message from chatbot.services.receipt_service
+[2025-08-15 12:30:45] DEBUG in chatbot.receipt_processor: DEBUG test message from chatbot.receipt_processor
+[2025-08-15 12:30:45] INFO in chatbot.receipt_processor: INFO test message from chatbot.receipt_processor
+[2025-08-15 12:30:45] WARNING in chatbot.receipt_processor: WARNING test message from chatbot.receipt_processor
+[2025-08-15 12:30:45] ERROR in chatbot.receipt_processor: ERROR test message from chatbot.receipt_processor
+[2025-08-15 12:30:45] DEBUG in chatbot.tasks: DEBUG test message from chatbot.tasks
+[2025-08-15 12:30:45] INFO in chatbot.tasks: INFO test message from chatbot.tasks
+[2025-08-15 12:30:45] WARNING in chatbot.tasks: WARNING test message from chatbot.tasks
+[2025-08-15 12:30:45] ERROR in chatbot.tasks: ERROR test message from chatbot.tasks
+[2025-08-15 12:32:48] INFO in chatbot.services.receipt_service: Created receipt processing record: 11
+[2025-08-15 12:32:48] INFO in chatbot.services.receipt_service: 🔄 Starting processing for receipt ID: 11
+[2025-08-15 12:32:48] DEBUG in chatbot.services.receipt_service: Found receipt: Paragon 11 - Status: Plik przesłany, current status: uploaded
+[2025-08-15 12:32:48] INFO in chatbot.services.receipt_service: Marking receipt 11 as processing...
+[2025-08-15 12:32:48] DEBUG in chatbot.services.receipt_service: Receipt 11 status updated to: ocr_in_progress
+[2025-08-15 12:32:48] INFO in chatbot.services.receipt_service: Attempting to start Celery task for receipt 11
+[2025-08-15 12:32:48] DEBUG in chatbot.services.receipt_service: Celery task imported successfully
+[2025-08-15 12:33:07] WARNING in chatbot.services.receipt_service: ⚠️ Celery task failed for receipt 11: Error 111 connecting to localhost:6379. Connection refused.
+[2025-08-15 12:33:07] INFO in chatbot.services.receipt_service: Falling back to synchronous processing for receipt 11
+[2025-08-15 12:33:07] DEBUG in chatbot.services.receipt_service: Receipt processor imported successfully
+[2025-08-15 12:33:07] INFO in chatbot.services.receipt_service: Starting synchronous OCR processing for receipt 11
+[2025-08-15 12:33:07] INFO in chatbot.services.receipt_service: ✅ Completed synchronous processing for receipt 11
+[2025-08-15 12:33:07] INFO in chatbot.services.receipt_service: ✅ Processing workflow completed for receipt 11
+[2025-08-15 16:07:03] INFO in chatbot.services.receipt_service: Starting OCR processing for receipt 1: /fake/receipt.pdf
+[2025-08-15 16:07:03] ERROR in chatbot.services.receipt_service: OCR failed for receipt 1: Could not extract text
+[2025-08-15 16:07:03] INFO in chatbot.services.receipt_service: Starting OCR processing for receipt 1: /fake/receipt.pdf
+[2025-08-15 16:07:03] ERROR in chatbot.services.receipt_service: No OCR backends available
+[2025-08-15 16:07:03] INFO in chatbot.services.receipt_service: Starting OCR processing for receipt 1: /fake/receipt.pdf
+[2025-08-15 16:07:03] INFO in chatbot.services.receipt_service: OCR completed for receipt 1: 42 characters extracted
+[2025-08-15 16:08:12] INFO in chatbot.services.receipt_service: Starting OCR processing for receipt 1: /fake/receipt.pdf
+[2025-08-15 16:08:12] ERROR in chatbot.services.receipt_service: OCR failed for receipt 1: Could not extract text
+[2025-08-15 16:08:12] INFO in chatbot.services.receipt_service: Starting OCR processing for receipt 1: /fake/receipt.pdf
+[2025-08-15 16:08:12] ERROR in chatbot.services.receipt_service: No OCR backends available
+[2025-08-15 16:08:12] INFO in chatbot.services.receipt_service: Starting OCR processing for receipt 1: /fake/receipt.pdf
+[2025-08-15 16:08:12] INFO in chatbot.services.receipt_service: OCR completed for receipt 1: 42 characters extracted
+[2025-08-15 16:09:47] INFO in chatbot.services.receipt_service: Starting OCR processing for receipt 1: /fake/receipt.pdf
+[2025-08-15 16:09:47] ERROR in chatbot.services.receipt_service: OCR failed for receipt 1: Could not extract text
+[2025-08-15 16:09:47] INFO in chatbot.services.receipt_service: Starting OCR processing for receipt 1: /fake/receipt.pdf
+[2025-08-15 16:09:47] ERROR in chatbot.services.receipt_service: No OCR backends available
+[2025-08-15 16:09:47] INFO in chatbot.services.receipt_service: Starting OCR processing for receipt 1: /fake/receipt.pdf
+[2025-08-15 16:09:47] INFO in chatbot.services.receipt_service: OCR completed for receipt 1: 42 characters extracted
+[2025-08-15 16:20:54] ERROR in chatbot.services.receipt_service: Receipt 1 has empty OCR text
+[2025-08-15 16:20:54] ERROR in chatbot.services.receipt_service: Receipt 1 has no valid OCR text data
+[2025-08-15 16:20:54] INFO in chatbot.services.receipt_service: Starting parsing for receipt 1: 277 characters
+[2025-08-15 16:20:54] INFO in chatbot.services.receipt_service: Parsing completed for receipt 1: 5 products extracted
+[2025-08-15 16:20:54] WARNING in chatbot.services.receipt_service: Receipt 1 is not in ocr_completed status: pending_ocr
+[2025-08-15 16:21:37] ERROR in chatbot.services.receipt_service: Receipt 1 has empty OCR text
+[2025-08-15 16:21:37] ERROR in chatbot.services.receipt_service: Receipt 1 has no valid OCR text data
+[2025-08-15 16:21:37] INFO in chatbot.services.receipt_service: Starting parsing for receipt 1: 277 characters
+[2025-08-15 16:21:37] INFO in chatbot.services.receipt_service: Parsing completed for receipt 1: 5 products extracted
+[2025-08-15 16:21:37] WARNING in chatbot.services.receipt_service: Receipt 1 is not in ocr_completed status: pending_ocr

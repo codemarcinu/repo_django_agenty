@@ -1,0 +1,333 @@
+DEBUG 2025-08-15 12:30:45,125 test_logging 48553 140370552085440 DEBUG test message from chatbot.views
+DEBUG 2025-08-15 12:30:45,125 test_logging 48553 140370552085440 DEBUG test message from chatbot.views
+INFO 2025-08-15 12:30:45,125 test_logging 48553 140370552085440 INFO test message from chatbot.views
+INFO 2025-08-15 12:30:45,125 test_logging 48553 140370552085440 INFO test message from chatbot.views
+WARNING 2025-08-15 12:30:45,125 test_logging 48553 140370552085440 WARNING test message from chatbot.views
+WARNING 2025-08-15 12:30:45,125 test_logging 48553 140370552085440 WARNING test message from chatbot.views
+ERROR 2025-08-15 12:30:45,125 test_logging 48553 140370552085440 ERROR test message from chatbot.views
+ERROR 2025-08-15 12:30:45,125 test_logging 48553 140370552085440 ERROR test message from chatbot.views
+INFO 2025-08-15 12:30:45,126 test_logging 48553 140370552085440 INFO test message from django
+WARNING 2025-08-15 12:30:45,126 test_logging 48553 140370552085440 WARNING test message from django
+ERROR 2025-08-15 12:30:45,126 test_logging 48553 140370552085440 ERROR test message from django
+INFO 2025-08-15 12:32:31,433 autoreload 48779 139742944127936 Watching for file changes with StatReloader
+INFO 2025-08-15 12:32:39,339 basehttp 48779 139735643190976 "GET / HTTP/1.1" 200 27415
+INFO 2025-08-15 12:32:43,564 basehttp 48779 139735643190976 "GET /receipts/upload/ HTTP/1.1" 200 21255
+INFO 2025-08-15 12:32:48,677 views 48779 139735643190976 === STARTING RECEIPT UPLOAD PROCESS ===
+INFO 2025-08-15 12:32:48,677 views 48779 139735643190976 === STARTING RECEIPT UPLOAD PROCESS ===
+DEBUG 2025-08-15 12:32:48,677 views 48779 139735643190976 Form data: {'receipt_file': <InMemoryUploadedFile: 2508020118133218.pdf (application/pdf)>}
+DEBUG 2025-08-15 12:32:48,677 views 48779 139735643190976 Form data: {'receipt_file': <InMemoryUploadedFile: 2508020118133218.pdf (application/pdf)>}
+INFO 2025-08-15 12:32:48,677 views 48779 139735643190976 Uploaded file: 2508020118133218.pdf, size: 655865 bytes, content_type: application/pdf
+INFO 2025-08-15 12:32:48,677 views 48779 139735643190976 Uploaded file: 2508020118133218.pdf, size: 655865 bytes, content_type: application/pdf
+INFO 2025-08-15 12:32:48,677 views 48779 139735643190976 Creating receipt record...
+INFO 2025-08-15 12:32:48,677 views 48779 139735643190976 Creating receipt record...
+INFO 2025-08-15 12:32:48,685 views 48779 139735643190976 ✅ Receipt record created successfully with ID: 11
+INFO 2025-08-15 12:32:48,685 views 48779 139735643190976 ✅ Receipt record created successfully with ID: 11
+DEBUG 2025-08-15 12:32:48,685 views 48779 139735643190976 Receipt record details: status=uploaded, file_path=receipt_files/2508020118133218_cblGtPh.pdf
+DEBUG 2025-08-15 12:32:48,685 views 48779 139735643190976 Receipt record details: status=uploaded, file_path=receipt_files/2508020118133218_cblGtPh.pdf
+INFO 2025-08-15 12:32:48,685 views 48779 139735643190976 Starting processing for receipt ID: 11
+INFO 2025-08-15 12:32:48,685 views 48779 139735643190976 Starting processing for receipt ID: 11
+INFO 2025-08-15 12:33:07,735 views 48779 139735643190976 ✅ Processing started successfully for receipt 11
+INFO 2025-08-15 12:33:07,735 views 48779 139735643190976 ✅ Processing started successfully for receipt 11
+INFO 2025-08-15 12:33:07,736 views 48779 139735643190976 Success URL set to: /receipts/11/status/
+INFO 2025-08-15 12:33:07,736 views 48779 139735643190976 Success URL set to: /receipts/11/status/
+INFO 2025-08-15 12:33:07,736 views 48779 139735643190976 === RECEIPT UPLOAD PROCESS COMPLETED ===
+INFO 2025-08-15 12:33:07,736 views 48779 139735643190976 === RECEIPT UPLOAD PROCESS COMPLETED ===
+INFO 2025-08-15 12:33:07,736 basehttp 48779 139735643190976 "POST /receipts/upload/ HTTP/1.1" 302 0
+INFO 2025-08-15 12:33:07,740 basehttp 48779 139735643190976 "GET /receipts/11/status/ HTTP/1.1" 200 29337
+INFO 2025-08-15 12:33:09,888 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:33:11,918 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:33:13,922 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:33:16,070 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:33:18,102 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:33:20,106 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:33:22,110 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:33:24,114 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:33:26,118 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:33:28,121 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:33:30,125 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:33:32,129 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:33:34,132 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:33:36,136 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:33:38,140 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:33:40,144 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:33:42,147 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:33:44,151 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:33:46,155 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:33:48,158 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:33:50,162 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:33:52,166 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:33:54,170 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:33:56,173 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:33:58,177 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:34:00,181 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:34:02,184 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:34:04,187 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:34:06,191 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:34:08,195 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:34:10,397 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:34:12,401 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:34:14,495 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:34:16,500 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:34:19,501 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:34:21,505 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:34:24,506 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:34:26,533 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:34:28,537 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:34:31,541 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:34:34,545 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:34:37,549 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:34:40,552 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:34:43,554 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:34:46,555 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:34:49,556 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:34:51,590 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:34:54,591 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:34:56,595 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:34:58,600 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:35:01,601 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:35:04,604 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:35:07,605 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:35:10,607 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:35:12,627 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:35:14,632 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:35:16,636 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:35:19,639 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:35:21,643 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:35:24,647 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:35:26,651 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:35:29,653 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:35:31,657 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:35:34,658 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:35:36,664 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:35:39,668 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:35:41,672 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:35:44,675 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:35:46,680 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:35:49,683 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:35:51,700 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:35:54,702 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:35:56,734 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:35:59,736 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:36:01,752 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:36:04,753 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:36:06,785 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:36:08,789 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:36:10,838 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:36:13,858 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:36:15,908 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:36:17,930 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:36:19,947 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:36:21,968 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:36:23,988 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:36:26,038 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:36:28,058 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:36:30,092 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:36:32,113 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:36:34,118 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:36:36,122 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:36:39,126 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:36:41,131 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:36:44,134 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:36:46,139 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:36:49,139 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:36:51,144 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:36:54,148 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:36:56,152 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:36:59,155 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:37:01,172 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:37:04,173 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:37:06,189 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:37:08,200 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:37:10,320 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:37:12,334 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:37:15,335 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:37:18,338 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:37:21,340 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:37:23,367 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:37:26,368 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:37:28,372 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:37:30,375 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:37:33,376 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:37:36,380 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:37:38,441 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:37:41,445 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:37:43,449 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:37:46,452 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:37:48,456 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:37:51,460 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:37:53,464 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:37:56,468 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:37:58,471 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:38:01,475 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:38:03,479 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:38:06,489 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:38:08,493 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:38:11,495 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:38:13,517 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:38:15,536 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:38:17,557 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:38:19,607 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:38:21,627 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:38:23,644 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:38:26,650 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:38:29,654 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:38:32,657 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:38:35,661 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:38:38,661 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:38:41,664 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:38:44,668 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:38:47,669 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:38:49,673 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:38:52,674 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:38:54,678 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:38:57,682 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:38:59,686 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:39:02,689 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:39:04,693 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:39:06,697 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:39:09,698 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:39:12,699 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:39:15,700 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:39:18,701 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:39:20,735 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:39:22,768 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:39:25,771 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:39:28,774 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:39:31,775 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:39:34,779 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:39:37,782 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:39:40,786 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:39:43,787 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:39:46,788 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:39:49,792 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:39:52,793 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:39:55,796 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:39:58,799 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:40:01,800 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:40:04,801 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:40:07,804 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:40:09,808 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:40:12,829 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:40:14,849 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:40:16,870 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:40:18,923 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:40:21,940 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:40:23,945 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:40:26,949 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:40:28,953 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:40:31,957 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:40:33,961 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:40:36,593 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:40:38,601 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+INFO 2025-08-15 12:40:40,604 basehttp 48779 139735643190976 "GET /api/receipts/11/status/ HTTP/1.1" 200 29
+ERROR 2025-08-15 13:55:01,060 log 56052 139741504936896 Internal Server Error: /api/receipts/upload/
+WARNING 2025-08-15 13:55:01,075 log 56052 139741504936896 Bad Request: /api/receipts/upload/
+WARNING 2025-08-15 13:55:01,076 log 56052 139741504936896 Bad Request: /api/receipts/upload/
+WARNING 2025-08-15 13:55:01,139 log 56052 139741504936896 Bad Request: /api/receipts/upload/
+WARNING 2025-08-15 13:55:01,147 log 56052 139741504936896 Bad Request: /api/receipts/upload/
+WARNING 2025-08-15 13:55:01,149 log 56052 139741504936896 Bad Request: /api/receipts/upload/
+WARNING 2025-08-15 13:55:01,156 log 56052 139741504936896 Bad Request: /api/receipts/upload/
+ERROR 2025-08-15 13:55:01,158 log 56052 139741504936896 Internal Server Error: /api/receipts/upload/
+WARNING 2025-08-15 13:55:01,160 log 56052 139741504936896 Bad Request: /api/receipts/upload/
+ERROR 2025-08-15 13:56:58,423 log 56258 139799128112064 Internal Server Error: /api/receipts/upload/
+ERROR 2025-08-15 13:57:30,753 log 56384 140368905153472 Internal Server Error: /api/receipts/upload/
+WARNING 2025-08-15 13:58:08,783 log 56540 140538965371840 Not Found: /api/receipts/1/status/
+WARNING 2025-08-15 13:58:08,786 log 56540 140538965371840 Not Found: /api/receipts/999999/status/
+WARNING 2025-08-15 13:58:08,787 log 56540 140538965371840 Not Found: /api/receipts/1/status/
+WARNING 2025-08-15 13:58:08,792 log 56540 140538965371840 Not Found: /api/receipts/1/status/
+WARNING 2025-08-15 13:58:08,796 log 56540 140538965371840 Bad Request: /api/receipts/upload/
+WARNING 2025-08-15 13:58:08,798 log 56540 140538965371840 Bad Request: /api/receipts/upload/
+WARNING 2025-08-15 13:58:08,859 log 56540 140538965371840 Bad Request: /api/receipts/upload/
+WARNING 2025-08-15 13:58:08,866 log 56540 140538965371840 Bad Request: /api/receipts/upload/
+WARNING 2025-08-15 13:58:08,868 log 56540 140538965371840 Bad Request: /api/receipts/upload/
+WARNING 2025-08-15 15:51:16,594 log 62907 140302971407296 Not Found: /api/receipts/999999/status/
+WARNING 2025-08-15 15:51:16,602 log 62907 140302971407296 Bad Request: /api/receipts/upload/
+WARNING 2025-08-15 15:51:16,603 log 62907 140302971407296 Bad Request: /api/receipts/upload/
+WARNING 2025-08-15 15:51:16,665 log 62907 140302971407296 Bad Request: /api/receipts/upload/
+WARNING 2025-08-15 15:51:16,676 log 62907 140302971407296 Bad Request: /api/receipts/upload/
+WARNING 2025-08-15 15:51:16,678 log 62907 140302971407296 Bad Request: /api/receipts/upload/
+INFO 2025-08-15 16:07:03,738 ocr_service 64362 139817880984512 EasyOCR backend initialized with languages: ['en']
+INFO 2025-08-15 16:07:03,738 ocr_service 64362 139817880984512 Primary OCR backend: easyocr
+INFO 2025-08-15 16:07:03,738 ocr_service 64362 139817880984512 EasyOCR backend initialized with languages: ['en']
+INFO 2025-08-15 16:07:03,739 ocr_service 64362 139817880984512 Primary OCR backend: easyocr
+INFO 2025-08-15 16:07:03,739 ocr_service 64362 139817880984512 Processing /fake/receipt.pdf with easyocr
+WARNING 2025-08-15 16:07:03,739 ocr_service 64362 139817880984512 OCR failed with easyocr
+INFO 2025-08-15 16:07:03,740 ocr_service 64362 139817880984512 EasyOCR backend initialized with languages: ['en']
+INFO 2025-08-15 16:07:03,740 ocr_service 64362 139817880984512 Primary OCR backend: easyocr
+ERROR 2025-08-15 16:07:03,740 ocr_service 64362 139817880984512 No OCR backends available!
+ERROR 2025-08-15 16:07:03,740 ocr_service 64362 139817880984512 No OCR backends available!
+ERROR 2025-08-15 16:07:03,740 ocr_service 64362 139817880984512 No OCR backends available!
+INFO 2025-08-15 16:08:12,076 ocr_service 64548 140699387079616 EasyOCR backend initialized with languages: ['en']
+INFO 2025-08-15 16:08:12,076 ocr_service 64548 140699387079616 Primary OCR backend: easyocr
+INFO 2025-08-15 16:08:12,077 ocr_service 64548 140699387079616 EasyOCR backend initialized with languages: ['en']
+INFO 2025-08-15 16:08:12,077 ocr_service 64548 140699387079616 Primary OCR backend: easyocr
+INFO 2025-08-15 16:08:12,077 ocr_service 64548 140699387079616 Processing /fake/receipt.pdf with easyocr
+WARNING 2025-08-15 16:08:12,077 ocr_service 64548 140699387079616 OCR failed with easyocr
+INFO 2025-08-15 16:08:12,079 ocr_service 64548 140699387079616 EasyOCR backend initialized with languages: ['en']
+INFO 2025-08-15 16:08:12,079 ocr_service 64548 140699387079616 Primary OCR backend: easyocr
+ERROR 2025-08-15 16:08:12,079 ocr_service 64548 140699387079616 No OCR backends available!
+ERROR 2025-08-15 16:08:12,079 ocr_service 64548 140699387079616 No OCR backends available!
+ERROR 2025-08-15 16:08:12,079 ocr_service 64548 140699387079616 No OCR backends available!
+WARNING 2025-08-15 16:08:12,090 ocr_backends 64548 140699387079616 pytesseract not available. Install with: pip install pytesseract
+WARNING 2025-08-15 16:08:12,091 ocr_backends 64548 140699387079616 pytesseract not available. Install with: pip install pytesseract
+WARNING 2025-08-15 16:08:12,092 ocr_backends 64548 140699387079616 pytesseract not available. Install with: pip install pytesseract
+INFO 2025-08-15 16:09:47,663 ocr_service 64739 140463393156032 EasyOCR backend initialized with languages: ['en']
+INFO 2025-08-15 16:09:47,663 ocr_service 64739 140463393156032 Primary OCR backend: easyocr
+INFO 2025-08-15 16:09:47,664 ocr_service 64739 140463393156032 EasyOCR backend initialized with languages: ['en']
+INFO 2025-08-15 16:09:47,664 ocr_service 64739 140463393156032 Primary OCR backend: easyocr
+INFO 2025-08-15 16:09:47,664 ocr_service 64739 140463393156032 Processing /fake/receipt.pdf with easyocr
+INFO 2025-08-15 16:09:47,664 ocr_service 64739 140463393156032 OCR successful with easyocr: 0.85 confidence
+INFO 2025-08-15 16:09:47,665 ocr_service 64739 140463393156032 EasyOCR backend initialized with languages: ['en']
+INFO 2025-08-15 16:09:47,665 ocr_service 64739 140463393156032 Primary OCR backend: easyocr
+ERROR 2025-08-15 16:09:47,665 ocr_service 64739 140463393156032 No OCR backends available!
+ERROR 2025-08-15 16:09:47,665 ocr_service 64739 140463393156032 No OCR backends available!
+ERROR 2025-08-15 16:09:47,665 ocr_service 64739 140463393156032 No OCR backends available!
+WARNING 2025-08-15 16:09:47,677 ocr_backends 64739 140463393156032 pytesseract not available. Install with: pip install pytesseract
+WARNING 2025-08-15 16:09:47,677 ocr_backends 64739 140463393156032 pytesseract not available. Install with: pip install pytesseract
+WARNING 2025-08-15 16:09:47,679 ocr_backends 64739 140463393156032 pytesseract not available. Install with: pip install pytesseract
+DEBUG 2025-08-15 16:19:30,092 receipt_parser 65603 139752150195136 Found store: biedronka in line: BIEDRONKA SP. Z O.O.
+DEBUG 2025-08-15 16:19:30,092 receipt_parser 65603 139752150195136 Found store: tesco in line: TESCO Stores Sp. z o.o.
+WARNING 2025-08-15 16:19:30,094 receipt_parser 65603 139752150195136 Empty OCR text provided to parser
+INFO 2025-08-15 16:19:30,094 receipt_parser 65603 139752150195136 Parsing receipt text: 66 characters
+DEBUG 2025-08-15 16:19:30,095 receipt_parser 65603 139752150195136 Product lines range: 1 to 3
+INFO 2025-08-15 16:19:30,095 receipt_parser 65603 139752150195136 Parsed receipt: 0 products, total: None
+DEBUG 2025-08-15 16:19:30,095 receipt_parser 65603 139752150195136 Parsing product line 1: Mleko 3,2% 1L                2,99
+DEBUG 2025-08-15 16:19:30,095 receipt_parser 65603 139752150195136 Parsing product line 2: Jabłka 2 x 3,50 = 7,00
+INFO 2025-08-15 16:19:30,096 receipt_parser 65603 139752150195136 Parsing receipt text: 367 characters
+DEBUG 2025-08-15 16:19:30,096 receipt_parser 65603 139752150195136 Found store: biedronka in line: BIEDRONKA SP. Z O.O.
+DEBUG 2025-08-15 16:19:30,096 receipt_parser 65603 139752150195136 Product lines range: 0 to 11
+DEBUG 2025-08-15 16:19:30,096 receipt_parser 65603 139752150195136 Parsing product line 1: ul. Przykładowa 123
+DEBUG 2025-08-15 16:19:30,096 receipt_parser 65603 139752150195136 Parsing product line 2: 00-000 Warszawa
+DEBUG 2025-08-15 16:19:30,096 receipt_parser 65603 139752150195136 Parsing product line 5: Nr 123/456/789
+DEBUG 2025-08-15 16:19:30,096 receipt_parser 65603 139752150195136 Parsing product line 7: Kasjer: 001
+DEBUG 2025-08-15 16:19:30,096 receipt_parser 65603 139752150195136 Parsing product line 8: Mleko 3,2% 1L 2,99
+DEBUG 2025-08-15 16:19:30,096 receipt_parser 65603 139752150195136 Parsing product line 9: Chleb graham 3,50
+DEBUG 2025-08-15 16:19:30,097 receipt_parser 65603 139752150195136 Parsing product line 10: Masło extra 200g 5,99
+INFO 2025-08-15 16:19:30,097 receipt_parser 65603 139752150195136 Parsed receipt: 5 products, total: 12.48
+INFO 2025-08-15 16:19:30,098 receipt_parser 65603 139752150195136 Parsing receipt text: 273 characters
+DEBUG 2025-08-15 16:19:30,098 receipt_parser 65603 139752150195136 Found store: tesco in line: TESCO STORES SP. Z O.O.
+DEBUG 2025-08-15 16:19:30,098 receipt_parser 65603 139752150195136 Product lines range: 3 to 9
+DEBUG 2025-08-15 16:19:30,098 receipt_parser 65603 139752150195136 Parsing product line 4: NO: 456789
+DEBUG 2025-08-15 16:19:30,098 receipt_parser 65603 139752150195136 Parsing product line 5: Date: 16/01/2024 16:45
+DEBUG 2025-08-15 16:19:30,098 receipt_parser 65603 139752150195136 Parsing product line 6: Apples 1.5 kg x 4.50 = 6.75
+DEBUG 2025-08-15 16:19:30,098 receipt_parser 65603 139752150195136 Parsing product line 7: Bread Whole Grain 3.20
+DEBUG 2025-08-15 16:19:30,099 receipt_parser 65603 139752150195136 Parsing product line 8: Butter 250g 2 x 5.99 = 11.98
+INFO 2025-08-15 16:19:30,099 receipt_parser 65603 139752150195136 Parsed receipt: 4 products, total: 21.93
+INFO 2025-08-15 16:20:54,861 receipt_parser 65743 140344380013504 Parsing receipt text: 277 characters
+DEBUG 2025-08-15 16:20:54,861 receipt_parser 65743 140344380013504 Found store: biedronka in line: BIEDRONKA SP. Z O.O.
+DEBUG 2025-08-15 16:20:54,862 receipt_parser 65743 140344380013504 Product lines range: 0 to 9
+DEBUG 2025-08-15 16:20:54,862 receipt_parser 65743 140344380013504 Parsing product line 1: ul. Przykładowa 123
+DEBUG 2025-08-15 16:20:54,863 receipt_parser 65743 140344380013504 Parsing product line 4: Nr 456789
+DEBUG 2025-08-15 16:20:54,863 receipt_parser 65743 140344380013504 Parsing product line 6: Mleko 3,2% 1L 2,99
+DEBUG 2025-08-15 16:20:54,863 receipt_parser 65743 140344380013504 Parsing product line 7: Chleb graham 3,50
+DEBUG 2025-08-15 16:20:54,863 receipt_parser 65743 140344380013504 Parsing product line 8: Masło extra 200g 5,99
+INFO 2025-08-15 16:20:54,863 receipt_parser 65743 140344380013504 Parsed receipt: 5 products, total: 12.48
+INFO 2025-08-15 16:21:37,652 receipt_parser 65856 140543460137920 Parsing receipt text: 277 characters
+DEBUG 2025-08-15 16:21:37,652 receipt_parser 65856 140543460137920 Found store: biedronka in line: BIEDRONKA SP. Z O.O.
+DEBUG 2025-08-15 16:21:37,653 receipt_parser 65856 140543460137920 Product lines range: 0 to 9
+DEBUG 2025-08-15 16:21:37,653 receipt_parser 65856 140543460137920 Parsing product line 1: ul. Przykładowa 123
+DEBUG 2025-08-15 16:21:37,654 receipt_parser 65856 140543460137920 Parsing product line 4: Nr 456789
+DEBUG 2025-08-15 16:21:37,654 receipt_parser 65856 140543460137920 Parsing product line 6: Mleko 3,2% 1L 2,99
+DEBUG 2025-08-15 16:21:37,654 receipt_parser 65856 140543460137920 Parsing product line 7: Chleb graham 3,50
+DEBUG 2025-08-15 16:21:37,654 receipt_parser 65856 140543460137920 Parsing product line 8: Masło extra 200g 5,99
+INFO 2025-08-15 16:21:37,654 receipt_parser 65856 140543460137920 Parsed receipt: 5 products, total: 12.48
