@@ -5,9 +5,9 @@ Inspired by FoodSave AI's AgentFactory pattern.
 import logging
 from typing import Any, Dict, List, Optional, Type
 
-from .interfaces import AgentFactoryInterface, BaseAgentInterface
+from ..interfaces import AgentFactoryInterface, BaseAgentInterface
 from .agents import OllamaAgent, RouterAgent
-from .models import Agent
+from ..models import Agent
 
 logger = logging.getLogger(__name__)
 
@@ -50,7 +50,10 @@ class AgentFactory(AgentFactoryInterface):
     async def create_agent_from_db(self, agent_name: str) -> BaseAgentInterface:
         """Create agent instance from database configuration"""
         try:
-            agent_config = await Agent.objects.aget(name=agent_name, is_active=True)
+            from .async_services import AsyncAgentService
+            
+            # Use async service for database operations
+            agent_config = await AsyncAgentService.get_agent_by_name(agent_name)
             
             # Prepare kwargs from database config
             kwargs = {
@@ -73,9 +76,6 @@ class AgentFactory(AgentFactoryInterface):
             
             return agent_instance
             
-        except Agent.DoesNotExist:
-            logger.error(f"Agent not found in database: {agent_name}")
-            raise ValueError(f"Agent not found: {agent_name}")
         except Exception as e:
             logger.error(f"Error creating agent from database: {str(e)}")
             raise
@@ -87,15 +87,8 @@ class AgentFactory(AgentFactoryInterface):
     async def list_database_agents(self) -> List[Dict[str, Any]]:
         """List all agents from database"""
         try:
-            agents = []
-            async for agent in Agent.objects.filter(is_active=True):
-                agents.append({
-                    'name': agent.name,
-                    'type': agent.agent_type,
-                    'capabilities': agent.capabilities,
-                    'created_at': agent.created_at
-                })
-            return agents
+            from .async_services import AsyncAgentService
+            return await AsyncAgentService.list_active_agents()
         except Exception as e:
             logger.error(f"Error listing database agents: {str(e)}")
             return []

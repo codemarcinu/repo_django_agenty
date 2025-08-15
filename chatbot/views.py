@@ -23,27 +23,39 @@ from django.utils import timezone
 import datetime
 
 from .models import Agent, Conversation, Document, PantryItem, ReceiptProcessing
-from .agent_factory import agent_factory
+from .services.agent_factory import agent_factory
+from .services.pantry_service import PantryService
+from .services.receipt_service import ReceiptService
 from .conversation_manager import conversation_manager
 from .rag_processor import rag_processor
-from .receipt_processor import receipt_processor 
+from .receipt_processor import receipt_processor
+from .utils.cache_utils import get_agent_statistics, CachedViewMixin 
 
 logger = logging.getLogger(__name__)
 
-class DashboardView(View):
+class DashboardView(CachedViewMixin, View):
     """Main dashboard view with overview of all features"""
+    cache_timeout = 300  # Cache for 5 minutes
+    
     def get(self, request: HttpRequest):
-        # Get statistics
-        agents_count = Agent.objects.filter(is_active=True).count()
-        documents_count = Document.objects.count()
-        pantry_items_count = PantryItem.objects.count()
-        recent_receipts = ReceiptProcessing.objects.order_by('-uploaded_at')[:5]
+        # Get cached statistics using fat model methods
+        agent_stats = Agent.get_statistics()
+        pantry_stats = PantryItem.get_statistics()
+        receipt_service = ReceiptService()
+        receipt_stats = receipt_service.get_processing_statistics()
+        recent_receipts = receipt_service.get_recent_receipts(5)
         
         context = {
-            'agents_count': agents_count,
-            'documents_count': documents_count,
-            'pantry_items_count': pantry_items_count,
+            'agents_count': agent_stats['active_agents'],
+            'documents_count': Document.objects.count(),  # TODO: Add statistics method to Document
+            'pantry_items_count': pantry_stats['total_items'],
+            'receipt_stats': receipt_stats,
             'recent_receipts': recent_receipts,
+            'pantry_alerts': {
+                'expired_count': pantry_stats['expired_count'],
+                'expiring_soon_count': pantry_stats['expiring_soon_count'],
+                'low_stock_count': pantry_stats['low_stock_count'],
+            },
             'title': 'Dashboard - Twój Osobisty Asystent AI'
         }
         return render(request, 'chatbot/dashboard.html', context)
@@ -66,7 +78,8 @@ class DocumentUploadView(FormView):
     def form_valid(self, form):
         document = form.save()
         try:
-            rag_processor.process_document(document.id)
+            from .tasks import process_document_task # Import the task
+            process_document_task.delay(document.id) # Call the task asynchronously
         except Exception as e:
             logger.error(f"Failed to trigger processing for document {document.id}: {e}")
         return super().form_valid(form)
@@ -83,88 +96,119 @@ class ReceiptUploadView(FormView):
     success_url = reverse_lazy('chatbot:receipt_processing_status') # Redirect to status page
 
     def form_valid(self, form):
-        receipt_record = form.save(commit=False)
-        receipt_record.status = 'uploaded'
-        receipt_record.save()
+        receipt_service = ReceiptService()
+        
+        # Create receipt record using service
+        receipt_record = receipt_service.create_receipt_record(
+            form.cleaned_data['receipt_file']
+        )
 
-        # Process the receipt using the helper function for async in sync context
-        try:
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
-            loop.run_in_executor(None, self._process_receipt_sync, receipt_record.id)
-        except Exception as e:
-            logger.error(f"Failed to start receipt processing: {e}")
-            receipt_record.status = 'error'
-            receipt_record.error_message = f"Nie udało się rozpocząć przetwarzania: {e}"
-            receipt_record.save()
-
-        self.success_url = reverse_lazy('chatbot:receipt_processing_status', kwargs={'receipt_id': receipt_record.id})
+        # Start processing using service
+        if receipt_service.start_processing(receipt_record.id):
+            self.success_url = reverse_lazy(
+                'chatbot:receipt_processing_status', 
+                kwargs={'receipt_id': receipt_record.id}
+            )
+        else:
+            # Handle processing start failure
+            logger.error(f"Failed to start processing for receipt {receipt_record.id}")
+        
         return super().form_valid(form)
-    
-    def _process_receipt_sync(self, receipt_id):
-        """Helper method to run async receipt processing in sync context"""
-        try:
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
-            loop.run_until_complete(receipt_processor.process_receipt(receipt_id))
-        except Exception as e:
-            logger.error(f"Error processing receipt {receipt_id}: {e}")
-        finally:
-            loop.close()
 
 class ReceiptProcessingStatusView(View):
     def get(self, request, receipt_id):
-        receipt_record = get_object_or_404(ReceiptProcessing, id=receipt_id)
+        receipt_service = ReceiptService()
+        status_info = receipt_service.get_receipt_status(receipt_id)
+        
+        if not status_info:
+            from django.http import Http404
+            raise Http404("Paragon nie został znaleziony")
+        
         context = {
             'receipt_id': receipt_id,
-            'status': receipt_record.status,
-            'error_message': receipt_record.error_message,
+            'status_info': status_info,
         }
         return render(request, 'chatbot/receipt_processing_status.html', context)
 
-@method_decorator(csrf_exempt, name='dispatch')
 class ReceiptProcessingStatusAPIView(View):
     def get(self, request, receipt_id):
-        receipt_record = get_object_or_404(ReceiptProcessing, id=receipt_id)
-        if receipt_record.status == 'ready_for_review':
-            return JsonResponse({'status': receipt_record.status, 'redirect_url': reverse_lazy('chatbot:receipt_review', kwargs={'receipt_id': receipt_record.id})})
-        elif receipt_record.status == 'error':
-            return JsonResponse({'status': receipt_record.status, 'error_message': receipt_record.error_message})
-        return JsonResponse({'status': receipt_record.status})
+        receipt_service = ReceiptService()
+        status_info = receipt_service.get_receipt_status(receipt_id)
+        
+        if not status_info:
+            return JsonResponse({'error': 'Paragon nie został znaleziony'}, status=404)
+        
+        return JsonResponse({
+            'status': status_info['status'],
+            'status_display': status_info['status_display'],
+            'is_ready_for_review': status_info['is_ready_for_review'],
+            'is_completed': status_info['is_completed'],
+            'has_error': status_info['has_error'],
+            'error_message': status_info['error_message'],
+            'redirect_url': status_info['redirect_url'],
+        })
 
 class ReceiptReviewView(View):
     def get(self, request, receipt_id):
-        receipt_record = get_object_or_404(ReceiptProcessing, id=receipt_id)
-        if receipt_record.status != 'ready_for_review':
+        receipt_service = ReceiptService()
+        status_info = receipt_service.get_receipt_status(receipt_id)
+        
+        if not status_info:
+            from django.http import Http404
+            raise Http404("Paragon nie został znaleziony")
+        
+        if not status_info['is_ready_for_review']:
             # If not ready for review, redirect to status page
-            return HttpResponseRedirect(reverse_lazy('chatbot:receipt_processing_status', kwargs={'receipt_id': receipt_id}))
+            return HttpResponseRedirect(
+                reverse_lazy('chatbot:receipt_processing_status', kwargs={'receipt_id': receipt_id})
+            )
 
+        extracted_products = receipt_service.get_extracted_products(receipt_id)
+        
         context = {
             'receipt_id': receipt_id,
-            'raw_ocr_text': receipt_record.raw_ocr_text,
-            'extracted_data': json.dumps(receipt_record.extracted_data) if receipt_record.extracted_data else '[]',
+            'status_info': status_info,
+            'raw_ocr_text': status_info['raw_ocr_text'],
+            'extracted_data': json.dumps(extracted_products),
         }
         return render(request, 'chatbot/receipt_review.html', context)
 
-    @method_decorator(csrf_exempt, name='dispatch')
     def post(self, request, receipt_id):
-        receipt_record = get_object_or_404(ReceiptProcessing, id=receipt_id)
+        receipt_service = ReceiptService()
+        
         try:
-            # Assuming data comes as JSON from the frontend
+            # Parse reviewed products data from frontend
             products_data = json.loads(request.body.decode('utf-8'))
-            receipt_processor.update_pantry(products_data)
             
-            receipt_record.status = 'completed'
-            receipt_record.processed_at = timezone.now()
-            receipt_record.save()
-
-            return JsonResponse({'success': True, 'redirect_url': reverse_lazy('chatbot:pantry_list')})
+            # Finalize receipt processing using service
+            success, message = receipt_service.finalize_receipt_processing(
+                receipt_id, 
+                products_data
+            )
+            
+            if success:
+                return JsonResponse({
+                    'success': True, 
+                    'message': message,
+                    'redirect_url': reverse_lazy('chatbot:pantry_list')
+                })
+            else:
+                return JsonResponse({
+                    'success': False, 
+                    'error': message
+                }, status=400)
+                
+        except json.JSONDecodeError:
+            return JsonResponse({
+                'success': False, 
+                'error': 'Nieprawidłowe dane JSON'
+            }, status=400)
         except Exception as e:
-            receipt_record.status = 'error'
-            receipt_record.error_message = f"Błąd podczas zapisywania danych do spiżarni: {e}"
-            receipt_record.save()
-            logger.error(f"Error saving reviewed receipt data for {receipt_id}: {e}", exc_info=True)
-            return JsonResponse({'success': False, 'error': str(e)}, status=400)
+            logger.error(f"Error in receipt review for {receipt_id}: {e}", exc_info=True)
+            return JsonResponse({
+                'success': False, 
+                'error': 'Wystąpił nieoczekiwany błąd'
+            }, status=500)
 
 class PantryListView(ListView):
     model = PantryItem
@@ -172,19 +216,13 @@ class PantryListView(ListView):
     context_object_name = 'pantry_items'
 
 
-def run_async(coro):
-    """Helper to run async functions in sync context"""
-    try:
-        loop = asyncio.get_event_loop()
-    except RuntimeError:
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-    return loop.run_until_complete(coro)
+
 
 class ChatView(View):
     """Main chat interface view"""
     def get(self, request: HttpRequest):
-        agents = Agent.objects.filter(is_active=True).order_by('name')
+        # Use fat model method
+        agents = Agent.get_active_agents()
         context = {
             'agents': agents,
             'title': 'Django Agent - Chat Interface'
@@ -196,22 +234,25 @@ class AgentListView(View):
     def get(self, request: HttpRequest):
         try:
             agents = []
-            for agent in Agent.objects.filter(is_active=True).order_by('name'):
+            # Use fat model method
+            for agent in Agent.get_active_agents():
                 agents.append({
                     'name': agent.name,
                     'type': agent.agent_type,
                     'capabilities': agent.capabilities,
-                    'description': agent.persona_prompt[:200] + "..." if len(agent.persona_prompt) > 200 else agent.persona_prompt
+                    'description': agent.get_description()  # Use model method
                 })
             return JsonResponse({'success': True, 'agents': agents})
         except Exception as e:
             logger.error(f"Error listing agents: {str(e)}")
             return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
-@method_decorator(csrf_exempt, name='dispatch')
+# WARNING: This API view now requires CSRF token for POST requests.
+# If this is an API endpoint, consider migrating to Django Rest Framework
+# with token-based authentication instead of session-based authentication.
 class ConversationCreateView(View):
     """API view for creating new conversations"""
-    def post(self, request: HttpRequest):
+    async def post(self, request: HttpRequest):
         try:
             data = json.loads(request.body.decode('utf-8'))
             agent_name = data.get('agent_name')
@@ -219,11 +260,11 @@ class ConversationCreateView(View):
             title = data.get('title')
             if not agent_name:
                 return JsonResponse({'success': False, 'error': 'Agent name is required'}, status=400)
-            session_id = run_async(conversation_manager.create_conversation(
+            session_id = await conversation_manager.create_conversation(
                 agent_name=agent_name,
                 user_id=user_id,
                 title=title
-            ))
+            )
             return JsonResponse({'success': True, 'session_id': session_id})
         except ValueError as e:
             return JsonResponse({'success': False, 'error': str(e)}, status=400)
@@ -231,27 +272,29 @@ class ConversationCreateView(View):
             logger.error(f"Error creating conversation: {str(e)}")
             return JsonResponse({'success': False, 'error': 'Internal server error'}, status=500)
 
-@method_decorator(csrf_exempt, name='dispatch')
+# WARNING: This API view now requires CSRF token for POST requests.
+# If this is an API endpoint, consider migrating to Django Rest Framework
+# with token-based authentication instead of session-based authentication.
 class ChatMessageView(View):
     """API view for sending messages to agents"""
-    def post(self, request: HttpRequest):
+    async def post(self, request: HttpRequest):
         try:
             data = json.loads(request.body.decode('utf-8'))
             session_id = data.get('session_id')
             message = data.get('message')
             if not session_id or not message:
                 return JsonResponse({'success': False, 'error': 'Session ID and message are required'}, status=400)
-            run_async(conversation_manager.add_message(
+            await conversation_manager.add_message(
                 session_id=session_id,
                 role='user',
                 content=message,
                 metadata={'timestamp': 'auto'}
-            ))
-            context = run_async(conversation_manager.get_conversation_context(session_id))
+            )
+            context = await conversation_manager.get_conversation_context(session_id)
             if not context:
                 return JsonResponse({'success': False, 'error': 'Conversation not found'}, status=404)
             agent_name = context['conversation']['agent_name']
-            agent = run_async(agent_factory.create_agent_from_db(agent_name))
+            agent = await agent_factory.create_agent_from_db(agent_name)
             now = timezone.now()
             current_datetime_str = now.strftime("%A, %Y-%m-%d %H:%M:%S")
             agent_input = {
@@ -261,15 +304,15 @@ class ChatMessageView(View):
                 'user_id': context['conversation']['user_id'],
                 'current_datetime': current_datetime_str
             }
-            response = run_async(agent.safe_process(agent_input))
+            response = await agent.safe_process(agent_input)
             if response.success:
                 agent_message = response.data.get('response', 'No response generated')
-                run_async(conversation_manager.add_message(
+                await conversation_manager.add_message(
                     session_id=session_id,
                     role='assistant',
                     content=agent_message,
                     metadata=response.metadata or {}
-                ))
+                )
                 return JsonResponse({'success': True, 'response': agent_message, 'agent': agent_name, 'metadata': response.metadata})
             else:
                 return JsonResponse({'success': False, 'error': response.error, 'agent': agent_name})
@@ -279,12 +322,12 @@ class ChatMessageView(View):
 
 class ConversationHistoryView(View):
     """API view for getting conversation history"""
-    def get(self, request: HttpRequest, session_id: str):
+    async def get(self, request: HttpRequest, session_id: str):
         try:
-            history = run_async(conversation_manager.get_conversation_history(
+            history = await conversation_manager.get_conversation_history(
                 session_id=session_id,
                 limit=int(request.GET.get('limit', 50))
-            ))
+            )
             return JsonResponse({'success': True, 'history': history})
         except Exception as e:
             logger.error(f"Error getting conversation history: {str(e)}")
@@ -292,9 +335,9 @@ class ConversationHistoryView(View):
 
 class ConversationInfoView(View):
     """API view for getting conversation information"""
-    def get(self, request: HttpRequest, session_id: str):
+    async def get(self, request: HttpRequest, session_id: str):
         try:
-            info = run_async(conversation_manager.get_conversation_info(session_id))
+            info = await conversation_manager.get_conversation_info(session_id)
             if info:
                 return JsonResponse({'success': True, 'conversation': info})
             else:

@@ -1,167 +1,431 @@
-# Witaj w Świecie Twojego Osobistego Asystenta AI
+# Agenty - Twój Inteligentny Asystent AI 🤖
 
-Ten plik to instrukcja obsługi Twojej osobistej aplikacji z inteligentnym asystentem. Przeczytaj go, aby dowiedzieć się, czym jest ten program, co potrafi i jak z niego korzystać.
-
----
-
-## Czym jest ta aplikacja?
-
-Wyobraź sobie, że masz na swoim komputerze prywatnego, inteligentnego pomocnika. To właśnie jest ta aplikacja. To nie jest kolejny chatbot na stronie internetowej, ale Twój własny, lokalny system sztucznej inteligencji. Działa on w całości na Twoim sprzęcie, co zapewnia pełną prywatność i bezpieczeństwo Twoich danych.
-
-Możesz z nim rozmawiać, zadawać mu pytania, a nawet uczyć go nowych rzeczy na podstawie własnych dokumentów.
+Nowoczesna aplikacja Django z zaawansowanymi agentami AI, zarządzaniem spiżarnią, analizą paragonów i kompletnym systemem RAG (Retrieval-Augmented Generation).
 
 ---
 
-## Co potrafi Twój Asystent?
+## 🎯 Czym jest Agenty?
 
-Twój asystent AI został wyposażony w kilka "supermocy", które sprawiają, że jest niezwykle użyteczny:
+Agenty to kompleksowy system sztucznej inteligencji działający lokalnie na Twoim komputerze. Zapewnia pełną prywatność danych i oferuje zaawansowane funkcje AI bez konieczności wysyłania informacji do zewnętrznych serwisów.
 
-### 🧠 Inteligentna Rozmowa
-Możesz z nim po prostu rozmawiać na dowolne tematy. Asystent rozumie kontekst rozmowy i stara się odpowiadać w sposób sensowny i spójny. Idealnie nadaje się do burzy mózgów, pisania tekstów czy po prostu jako towarzysz do rozmowy.
+### ✨ Kluczowe Funkcje
 
-### 🌐 Wiedza z Internetu
-Asystent potrafi samodzielnie zdecydować, że potrzebuje poszukać informacji w internecie, aby odpowiedzieć na Twoje pytanie. Dzięki temu jego wiedza jest zawsze aktualna i może odpowiadać na pytania dotyczące bieżących wydarzeń, znanych osób czy specyficznych faktów, unikając przy tym "halucynacji" (zmyślania odpowiedzi).
-
-### 📄 Ekspert od Twoich Dokumentów
-To jedna z potężnych funkcji. Możesz "nauczyć" asystenta treści swoich własnych dokumentów (np. plików PDF, notatek w formacie .txt). Po przesłaniu plików, agent automatycznie się z nimi zapozna i będzie gotowy do odpowiadania na pytania dotyczące informacji zawartych w tych dokumentach. Działa to jak Twoja osobista, inteligentna wyszukiwarka do własnych materiałów.
-
-### 🛒 Zarządzanie Spiżarnią i Analiza Paragonów (NOWOŚĆ!)
-Ta funkcja pozwala Ci na inteligentne zarządzanie zawartością Twojej spiżarni lub lodówki. Możesz:
-
-1.  **Przesłać zdjęcie paragonu:** System automatycznie odczyta tekst z paragonu (OCR) i wyodrębni produkty, ich ilości i jednostki.
-2.  **Monitorować przetwarzanie:** Zobaczysz status przetwarzania (np. "OCR w toku", "Ekstrakcja AI w toku").
-3.  **Recenzować i edytować:** Przed zapisaniem do spiżarni, możesz sprawdzić i poprawić wyodrębnione dane. Masz pełną kontrolę nad nazwami produktów, ilościami, jednostkami, a nawet możesz dodać **daty przydatności do spożycia**!
-4.  **Zarządzać spiżarnią:** Po zapisaniu, produkty trafiają do Twojej wirtualnej spiżarni. Możesz przeglądać jej zawartość w dowolnym momencie.
-5.  **Pytać Asystenta:** Twój asystent AI potrafi odpowiedzieć na pytania dotyczące zawartości spiżarni, np. "Co mam w lodówce?", "Czy mam mleko?", "Ile mam jajek?".
-
-### ☀️ Sprawdzanie Pogody
-Jeśli zapytasz o pogodę w dowolnym mieście na świecie, asystent skorzysta z serwisu pogodowego, aby podać Ci aktualną prognozę.
+- **🧠 Inteligentne Agenty AI** - Specjalizowane agenty z różnymi kompetencjami
+- **📄 System RAG** - Upload dokumentów i rozmowy o ich zawartości  
+- **🧾 Analiza Paragonów** - OCR z przyspieszeniem GPU i ekstrakcja produktów
+- **🏪 Zarządzanie Spiżarnią** - Inteligentne śledzenie produktów i dat przydatności
+- **🌐 Wyszukiwanie Web** - Aktualne informacje z internetu
+- **☀️ Prognoza Pogody** - Bieżące warunki pogodowe dla dowolnego miasta
+- **💬 Nowoczesny Chat UI** - Responsywny interfejs z animacjami
 
 ---
 
-## Wymagania Systemowe
+## 🏗️ Architektura Systemu
 
-### Minimalne:
-- **Python 3.13+** 
+### Backend (Django 5.2.5)
+```
+agenty/
+├── core/                    # Konfiguracja Django
+│   ├── settings.py         # Główne ustawienia
+│   ├── settings_dev.py     # Środowisko development
+│   ├── settings_prod.py    # Środowisko produkcyjne
+│   ├── celery.py          # Konfiguracja Celery
+│   └── database_config.py  # Konfiguracja bazy danych
+├── chatbot/                # Główna aplikacja
+│   ├── api/               # REST API endpoints
+│   │   ├── views.py       # Django views z @csrf_exempt
+│   │   ├── drf_views.py   # Django REST Framework views
+│   │   └── urls.py        # Routing API
+│   ├── services/          # Logika biznesowa (Fat Model pattern)
+│   │   ├── agent_factory.py    # Factory pattern dla agentów
+│   │   ├── agents.py           # Implementacje agentów AI
+│   │   ├── pantry_service.py   # Zarządzanie spiżarnią
+│   │   ├── receipt_service.py  # Przetwarzanie paragonów
+│   │   └── async_services.py   # Asynchroniczne operacje
+│   ├── models.py          # Modele Django z business logic
+│   ├── views.py           # Widoki HTML
+│   ├── tasks.py           # Zadania Celery
+│   └── templates/         # Szablony HTML z Tailwind CSS
+└── requirements.txt       # Zależności Python
+```
+
+### Frontend (Vanilla JS + Tailwind CSS)
+- **Responsive Design** - Działa na wszystkich urządzeniach
+- **Modern Chat Interface** - Bubble UI z animacjami
+- **Drag & Drop Upload** - Intuicyjne przesyłanie plików
+- **Real-time Status** - Live updates statusów przetwarzania
+- **Glass Effects** - Nowoczesne efekty wizualne
+
+---
+
+## ⚙️ Wymagania Systemowe
+
+### Minimalne
+- **Python 3.13+**
 - **4 GB RAM**
-- **2 GB wolnego miejsca na dysku**
-- **Przeglądarka internetowa** (Chrome, Firefox, Edge)
+- **2 GB miejsca na dysku**
+- **Przeglądarka** (Chrome, Firefox, Edge)
 
-### Zalecane dla najlepszej wydajności:
-- **Karta graficzna NVIDIA RTX** (dla przyspieszenia GPU)
-- **8 GB RAM lub więcej**
-- **CUDA 12.9+** (automatycznie wykrywane)
+### Zalecane dla GPU
+- **NVIDIA RTX 20xx/30xx/40xx**
+- **8 GB RAM**
+- **CUDA 12.9+** (auto-wykrywane)
+- **10 GB miejsca** (dla modeli AI)
 
-### 🚀 Optymalizacja GPU
-Jeśli masz kartę NVIDIA RTX, aplikacja **automatycznie wykryje i wykorzysta GPU** do:
-- Szybszego przetwarzania paragonów (EasyOCR)
-- Przyspieszenia rozpoznawania tekstu
-- Lepszej wydajności modeli AI
-
-Sprawdź czy Twoja karta jest wykryta przez uruchomienie `nvidia-smi` w terminalu.
-
----
-
-## Jak Zacząć? (Instrukcja krok po kroku)
-
-Uruchomienie aplikacji jest bardzo proste.
-
-1.  **Znajdź plik `start.sh`** w głównym folderze aplikacji.
-2.  **Kliknij go dwukrotnie**. Na ekranie pojawi się czarne okno terminala z przewijającym się tekstem. To znak, że Twój asystent "budzi się do życia".
-3.  **Poczekaj chwilę**. W terminalu pojawi się informacja podobna do tej: `Starting development server at http://127.0.0.1:8000/`. Oznacza to, że wszystko jest gotowe.
-4.  **Otwórz przeglądarkę internetową** (np. Chrome, Firefox, Edge).
-5.  W pasku adresu wpisz: `http://127.0.0.1:8000/` i naciśnij Enter.
-
-To wszystko! Powinieneś teraz zobaczyć **nowoczesny dashboard** z przeglądem wszystkich funkcji aplikacji.
+### 🚀 Przyspieszenie GPU
+System automatycznie wykrywa i wykorzystuje karty NVIDIA dla:
+- **EasyOCR** - Szybsze rozpoznawanie tekstu z paragonów
+- **Przetwarzanie AI** - Przyspieszenie modeli językowych
+- **Computer Vision** - Analiza obrazów
 
 ---
 
-## Jak Korzystać z Aplikacji?
+## 🚀 Instalacja i Uruchomienie
 
-Aplikacja ma teraz **nowoczesny, intuicyjny dashboard** z łatwą nawigacją:
+### 1. Przygotowanie środowiska
+```bash
+# Klonowanie repozytorium
+git clone <repo-url>
+cd agenty
 
-### 🏠 Dashboard - Strona Główna
-Po wejściu na `http://127.0.0.1:8000/` zobaczysz:
-- **Statystyki** - liczba aktywnych agentów, dokumentów, produktów w spiżarni
-- **Karty funkcji** - kliknij w dowolną kartę aby przejść do odpowiedniej sekcji
-- **Ostatnie paragony** - podgląd statusów przetwarzania paragonów
-- **Górna nawigacja** - dostęp do wszystkich funkcji jednym kliknięciem
+# Tworzenie środowiska wirtualnego
+python -m venv .venv
+source .venv/bin/activate  # Linux/Mac
+# lub .venv\Scripts\activate  # Windows
 
-### 💬 Chat - Rozmowa z Asystentem
-**Najnowocześniejszy interfejs czatu z AI:**
-- **Bubble UI** - nowoczesny wygląd wiadomości z animacjami
-- **Wskaźniki pisania** - widzisz gdy asystent pisze odpowiedź
-- **Quick Actions** - szybkie pytania jednym kliknięciem
-- **Smart Status** - bieżący status połączenia z agentem
-- **Zalecamy agenta `bielik`** - ma dostęp do wszystkich narzędzi
-- **GPU Optimization** - szybsze przetwarzanie na kartach RTX
+# Instalacja zależności
+pip install -r requirements.txt
+```
 
-### 📄 Dokumenty RAG - Twoja Baza Wiedzy
-**Nowocześnie przeprojektowany system dokumentów:**
-- **Drag & Drop Upload** - przeciągnij pliki bezpośrednio do przeglądarki
-- **Karty dokumentów** - elegancki widok grid z ikonami typu pliku
-- **Status badges** - sprawdzaj stan przetwarzania w czasie rzeczywistym
-- **Smart Preview** - podgląd informacji o plikach przed wysyłaniem
-- **Direct Chat Integration** - przejdź do czatu z pytaniem o dokument jednym kliknięciem
-- **Walidacja kliencka** - sprawdzanie rozmiaru i typu pliku przed wysłaniem
+### 2. Konfiguracja
+```bash
+# Skopiuj plik środowiskowy
+cp .env.example .env
 
-### 🧾 Paragony - Automatyczna Analiza
-**Teraz z przyspieszeniem GPU!** System szybciej przetwarza obrazy:
-1. **Prześlij zdjęcie paragonu** - przeciągnij i upuść lub wybierz plik
-2. **Automatyczne OCR** - rozpoznawanie tekstu z wykorzystaniem karty graficznej
-3. **Ekstrakcja AI** - wyodrębnianie produktów, cen, ilości
-4. **Przegląd i edycja** - sprawdź dane przed zapisem
-5. **Dodanie dat przydatności** - kontroluj świeżość produktów
+# Edytuj .env file z własnymi ustawieniami:
+# - DJANGO_SECRET_KEY
+# - OPENWEATHERMAP_API_KEY
+# - DATABASE_URL (opcjonalnie)
+```
 
-### 🏪 Spiżarnia - Zarządzanie Produktami
-- **Przegląd zawartości** - co masz w domu
-- **Daty przydatności** - kontrola świeżości
-- **Integracja z AI** - pytaj asystenta o produkty
-- Przykłady: "Co mam w lodówce?", "Czy mam mleko?", "Co wkrótce się zepsuje?"
+### 3. Uruchomienie
+```bash
+# Metoda 1: Użyj skryptu startowego (zalecane)
+./start.sh
 
-### Panel Administracyjny (Dla Ciekawskich)
+# Metoda 2: Manualne uruchomienie
+python manage.py migrate
+python manage.py runserver
 
-Pod adresem `http://127.0.0.1:8000/admin` znajduje się panel administracyjny. To jest "zaplecze" Twojej aplikacji. Możesz tam zobaczyć listę dostępnych agentów i ich konfigurację. Nie musisz tam nic zmieniać, aby aplikacja działała, ale warto wiedzieć, że takie miejsce istnieje.
+# Opcjonalnie: Uruchom Celery dla zadań w tle
+celery -A core worker --loglevel=info
+```
 
----
-
-## 🆕 Najnowsze Aktualizacje
-
-### Wersja 2.0 (Sierpień 2025)
-- ✅ **Nowy Dashboard** - Nowoczesny interfejs z przeglądem wszystkich funkcji
-- ✅ **Przyspieszenie GPU** - Automatyczne wykrywanie i wykorzystanie kart NVIDIA RTX
-- ✅ **Ulepszona Nawigacja** - Intuicyjne menu z emoji i responsive design  
-- ✅ **Lepsze UX** - Karty funkcji, statystyki, smooth transitions
-- ✅ **Optymalizacja EasyOCR** - Szybsze przetwarzanie paragonów na GPU
-- ✅ **Responsywny Design** - Działa na wszystkich rozmiarach ekranów
-- ✅ **Kompletny Redesign UI/UX** - Spójny system designowy z Tailwind CSS
-- ✅ **Nowoczesny Chat Interface** - Bubble UI, wskaźniki pisania, quick actions
-- ✅ **Ulepszone Formularze** - Drag & drop, walidacja, loading states
-- ✅ **Glass Effects** - Efekty szkła, animacje, ripple effects na przyciskach
-- ✅ **Toast Notifications** - Inteligentny system powiadomień
-- ✅ **Animacje i Transycje** - Płynne przejścia między stanami
-
-### Funkcje w przygotowaniu:
-- 🔄 **Tryb ciemny** - dla osób preferujących dark mode
-- 🔄 **Powiadomienia** - alerty o produktach z kończącą się przydatnością  
-- 🔄 **Eksport danych** - backup spiżarni do plików CSV/JSON
-- 🔄 **Więcej języków** - obsługa paragonów w różnych językach
+### 4. Dostęp do aplikacji
+- **Dashboard**: http://127.0.0.1:8000/
+- **Chat**: http://127.0.0.1:8000/chat/
+- **Admin Panel**: http://127.0.0.1:8000/admin/
+- **API Docs**: http://127.0.0.1:8000/api/
 
 ---
 
-## 📞 Pomoc i Wsparcie
+## 📋 Główne Funkcjonalności
 
-Jeśli napotkasz problemy:
-1. Sprawdź czy aplikacja działa pod `http://127.0.0.1:8000/`
-2. Upewnij się że terminal z `./start.sh` jest nadal otwarty
-3. Zrestartuj aplikację zatrzymując terminal (Ctrl+C) i uruchamiając ponownie
+### 🤖 System Agentów AI
 
-**Masz kartę RTX ale widzisz "Using CPU"?**
-- Sprawdź `nvidia-smi` w terminalu
-- Aplikacja automatycznie wykryje i użyje GPU przy następnym analizowaniu paragonu
+**Dostępni Agenci:**
+- **bielik** - Agent główny z dostępem do wszystkich narzędzi
+- **router** - Agent routingu i zarządzania rozmowami
+- **Specialization agents** - Agenty specjalistyczne dla konkretnych zadań
+
+**Capabilities:**
+- `llm_chat` - Rozmowy w języku naturalnym
+- `web_search` - Wyszukiwanie informacji w internecie
+- `weather_check` - Sprawdzanie prognozy pogody
+- `rag_query` - Odpowiedzi na podstawie przesłanych dokumentów
+- `pantry_management` - Zarządzanie spiżarnią
+
+### 📄 System RAG (Retrieval-Augmented Generation)
+
+**Upload Dokumentów:**
+- Obsługiwane formaty: PDF, TXT, DOCX, MD
+- Maksymalny rozmiar: 10MB
+- Automatyczne indeksowanie treści
+- Vector search dla precyzyjnych odpowiedzi
+
+**Funkcje:**
+- Drag & drop interface
+- Preview przed wysłaniem
+- Status tracking przetwarzania
+- Bezpośrednie pytania o dokumenty
+
+### 🧾 Analiza Paragonów (OCR + AI)
+
+**Proces przetwarzania:**
+1. **Upload** - Prześlij zdjęcie paragonu
+2. **OCR** - EasyOCR z przyspieszeniem GPU
+3. **AI Extraction** - Wyodrębnienie produktów, cen, ilości
+4. **Review** - Edycja i weryfikacja danych
+5. **Save** - Dodanie do spiżarni z datami przydatności
+
+**GPU Optimization:**
+- Automatyczne wykrywanie kart NVIDIA
+- 3-5x szybsze przetwarzanie na RTX
+- Fallback na CPU gdy GPU niedostępne
+
+### 🏪 Zarządzanie Spiżarnią
+
+**Smart Pantry Management:**
+- Automatyczne dodawanie produktów z paragonów
+- Śledzenie dat przydatności do spożycia
+- Alerty o produktach kończących się
+- Integracja z AI (pytania o zawartość)
+- Bulk operations (dodawanie, edycja, usuwanie)
+
+**Business Logic w modelach:**
+```python
+# Przykłady użycia
+item.is_expired()           # Sprawdź czy produkt się zepsuł
+item.days_until_expiry()    # Ile dni do przydatności
+PantryItem.get_expiring_soon(7)  # Produkty kończące się w 7 dni
+```
+
+### 🌐 Integracje Zewnętrzne
+
+**Web Search (DuckDuckGo):**
+- Wyszukiwanie aktualnych informacji
+- Bezpieczne API bez logowania
+- Integracja z agentami AI
+
+**Weather Service (OpenWeatherMap):**
+- Bieżąca pogoda dla dowolnego miasta
+- Prognoza 5-dniowa
+- Integracja z chat interface
 
 ---
 
-## 🎉 Ciesz się swoim osobistym asystentem AI!
+## 🔧 Konfiguracja Zaawansowana
 
-Teraz masz dostęp do pełni możliwości swojego inteligentnego asystenta. Eksploruj funkcje, przesyłaj dokumenty, analizuj paragony i rozmawiaj z AI - wszystko w jednym, bezpiecznym miejscu na Twoim komputerze.
+### Cache System (Redis + Database Fallback)
+```python
+# Automatyczne przełączanie Redis ↔ Database
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.redis.RedisCache',  # Jeśli Redis dostępne
+        # lub
+        'BACKEND': 'django.core.cache.backends.db.DatabaseCache',  # Fallback
+    }
+}
+```
+
+### Settings Management
+- **settings.py** - Główny entry point z auto-detection
+- **settings_dev.py** - Development (SQLite, Debug=True)
+- **settings_prod.py** - Production (PostgreSQL, optimizations)
+
+### API Architecture
+- **Django Views** - Main API z @csrf_exempt
+- **DRF Views** - Backup REST endpoints
+- **Async Support** - Przygotowane do async operations
+
+---
+
+## 🧪 Testing
+
+```bash
+# Uruchom wszystkie testy
+python manage.py test
+
+# Testy z pytest
+pytest
+
+# Testy specyficzne
+python manage.py test chatbot.tests.test_models
+python manage.py test chatbot.tests.test_api
+```
+
+**Test Coverage:**
+- Models business logic
+- API endpoints
+- Services layer
+- OCR processing
+- Agent functionality
+
+---
+
+## 📈 Monitoring i Wydajność
+
+### GPU Monitoring
+```bash
+# Sprawdź dostępność GPU
+nvidia-smi
+
+# Monitor użycia podczas OCR
+watch -n 1 nvidia-smi
+```
+
+### Django Debug Toolbar
+- Dostępny w development mode
+- SQL queries profiling
+- Cache hits/misses
+- Template rendering times
+
+### Logging
+```python
+# Centralized logging w settings
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'file': {
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'filename': 'django.log',
+        },
+    },
+    'loggers': {
+        'chatbot': {
+            'handlers': ['file'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+    },
+}
+```
+
+---
+
+## 🔒 Bezpieczeństwo
+
+### Implemented Security Features
+- **CSRF Protection** - Wszystkie formularze zabezpieczone
+- **CORS Headers** - Konfigurowane dla API
+- **File Upload Validation** - Sprawdzanie typu i rozmiaru plików
+- **SQL Injection Protection** - Django ORM
+- **XSS Prevention** - Template auto-escaping
+
+### Production Security Checklist
+- [ ] DEBUG = False
+- [ ] Secure SECRET_KEY
+- [ ] HTTPS redirect
+- [ ] HSTS headers
+- [ ] Secure cookies
+- [ ] Database credentials w .env
+
+---
+
+## 🐛 Troubleshooting
+
+### Częste Problemy
+
+**1. CSRF Errors w API**
+```python
+# Fixed with @csrf_exempt decorators
+@method_decorator(csrf_exempt, name='dispatch')
+class ConversationCreateView(View):
+    # ...
+```
+
+**2. Redis Connection Issues**
+```python
+# Auto-fallback to database cache
+try:
+    r = redis.Redis(host='127.0.0.1', port=6379, db=1)
+    r.ping()
+    # Use Redis
+except:
+    # Use database cache
+```
+
+**3. GPU Not Detected**
+```bash
+# Check NVIDIA drivers
+nvidia-smi
+
+# Install CUDA toolkit if needed
+# Application will fallback to CPU automatically
+```
+
+**4. OCR Processing Stuck**
+```bash
+# Check Celery worker status
+celery -A core inspect active
+
+# Restart worker if needed
+celery -A core worker --loglevel=info
+```
+
+---
+
+## 🚀 Development Roadmap
+
+### ✅ Completed (v2.0)
+- Modern Dashboard UI/UX
+- GPU acceleration for OCR
+- Fat Model, Thin View architecture
+- Complete API refactoring
+- CSRF token handling
+- Redis cache with fallback
+- Responsive design system
+
+### 🔄 In Progress
+- [ ] Dark mode support
+- [ ] Real-time notifications
+- [ ] Advanced pantry analytics
+- [ ] Multi-language receipt support
+- [ ] Voice interface integration
+
+### 📋 Planned Features
+- [ ] Mobile PWA support
+- [ ] Advanced AI model integration
+- [ ] Barcode scanning
+- [ ] Shopping list generation
+- [ ] Data export/import
+- [ ] Multi-user support
+
+---
+
+## 📞 Support & Contributing
+
+### Getting Help
+1. Check status: http://127.0.0.1:8000/
+2. Verify terminal z ./start.sh is running
+3. Restart: Ctrl+C → ./start.sh
+4. Check logs in Django admin
+
+### Development Setup
+```bash
+# Install development dependencies
+pip install -r requirements-dev.txt
+
+# Run with debug
+DEBUG=True python manage.py runserver
+
+# Pre-commit hooks
+pre-commit install
+```
+
+### Contributing Guidelines
+- Follow PEP 8 style guide
+- Add tests for new features
+- Update documentation
+- Use meaningful commit messages
+- Fat Model, Thin View pattern
+
+---
+
+## 📄 License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+---
+
+## 🎉 Ready to Start!
+
+Twój inteligentny asystent AI jest gotowy do pracy! 
+
+1. **Uruchom**: `./start.sh`
+2. **Otwórz**: http://127.0.0.1:8000/
+3. **Eksploruj**: Dashboard → Chat → Upload dokumentów → Analizuj paragony
+
+Miłego korzystania z Agenty! 🚀

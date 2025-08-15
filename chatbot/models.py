@@ -1,7 +1,10 @@
-from django.db import models
+
 from django.core.exceptions import ValidationError
+from django.utils import timezone
+from django.urls import reverse
 import json
 import uuid
+from typing import Dict, List, Optional
 from .validators import validate_receipt_file
 
 
@@ -17,9 +20,82 @@ class PantryItem(models.Model):
         verbose_name = "Produkt w spiżarni"
         verbose_name_plural = "Produkty w spiżarni"
         ordering = ['-updated_date']
+        indexes = [
+            models.Index(fields=['expiry_date']),
+            models.Index(fields=['updated_date']),
+        ]
 
     def __str__(self):
         return f"{self.name} - {self.quantity} {self.unit}"
+    
+    # Business logic methods (Fat Model pattern)
+    def is_expired(self) -> bool:
+        """Check if the item is expired"""
+        if not self.expiry_date:
+            return False
+        return self.expiry_date < timezone.now().date()
+    
+    def days_until_expiry(self) -> Optional[int]:
+        """Get number of days until expiry (negative if expired)"""
+        if not self.expiry_date:
+            return None
+        delta = self.expiry_date - timezone.now().date()
+        return delta.days
+    
+    def is_expiring_soon(self, days: int = 7) -> bool:
+        """Check if item expires within specified days"""
+        days_left = self.days_until_expiry()
+        return days_left is not None and 0 <= days_left <= days
+    
+    def update_quantity(self, new_quantity: float):
+        """Update item quantity and save"""
+        self.quantity = new_quantity
+        self.save()
+    
+    def add_quantity(self, amount: float):
+        """Add to existing quantity"""
+        self.quantity += amount
+        self.save()
+    
+    def subtract_quantity(self, amount: float):
+        """Subtract from existing quantity (doesn't allow negative)"""
+        self.quantity = max(0, self.quantity - amount)
+        self.save()
+    
+    @classmethod
+    def get_expired_items(cls):
+        """Get all expired items"""
+        today = timezone.now().date()
+        return cls.objects.filter(expiry_date__lt=today)
+    
+    @classmethod
+    def get_expiring_soon(cls, days: int = 7):
+        """Get items expiring within specified days"""
+        today = timezone.now().date()
+        future_date = today + timezone.timedelta(days=days)
+        return cls.objects.filter(
+            expiry_date__gte=today,
+            expiry_date__lte=future_date
+        )
+    
+    @classmethod
+    def get_low_stock_items(cls, threshold: float = 1.0):
+        """Get items with low stock"""
+        return cls.objects.filter(quantity__lte=threshold)
+    
+    @classmethod
+    def get_statistics(cls) -> Dict:
+        """Get pantry statistics"""
+        from django.db.models import Count, Avg
+        today = timezone.now().date()
+        
+        return {
+            'total_items': cls.objects.count(),
+            'expired_count': cls.objects.filter(expiry_date__lt=today).count(),
+            'expiring_soon_count': cls.get_expiring_soon().count(),
+            'low_stock_count': cls.get_low_stock_items().count(),
+            'average_quantity': cls.objects.aggregate(avg=Avg('quantity'))['avg'] or 0,
+        }
 
 
 class ReceiptProcessing(models.Model):
@@ -52,9 +128,128 @@ class ReceiptProcessing(models.Model):
         verbose_name = "Przetwarzanie paragonu"
         verbose_name_plural = "Przetwarzanie paragonów"
         ordering = ['-uploaded_at']
+        indexes = [
+            models.Index(fields=['status']),
+            models.Index(fields=['uploaded_at']),
+        ]
 
     def __str__(self):
         return f"Paragon {self.id} - Status: {self.get_status_display()}"
+    
+    # Business logic methods (Fat Model pattern)
+    def mark_as_processing(self):
+        """Mark receipt as being processed"""
+        self.status = 'ocr_in_progress'
+        self.save()
+    
+    def mark_ocr_done(self, raw_text: str):
+        """Mark OCR processing as completed"""
+        self.status = 'ocr_done'
+        self.raw_ocr_text = raw_text
+        self.save()
+    
+    def mark_llm_processing(self):
+        """Mark LLM processing as started"""
+        self.status = 'llm_in_progress'
+        self.save()
+    
+    def mark_llm_done(self, extracted_data: dict):
+        """Mark LLM processing as completed"""
+        self.status = 'llm_done'
+        self.extracted_data = extracted_data
+        self.save()
+    
+    def mark_as_ready_for_review(self):
+        """Mark receipt as ready for user review"""
+        self.status = 'ready_for_review'
+        self.save()
+    
+    def mark_as_completed(self):
+        """Mark receipt processing as completed"""
+        self.status = 'completed'
+        self.processed_at = timezone.now()
+        self.save()
+    
+    def mark_as_error(self, error_message: str):
+        """Mark receipt processing as failed with error message"""
+        self.status = 'error'
+        self.error_message = error_message
+        self.save()
+    
+    def is_ready_for_review(self) -> bool:
+        """Check if receipt is ready for user review"""
+        return self.status == 'ready_for_review'
+    
+    def is_completed(self) -> bool:
+        """Check if receipt processing is completed"""
+        return self.status == 'completed'
+    
+    def has_error(self) -> bool:
+        """Check if receipt processing has an error"""
+        return self.status == 'error'
+    
+    def is_processing(self) -> bool:
+        """Check if receipt is currently being processed"""
+        return self.status in ['ocr_in_progress', 'llm_in_progress']
+    
+    def get_redirect_url(self):
+        """Get appropriate redirect URL based on status"""
+        if self.is_ready_for_review():
+            return reverse('chatbot:receipt_review', kwargs={'receipt_id': self.id})
+        return None
+    
+    def get_status_display_with_message(self) -> str:
+        """Get status display with error message if applicable"""
+        if self.has_error() and self.error_message:
+            return f"{self.get_status_display()}: {self.error_message}"
+        return self.get_status_display()
+    
+    def get_extracted_products(self) -> List[Dict]:
+        """Get extracted products from receipt data"""
+        if not self.extracted_data:
+            return []
+        return self.extracted_data.get('products', [])
+    
+    def update_pantry_from_extracted_data(self, products_data: List[Dict]) -> bool:
+        """Update pantry with extracted receipt data"""
+        try:
+            from .services.pantry_service import PantryService
+            pantry_service = PantryService()
+            
+            for product in products_data:
+                name = product.get('name', '').strip()
+                quantity = float(product.get('quantity', 1.0))
+                unit = product.get('unit', 'szt.').strip()
+                
+                if name:
+                    pantry_service.add_or_update_item(name, quantity, unit)
+            
+            self.mark_as_completed()
+            return True
+            
+        except Exception as e:
+            self.mark_as_error(f"Błąd podczas aktualizacji spiżarni: {str(e)}")
+            return False
+    
+    @classmethod
+    def get_recent_receipts(cls, limit: int = 5):
+        """Get recent receipts for dashboard"""
+        return cls.objects.order_by('-uploaded_at')[:limit]
+    
+    @classmethod
+    def get_statistics(cls) -> Dict:
+        """Get receipt processing statistics"""
+        from django.db.models import Count, Q
+        return {
+            'total': cls.objects.count(),
+            'uploaded': cls.objects.filter(status='uploaded').count(),
+            'processing': cls.objects.filter(
+                status__in=['ocr_in_progress', 'llm_in_progress']
+            ).count(),
+            'ready_for_review': cls.objects.filter(status='ready_for_review').count(),
+            'completed': cls.objects.filter(status='completed').count(),
+            'error': cls.objects.filter(status='error').count(),
+        }
 
 
 class Agent(models.Model):
@@ -91,6 +286,82 @@ class Agent(models.Model):
                 self.config['model'] = correct_name
         
         super().save(*args, **kwargs) # Call the original save method
+    
+    # Business logic methods (Fat Model pattern)
+    def get_description(self) -> str:
+        """Get truncated description for display"""
+        if len(self.persona_prompt) > 200:
+            return self.persona_prompt[:200] + "..."
+        return self.persona_prompt
+    
+    def has_capability(self, capability: str) -> bool:
+        """Check if agent has specific capability"""
+        return capability in (self.capabilities or [])
+    
+    def add_capability(self, capability: str):
+        """Add capability to agent"""
+        if not self.capabilities:
+            self.capabilities = []
+        if capability not in self.capabilities:
+            self.capabilities.append(capability)
+            self.save()
+    
+    def remove_capability(self, capability: str):
+        """Remove capability from agent"""
+        if self.capabilities and capability in self.capabilities:
+            self.capabilities.remove(capability)
+            self.save()
+    
+    def update_config(self, key: str, value):
+        """Update agent configuration"""
+        if not self.config:
+            self.config = {}
+        self.config[key] = value
+        self.save()
+    
+    def get_config_value(self, key: str, default=None):
+        """Get configuration value"""
+        return (self.config or {}).get(key, default)
+    
+    def activate(self):
+        """Activate agent"""
+        self.is_active = True
+        self.save()
+    
+    def deactivate(self):
+        """Deactivate agent"""
+        self.is_active = False
+        self.save()
+    
+    def get_conversation_count(self) -> int:
+        """Get number of conversations for this agent"""
+        return self.conversations.count()
+    
+    def get_recent_conversations(self, limit: int = 5):
+        """Get recent conversations for this agent"""
+        return self.conversations.filter(is_active=True).order_by('-updated_at')[:limit]
+    
+    @classmethod
+    def get_active_agents(cls):
+        """Get all active agents"""
+        return cls.objects.filter(is_active=True).order_by('name')
+    
+    @classmethod
+    def get_by_type(cls, agent_type: str):
+        """Get agents by type"""
+        return cls.objects.filter(agent_type=agent_type, is_active=True)
+    
+    @classmethod
+    def get_statistics(cls) -> Dict:
+        """Get agent statistics"""
+        from django.db.models import Count
+        return {
+            'total_agents': cls.objects.count(),
+            'active_agents': cls.objects.filter(is_active=True).count(),
+            'total_conversations': cls.objects.aggregate(
+                count=Count('conversations')
+            )['count'] or 0,
+        }
 
 class Document(models.Model):
     STATUS_CHOICES = [
@@ -104,6 +375,12 @@ class Document(models.Model):
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='processing')
     uploaded_at = models.DateTimeField(auto_now_add=True)
     processed_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['status']),
+            models.Index(fields=['uploaded_at']),
+        ]
 
     def __str__(self):
         return self.title

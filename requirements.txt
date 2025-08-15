@@ -1,9 +1,35 @@
-django
-httpx
-ddgs
-fastapi
-python-dotenv
-# For receipt processing
-easyocr
-PyYAML
-PyMuPDF
+# Core Django packages
+Django==5.2.5
+djangorestframework==3.15.2
+django-environ==0.11.2
+
+# Database (PostgreSQL - install when needed)
+# psycopg2-binary==2.9.9  # Uncomment when PostgreSQL is available
+
+# Background tasks and caching
+celery[redis]==5.3.4
+redis==5.0.1
+django-redis==5.4.0
+
+# HTTP client
+httpx==0.25.2
+
+# Search and web scraping
+ddgs==9.5.2
+
+# Receipt processing and OCR
+easyocr==1.7.1
+PyYAML==6.0.1
+PyMuPDF==1.23.14
+
+# Testing
+pytest-django==4.7.0
+factory-boy==3.3.0
+pytest==7.4.3
+
+# Development tools
+django-debug-toolbar==4.2.0
+
+# Utilities
+pillow==10.1.0
+python-dotenv==1.0.0

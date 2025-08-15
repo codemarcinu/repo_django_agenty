@@ -6,13 +6,11 @@ import httpx
 import re
 from typing import Any, Dict, Optional, List
 from abc import ABC, abstractmethod
-from asgiref.sync import sync_to_async
-
-from .interfaces import BaseAgentInterface, AgentResponse, ErrorSeverity
-from .rag_processor import rag_processor
-from .web_search import ddg_search
-from .weather_service import get_weather
-from .models import PantryItem
+from ..interfaces import BaseAgentInterface, AgentResponse, ErrorSeverity
+from ..rag_processor import rag_processor
+from ..web_search import ddg_search
+from ..weather_service import get_weather
+from .async_services import AsyncPantryService
 
 logger = logging.getLogger(__name__)
 
@@ -321,19 +319,19 @@ Narzędzie: general_conversation
             product_name = product_name_response.data.get('response', '').strip()
 
             if product_name:
-                item = await sync_to_async(lambda: PantryItem.objects.filter(name__icontains=product_name).first())()
+                item = await AsyncPantryService.find_item_by_name(product_name)
                 if item:
-                    pantry_info = f"W spiżarni masz {item.quantity} {item.unit} {item.name}."
+                    pantry_info = f"W spiżarni masz {item['quantity']} {item['unit']} {item['name']}."
                 else:
                     pantry_info = f"Nie znalazłem {product_name} w spiżarni."
             else:
                 pantry_info = "Nie rozumiem, o jaki konkretny produkt pytasz."
         else: # general
-            all_items = await sync_to_async(list)(PantryItem.objects.all().order_by('name'))
+            all_items = await AsyncPantryService.get_all_items()
             if all_items:
                 pantry_info = "W spiżarni masz:\n"
                 for item in all_items:
-                    pantry_info += f"- {item.name}: {item.quantity} {item.unit}\n"
+                    pantry_info += f"- {item['name']}: {item['quantity']} {item['unit']}\n"
             else:
                 pantry_info = "Twoja spiżarnia jest pusta."
         
