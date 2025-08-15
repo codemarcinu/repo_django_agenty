@@ -136,8 +136,11 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 OPENWEATHERMAP_API_KEY = env('OPENWEATHERMAP_API_KEY')
 
 # Celery Configuration
+# Note: If Redis is not available, Celery tasks will fail gracefully
+# and the application will fallback to synchronous processing
 CELERY_BROKER_URL = 'redis://localhost:6379/0'
 CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
+CELERY_TASK_ALWAYS_EAGER = False  # Set to True to run tasks synchronously when debugging
 
 # Django REST Framework Configuration
 REST_FRAMEWORK = {

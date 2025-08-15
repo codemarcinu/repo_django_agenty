@@ -93,7 +93,6 @@ class ReceiptUploadForm(ModelForm):
 class ReceiptUploadView(FormView):
     template_name = 'chatbot/receipt_upload.html'
     form_class = ReceiptUploadForm
-    success_url = reverse_lazy('chatbot:receipt_processing_status') # Redirect to status page
 
     def form_valid(self, form):
         receipt_service = ReceiptService()
@@ -104,14 +103,13 @@ class ReceiptUploadView(FormView):
         )
 
         # Start processing using service
-        if receipt_service.start_processing(receipt_record.id):
-            self.success_url = reverse_lazy(
-                'chatbot:receipt_processing_status', 
-                kwargs={'receipt_id': receipt_record.id}
-            )
-        else:
-            # Handle processing start failure
-            logger.error(f"Failed to start processing for receipt {receipt_record.id}")
+        receipt_service.start_processing(receipt_record.id)
+        
+        # Set success_url with the receipt_id
+        self.success_url = reverse_lazy(
+            'chatbot:receipt_processing_status', 
+            kwargs={'receipt_id': receipt_record.id}
+        )
         
         return super().form_valid(form)
 

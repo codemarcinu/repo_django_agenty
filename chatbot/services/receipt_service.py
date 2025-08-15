@@ -56,11 +56,23 @@ class ReceiptService:
             receipt = ReceiptProcessing.objects.get(id=receipt_id)
             receipt.mark_as_processing()
             
-            # Trigger Celery task
-            from ..tasks import process_receipt_task
-            process_receipt_task.delay(receipt_id)
+            # Try to trigger Celery task
+            try:
+                from ..tasks import process_receipt_task
+                process_receipt_task.delay(receipt_id)
+                logger.info(f"Started Celery processing for receipt {receipt_id}")
+            except Exception as celery_error:
+                logger.warning(f"Celery task failed for receipt {receipt_id}: {celery_error}")
+                # Fallback to synchronous processing
+                try:
+                    from ..receipt_processor import receipt_processor
+                    receipt_processor.process_receipt(receipt_id)
+                    logger.info(f"Completed synchronous processing for receipt {receipt_id}")
+                except Exception as sync_error:
+                    logger.error(f"Both Celery and synchronous processing failed for receipt {receipt_id}: {sync_error}")
+                    receipt.mark_as_error(f"Przetwarzanie nie powiodło się: {sync_error}")
+                    return False
             
-            logger.info(f"Started processing for receipt {receipt_id}")
             return True
             
         except ReceiptProcessing.DoesNotExist:
