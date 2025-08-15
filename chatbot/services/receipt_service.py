@@ -81,10 +81,11 @@ class ReceiptService:
                 # Fallback to synchronous processing
                 try:
                     from ..receipt_processor import receipt_processor
+                    import asyncio
                     logger.debug("Receipt processor imported successfully")
                     
                     logger.info(f"Starting synchronous OCR processing for receipt {receipt_id}")
-                    receipt_processor.process_receipt(receipt_id)
+                    asyncio.run(receipt_processor.process_receipt(receipt_id))
                     logger.info(f"✅ Completed synchronous processing for receipt {receipt_id}")
                     
                 except Exception as sync_error:

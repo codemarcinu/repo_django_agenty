@@ -535,3 +535,38 @@ INFO 2025-08-15 17:06:37,086 inventory_service 68129 140434068347840 Updated inv
 INFO 2025-08-15 17:06:37,087 inventory_service 68129 140434068347840 Created inventory item 2: Chleb graham x1.000
 INFO 2025-08-15 17:06:37,088 inventory_service 68129 140434068347840 Created inventory item 3: Filet z kurczaka x0.650
 INFO 2025-08-15 17:06:37,088 inventory_service 68129 140434068347840 Inventory update completed for receipt 1: 2 items created, 1 items updated
+INFO 2025-08-15 17:40:03,606 autoreload 70828 140375947803584 Watching for file changes with StatReloader
+INFO 2025-08-15 17:40:10,673 basehttp 70828 140368617141952 "GET / HTTP/1.1" 200 27383
+INFO 2025-08-15 17:40:15,314 basehttp 70828 140368617141952 "GET /receipts/upload/ HTTP/1.1" 200 21255
+INFO 2025-08-15 17:40:20,546 views 70828 140368617141952 === STARTING RECEIPT UPLOAD PROCESS ===
+INFO 2025-08-15 17:40:20,546 views 70828 140368617141952 === STARTING RECEIPT UPLOAD PROCESS ===
+DEBUG 2025-08-15 17:40:20,546 views 70828 140368617141952 Form data: {'receipt_file': <InMemoryUploadedFile: 2508020118133218.pdf (application/pdf)>}
+DEBUG 2025-08-15 17:40:20,546 views 70828 140368617141952 Form data: {'receipt_file': <InMemoryUploadedFile: 2508020118133218.pdf (application/pdf)>}
+INFO 2025-08-15 17:40:20,546 views 70828 140368617141952 Uploaded file: 2508020118133218.pdf, size: 655865 bytes, content_type: application/pdf
+INFO 2025-08-15 17:40:20,546 views 70828 140368617141952 Uploaded file: 2508020118133218.pdf, size: 655865 bytes, content_type: application/pdf
+INFO 2025-08-15 17:40:20,546 views 70828 140368617141952 Creating receipt record...
+INFO 2025-08-15 17:40:20,546 views 70828 140368617141952 Creating receipt record...
+INFO 2025-08-15 17:40:20,554 views 70828 140368617141952 ✅ Receipt record created successfully with ID: 12
+INFO 2025-08-15 17:40:20,554 views 70828 140368617141952 ✅ Receipt record created successfully with ID: 12
+DEBUG 2025-08-15 17:40:20,555 views 70828 140368617141952 Receipt record details: status=uploaded, file_path=receipt_files/2508020118133218_FkRWleg.pdf
+DEBUG 2025-08-15 17:40:20,555 views 70828 140368617141952 Receipt record details: status=uploaded, file_path=receipt_files/2508020118133218_FkRWleg.pdf
+INFO 2025-08-15 17:40:20,555 views 70828 140368617141952 Starting processing for receipt ID: 12
+INFO 2025-08-15 17:40:20,555 views 70828 140368617141952 Starting processing for receipt ID: 12
+INFO 2025-08-15 17:40:39,610 views 70828 140368617141952 ✅ Processing started successfully for receipt 12
+INFO 2025-08-15 17:40:39,610 views 70828 140368617141952 ✅ Processing started successfully for receipt 12
+INFO 2025-08-15 17:40:39,610 views 70828 140368617141952 Success URL set to: /receipts/12/status/
+INFO 2025-08-15 17:40:39,610 views 70828 140368617141952 Success URL set to: /receipts/12/status/
+INFO 2025-08-15 17:40:39,610 views 70828 140368617141952 === RECEIPT UPLOAD PROCESS COMPLETED ===
+INFO 2025-08-15 17:40:39,610 views 70828 140368617141952 === RECEIPT UPLOAD PROCESS COMPLETED ===
+INFO 2025-08-15 17:40:39,610 basehttp 70828 140368617141952 "POST /receipts/upload/ HTTP/1.1" 302 0
+INFO 2025-08-15 17:40:39,614 basehttp 70828 140368617141952 "GET /receipts/12/status/ HTTP/1.1" 200 29337
+WARNING 2025-08-15 17:40:41,778 log 70828 140368617141952 Not Found: /api/receipts/12/status/
+WARNING 2025-08-15 17:40:41,779 basehttp 70828 140368617141952 "GET /api/receipts/12/status/ HTTP/1.1" 404 29
+INFO 2025-08-15 17:44:55,678 autoreload 71287 140669792701376 Watching for file changes with StatReloader
+INFO 2025-08-15 17:45:06,969 basehttp 71287 140662292870848 "HEAD /inventory/receipts/upload/ HTTP/1.1" 200 0
+WARNING 2025-08-15 17:45:15,318 log 71287 140662292870848 Method Not Allowed: /api/receipts/upload/
+WARNING 2025-08-15 17:45:15,318 basehttp 71287 140662292870848 "HEAD /api/receipts/upload/ HTTP/1.1" 405 0
+WARNING 2025-08-15 17:45:41,259 log 71287 140662292870848 Bad Request: /api/receipts/upload/
+WARNING 2025-08-15 17:45:41,259 basehttp 71287 140662292870848 "POST /api/receipts/upload/ HTTP/1.1" 400 94
+WARNING 2025-08-15 17:45:45,992 log 71287 140662292870848 Not Found: /api/receipts/1/status/
+WARNING 2025-08-15 17:45:45,992 basehttp 71287 140662292870848 "GET /api/receipts/1/status/ HTTP/1.1" 404 29

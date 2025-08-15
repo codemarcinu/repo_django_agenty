@@ -51,3 +51,16 @@
 [2025-08-15 16:21:37] INFO in chatbot.services.receipt_service: Starting parsing for receipt 1: 277 characters
 [2025-08-15 16:21:37] INFO in chatbot.services.receipt_service: Parsing completed for receipt 1: 5 products extracted
 [2025-08-15 16:21:37] WARNING in chatbot.services.receipt_service: Receipt 1 is not in ocr_completed status: pending_ocr
+[2025-08-15 17:40:20] INFO in chatbot.services.receipt_service: Created receipt processing record: 12
+[2025-08-15 17:40:20] INFO in chatbot.services.receipt_service: 🔄 Starting processing for receipt ID: 12
+[2025-08-15 17:40:20] DEBUG in chatbot.services.receipt_service: Found receipt: Paragon 12 - Status: Plik przesłany, current status: uploaded
+[2025-08-15 17:40:20] INFO in chatbot.services.receipt_service: Marking receipt 12 as processing...
+[2025-08-15 17:40:20] DEBUG in chatbot.services.receipt_service: Receipt 12 status updated to: ocr_in_progress
+[2025-08-15 17:40:20] INFO in chatbot.services.receipt_service: Attempting to start Celery task for receipt 12
+[2025-08-15 17:40:20] DEBUG in chatbot.services.receipt_service: Celery task imported successfully
+[2025-08-15 17:40:39] WARNING in chatbot.services.receipt_service: ⚠️ Celery task failed for receipt 12: Error 111 connecting to localhost:6379. Connection refused.
+[2025-08-15 17:40:39] INFO in chatbot.services.receipt_service: Falling back to synchronous processing for receipt 12
+[2025-08-15 17:40:39] DEBUG in chatbot.services.receipt_service: Receipt processor imported successfully
+[2025-08-15 17:40:39] INFO in chatbot.services.receipt_service: Starting synchronous OCR processing for receipt 12
+[2025-08-15 17:40:39] INFO in chatbot.services.receipt_service: ✅ Completed synchronous processing for receipt 12
+[2025-08-15 17:40:39] INFO in chatbot.services.receipt_service: ✅ Processing workflow completed for receipt 12
