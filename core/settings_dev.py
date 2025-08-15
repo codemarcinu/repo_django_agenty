@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'chatbot',
+    'inventory',  # New inventory app for receipt processing pipeline
     'pytest_django', # Added
 ]
 
@@ -198,3 +199,81 @@ SESSION_CACHE_ALIAS = 'default'
 
 # Database query caching
 DATABASE_ROUTERS = []
+
+# Comprehensive logging configuration for debugging
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
+            'style': '{',
+        },
+        'simple': {
+            'format': '{levelname} {message}',
+            'style': '{',
+        },
+        'detailed': {
+            'format': '[{asctime}] {levelname} in {name}: {message}',
+            'style': '{',
+            'datefmt': '%Y-%m-%d %H:%M:%S',
+        },
+    },
+    'handlers': {
+        'console': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+            'formatter': 'detailed',
+        },
+        'file': {
+            'level': 'DEBUG',
+            'class': 'logging.FileHandler',
+            'filename': BASE_DIR / 'logs' / 'django_debug.log',
+            'formatter': 'verbose',
+        },
+        'receipt_file': {
+            'level': 'DEBUG',
+            'class': 'logging.FileHandler',
+            'filename': BASE_DIR / 'logs' / 'receipt_processing.log',
+            'formatter': 'detailed',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console', 'file'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+        'chatbot': {
+            'handlers': ['console', 'file'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+        'chatbot.receipt_processor': {
+            'handlers': ['console', 'receipt_file'],
+            'level': 'DEBUG',
+            'propagate': False,  # Don't duplicate in parent loggers
+        },
+        'chatbot.services.receipt_service': {
+            'handlers': ['console', 'receipt_file'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
+        'chatbot.views': {
+            'handlers': ['console', 'file'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+        'chatbot.tasks': {
+            'handlers': ['console', 'receipt_file'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
+    },
+}
+
+# Create logs directory if it doesn't exist
+import os
+logs_dir = BASE_DIR / 'logs'
+if not os.path.exists(logs_dir):
+    os.makedirs(logs_dir)
