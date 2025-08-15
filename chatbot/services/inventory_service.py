@@ -436,6 +436,160 @@ class InventoryService:
         except Exception as e:
             logger.error(f"Error in bulk expiry update: {e}")
             return 0, 1
+    
+    def get_top_spending_categories(self, days: int = 30) -> List[Dict]:
+        """Get top 5 categories by spending in last N days."""
+        try:
+            from django.db.models import Sum, Count
+            from datetime import date, timedelta
+            
+            cutoff_date = date.today() - timedelta(days=days)
+            
+            # Get spending by category from receipt line items
+            from inventory.models import Receipt
+            category_spending = Receipt.objects.filter(
+                purchased_at__gte=cutoff_date,
+                status='completed'
+            ).values(
+                'line_items__matched_product__category__name'
+            ).annotate(
+                total_spent=Sum('line_items__line_total'),
+                item_count=Count('line_items')
+            ).order_by('-total_spent')[:5]
+            
+            result = []
+            for item in category_spending:
+                category_name = item['line_items__matched_product__category__name'] or 'Uncategorized'
+                result.append({
+                    'category': category_name,
+                    'total_spent': float(item['total_spent'] or 0),
+                    'item_count': item['item_count'],
+                    'avg_item_price': float(item['total_spent'] or 0) / max(item['item_count'], 1)
+                })
+                
+            return result
+            
+        except Exception as e:
+            logger.error(f"Error getting top spending categories: {e}")
+            return []
+    
+    def get_consumption_heatmap_data(self, days: int = 30) -> Dict:
+        """Get consumption data for heatmap visualization."""
+        try:
+            from django.db.models import Sum, Count
+            from datetime import date, timedelta, datetime
+            
+            cutoff_date = date.today() - timedelta(days=days)
+            
+            # Get consumption events by day of week and category  
+            from inventory.models import ConsumptionEvent, Category
+            
+            # Get all consumption events and process them in Python
+            consumption_events = list(ConsumptionEvent.objects.filter(
+                consumed_at__gte=cutoff_date
+            ).select_related(
+                'inventory_item__product__category'
+            ).values(
+                'consumed_at',
+                'consumed_qty',
+                'inventory_item__product__category__name'
+            ))
+            
+            # Process data to create heatmap
+            consumption_data = {}
+            
+            # Initialize heatmap data structure
+            weekdays = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+            categories = list(Category.objects.values_list('name', flat=True))
+            
+            heatmap = {}
+            for category in categories:
+                heatmap[category] = {day: 0 for day in weekdays}
+            
+            # Process events and fill heatmap
+            for event in consumption_events:
+                category = event['inventory_item__product__category__name'] or 'Uncategorized'
+                consumed_at = event['consumed_at']
+                consumed_qty = float(event['consumed_qty'] or 0)
+                
+                # Get weekday (0=Monday, 6=Sunday in Python)
+                weekday_num = consumed_at.weekday()
+                # Convert to our format (0=Sunday, 6=Saturday)
+                weekday_index = (weekday_num + 1) % 7
+                weekday_name = weekdays[weekday_index]
+                
+                if category not in heatmap:
+                    heatmap[category] = {day: 0 for day in weekdays}
+                    categories.append(category)
+                    
+                heatmap[category][weekday_name] += consumed_qty
+            
+            return {
+                'heatmap_data': heatmap,
+                'weekdays': weekdays,
+                'categories': list(heatmap.keys()),
+                'period_days': days,
+                'last_updated': timezone.now().isoformat()
+            }
+            
+        except Exception as e:
+            logger.error(f"Error getting consumption heatmap data: {e}")
+            return {
+                'heatmap_data': {},
+                'weekdays': [],
+                'categories': [],
+                'period_days': days,
+                'last_updated': timezone.now().isoformat()
+            }
+    
+    def get_recent_activity(self, days: int = 7) -> Dict:
+        """Get recent activity summary for dashboard."""
+        try:
+            from datetime import date, timedelta
+            
+            cutoff_date = date.today() - timedelta(days=days)
+            
+            # Recent receipts
+            from inventory.models import Receipt, Product, ConsumptionEvent
+            recent_receipts = Receipt.objects.filter(
+                purchased_at__gte=cutoff_date,
+                status='completed'
+            ).count()
+            
+            # Recent consumption events  
+            recent_consumption = ConsumptionEvent.objects.filter(
+                consumed_at__gte=cutoff_date
+            ).count()
+            
+            # New products added
+            new_products = Product.objects.filter(
+                created_at__gte=cutoff_date
+            ).count()
+            
+            # Items that expired recently
+            recently_expired = InventoryItem.objects.filter(
+                expiry_date__gte=cutoff_date,
+                expiry_date__lt=date.today(),
+                quantity_remaining__gt=0
+            ).count()
+            
+            return {
+                'recent_receipts': recent_receipts,
+                'recent_consumption': recent_consumption,
+                'new_products': new_products,
+                'recently_expired': recently_expired,
+                'period_days': days
+            }
+            
+        except Exception as e:
+            logger.error(f"Error getting recent activity: {e}")
+            return {
+                'recent_receipts': 0,
+                'recent_consumption': 0,
+                'new_products': 0,
+                'recently_expired': 0,
+                'period_days': days
+            }
 
 
 def get_inventory_service() -> InventoryService:

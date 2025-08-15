@@ -33,16 +33,24 @@ def dashboard(request):
     # Get low stock items
     low_stock_items = inventory_service.get_low_stock_items()[:5]
     
-    # Get recent receipts
+    # Get recent receipts (optimized)
     recent_receipts = Receipt.objects.filter(
         status='completed'
-    ).order_by('-purchased_at')[:5]
+    ).select_related().order_by('-purchased_at')[:5]
+    
+    # Get advanced statistics (Prompt 10 features)
+    top_categories = inventory_service.get_top_spending_categories(days=30)
+    heatmap_data = inventory_service.get_consumption_heatmap_data(days=30)
+    recent_activity = inventory_service.get_recent_activity(days=7)
     
     context = {
         'summary': summary,
         'expiring_items': expiring_items,
         'low_stock_items': low_stock_items,
         'recent_receipts': recent_receipts,
+        'top_categories': top_categories,
+        'heatmap_data': heatmap_data,
+        'recent_activity': recent_activity,
     }
     
     return render(request, 'inventory/dashboard.html', context)

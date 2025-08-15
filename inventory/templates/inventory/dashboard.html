@@ -1,4 +1,5 @@
 {% extends 'inventory/base.html' %}
+{% load inventory_extras %}
 
 {% block title %}Dashboard{% endblock %}
 {% block page_title %}Dashboard Magazynu{% endblock %}
@@ -165,6 +166,146 @@
     </div>
     {% endif %}
 
+    <!-- Top Spending Categories -->
+    {% if top_categories %}
+    <div class="row mb-4">
+        <div class="col-xl-8">
+            <div class="card shadow-sm">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">Top 5 kategorii wydatków (30 dni)</h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Kategoria</th>
+                                    <th>Łącznie wydano</th>
+                                    <th>Ilość pozycji</th>
+                                    <th>Średnia cena</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for cat in top_categories %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ cat.category }}</strong>
+                                    </td>
+                                    <td>
+                                        <span class="text-success font-weight-bold">{{ cat.total_spent|floatformat:2 }} zł</span>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-secondary">{{ cat.item_count }}</span>
+                                    </td>
+                                    <td>
+                                        {{ cat.avg_item_price|floatformat:2 }} zł
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-4">
+            <div class="card shadow-sm">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Ostatnie aktywności (7 dni)</h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="text-sm font-weight-bold">
+                                <i class="bi bi-receipt text-primary"></i> Paragony
+                            </span>
+                            <span class="h6 mb-0">{{ recent_activity.recent_receipts }}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="text-sm font-weight-bold">
+                                <i class="bi bi-arrow-down-circle text-warning"></i> Zużyte produkty
+                            </span>
+                            <span class="h6 mb-0">{{ recent_activity.recent_consumption }}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="text-sm font-weight-bold">
+                                <i class="bi bi-plus-circle text-success"></i> Nowe produkty
+                            </span>
+                            <span class="h6 mb-0">{{ recent_activity.new_products }}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-0">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="text-sm font-weight-bold">
+                                <i class="bi bi-x-circle text-danger"></i> Przeterminowane
+                            </span>
+                            <span class="h6 mb-0">{{ recent_activity.recently_expired }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Consumption Heatmap -->
+    {% if heatmap_data.categories %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">Mapa ciepła zużycia (30 dni)</h6>
+                    <small class="text-muted">Zużycie według dnia tygodnia i kategorii</small>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm heatmap-table">
+                            <thead>
+                                <tr>
+                                    <th>Kategoria</th>
+                                    {% for day in heatmap_data.weekdays %}
+                                    <th class="text-center">{{ day|slice:":3" }}</th>
+                                    {% endfor %}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for category in heatmap_data.categories %}
+                                <tr>
+                                    <td><strong>{{ category }}</strong></td>
+                                    {% for day in heatmap_data.weekdays %}
+                                    <td class="text-center heatmap-cell" data-value="{{ heatmap_data.heatmap_data|getitem:category|getitem:day|default:0 }}">
+                                        {% with value=heatmap_data.heatmap_data|getitem:category|getitem:day|default:0 %}
+                                            {% if value > 0 %}
+                                                {{ value|floatformat:1 }}
+                                            {% else %}
+                                                -
+                                            {% endif %}
+                                        {% endwith %}
+                                    </td>
+                                    {% endfor %}
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <small class="text-muted">
+                        <i class="bi bi-info-circle"></i>
+                        Wartości pokazują łączną ilość zużytych produktów z danej kategorii w określone dni tygodnia
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
     <!-- Alerts and Low Stock Items -->
     <div class="row">
         <!-- Expiring Items -->
@@ -267,6 +408,61 @@
         display: flex;
         align-items: center;
         justify-content: center;
+    }
+    
+    /* Heatmap styling */
+    .heatmap-table {
+        min-width: 700px;
+    }
+    
+    .heatmap-cell {
+        font-weight: bold;
+        min-width: 60px;
+        position: relative;
+        padding: 8px !important;
+    }
+    
+    .heatmap-cell[data-value="0"] {
+        background-color: #f8f9fa;
+        color: #6c757d;
+    }
+    
+    .heatmap-cell[data-value]:not([data-value="0"]) {
+        background-color: #e3f2fd;
+        color: #1976d2;
+    }
+    
+    .heatmap-cell[data-value]:not([data-value="0"]):hover {
+        background-color: #bbdefb;
+        transform: scale(1.05);
+        transition: all 0.2s ease;
+    }
+    
+    /* Dynamic color intensity based on value */
+    .heatmap-cell[data-value="1"], 
+    .heatmap-cell[data-value="2"],
+    .heatmap-cell[data-value="3"] {
+        background-color: #e8f5e8;
+        color: #2e7d32;
+    }
+    
+    .heatmap-cell[data-value="4"],
+    .heatmap-cell[data-value="5"],
+    .heatmap-cell[data-value="6"] {
+        background-color: #fff3e0;
+        color: #f57c00;
+    }
+    
+    .heatmap-cell[data-value]:not([data-value="0"]):not([data-value="1"]):not([data-value="2"]):not([data-value="3"]):not([data-value="4"]):not([data-value="5"]):not([data-value="6"]) {
+        background-color: #ffebee;
+        color: #c62828;
+    }
+    
+    /* Stats cards hover effect */
+    .stats-card:hover {
+        transform: translateY(-2px);
+        transition: all 0.3s ease;
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
     }
 </style>
 {% endblock %}

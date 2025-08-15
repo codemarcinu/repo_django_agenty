@@ -78,11 +78,11 @@
 - [x] Optymalizacja zapytań SQL
 
 #### Prompt 9: Zdarzenia zużycia i alerty
-- [ ] Endpoint POST /api/inventory/{id}/consume
-- [ ] Zadanie okresowe (24h) sprawdzające stany magazynowe
-- [ ] Identyfikacja pozycji poniżej reorder_point lub wygasających w 2 dni
-- [ ] Wysyłka powiadomień (e-mail/push) z szablonami
-- [ ] Testy endpointu i zadania okresowego
+- [x] Endpoint POST /api/inventory/{id}/consume
+- [x] Zadanie okresowe (24h) sprawdzające stany magazynowe
+- [x] Identyfikacja pozycji poniżej reorder_point lub wygasających w 2 dni
+- [x] Wysyłka powiadomień (e-mail/push) z szablonami
+- [x] Testy endpointu i zadania okresowego
 
 #### Prompt 10: Panel przeglądu (dashboard) - rozszerzenie
 - [ ] Wizualizacja "Consumption heatmap"
