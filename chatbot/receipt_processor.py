@@ -56,14 +56,24 @@ class ReceiptProcessor:
             return None
 
     def _extract_text_from_image(self, image_path):
+        logger.info(f"📷 Starting OCR text extraction from image: {image_path}")
         try:
+            logger.debug(f"Initializing EasyOCR reader for image processing...")
+            
             result = self.reader.readtext(image_path)
+            logger.info(f"EasyOCR detected {len(result)} text regions")
+            
+            # Log each detected text region for debugging
+            for i, (bbox, text, prob) in enumerate(result):
+                logger.debug(f"Region {i+1}: '{text}' (confidence: {prob:.2f})")
+            
             # Concatenate all detected text into a single string
             extracted_text = " ".join([text for (bbox, text, prob) in result])
-            logger.info(f"OCR extracted text: {extracted_text}")
+            logger.info(f"✅ OCR extraction completed. Total text length: {len(extracted_text)} characters")
+            logger.debug(f"OCR extracted text: {extracted_text}")
             return extracted_text
         except Exception as e:
-            logger.error(f"Error during OCR text extraction from {image_path}: {e}")
+            logger.error(f"❌ Error during OCR text extraction from {image_path}: {e}", exc_info=True)
             return None
     
     def _extract_text_from_file(self, file_path):
@@ -76,8 +86,14 @@ class ReceiptProcessor:
             return self._extract_text_from_image(file_path)
 
     async def _extract_products_with_llm(self, receipt_text):
+        logger.info(f"🤖 Starting LLM product extraction...")
+        
         if not receipt_text:
+            logger.warning("No receipt text provided to LLM")
             return []
+
+        logger.debug(f"Input text length: {len(receipt_text)} characters")
+        logger.debug(f"Input text preview: {receipt_text[:300]}...")
 
         # Prompt for LLM to extract structured product data
         # The LLM should return a JSON array of objects with 'product', 'quantity', 'unit'
@@ -100,88 +116,157 @@ class ReceiptProcessor:
 
         Wyodrębnione produkty (tylko JSON):
         """
+        
+        logger.debug(f"Prepared LLM prompt (length: {len(prompt)} chars)")
+        logger.info("Sending request to LLM model...")
 
         # Use a dedicated OllamaAgent instance for this task
         # Assuming 'bielik' is the model name for the OllamaAgent
+        logger.debug("Initializing OllamaAgent for product extraction...")
         ollama_agent = OllamaAgent(config={'model': 'SpeakLeash/bielik-11b-v2.3-instruct:Q5_K_M'}) # Adjust model name if different
         
         try:
             # The process method of OllamaAgent expects 'message' and 'history'
+            logger.info("Calling LLM to process receipt text...")
             response = await ollama_agent.process({'message': prompt, 'history': []})
+            
             if response.success:
                 llm_response_text = response.data.get('response', '').strip()
-                logger.info(f"LLM raw response: {llm_response_text}")
+                logger.info(f"✅ LLM response received (length: {len(llm_response_text)} chars)")
+                logger.debug(f"LLM raw response: {llm_response_text}")
                 
                 # Attempt to parse JSON. LLMs can sometimes add extra text.
                 # Find the first and last brace to isolate the JSON.
+                logger.info("Parsing JSON from LLM response...")
                 json_start = llm_response_text.find('[')
                 json_end = llm_response_text.rfind(']')
                 
                 if json_start != -1 and json_end != -1 and json_end > json_start:
                     json_string = llm_response_text[json_start : json_end + 1]
+                    logger.debug(f"Extracted JSON string: {json_string}")
+                    
                     products_data = json.loads(json_string)
-                    logger.info(f"LLM extracted products: {products_data}")
+                    logger.info(f"✅ Successfully parsed {len(products_data)} products from LLM response")
+                    logger.info(f"Extracted products: {products_data}")
                     return products_data
                 else:
-                    logger.warning(f"LLM response did not contain valid JSON array: {llm_response_text}")
+                    logger.warning(f"❌ LLM response did not contain valid JSON array")
+                    logger.debug(f"Problematic response: {llm_response_text}")
                     return []
             else:
-                logger.error(f"LLM extraction failed: {response.error}")
+                logger.error(f"❌ LLM processing failed: {response.error}")
                 return []
         except json.JSONDecodeError as e:
-            logger.error(f"JSON decoding error from LLM response: {e}, Response: {llm_response_text}")
+            logger.error(f"❌ JSON decoding error from LLM response: {e}")
+            logger.debug(f"Problematic response: {llm_response_text}")
             return []
         except Exception as e:
-            logger.error(f"Error during LLM product extraction: {e}")
+            logger.error(f"❌ Unexpected error during LLM product extraction: {e}", exc_info=True)
             return []
 
     async def process_receipt(self, receipt_processing_id):
+        logger.info(f"🔄 STARTING OCR PROCESSING for receipt ID: {receipt_processing_id}")
         receipt_record = None
+        
         try:
+            # Get receipt record
+            logger.debug(f"Fetching receipt record from database...")
             receipt_record = await sync_to_async(ReceiptProcessing.objects.get)(id=receipt_processing_id)
+            logger.info(f"✅ Found receipt record: {receipt_record.id}, current status: {receipt_record.status}")
+            
+            # Update status to OCR in progress
+            logger.info(f"Updating receipt {receipt_processing_id} status to 'ocr_in_progress'")
             receipt_record.status = 'ocr_in_progress'
             await sync_to_async(receipt_record.save)()
+            logger.debug(f"Receipt {receipt_processing_id} status updated successfully")
 
+            # Get file path and verify file exists
             file_path = receipt_record.receipt_file.path
-            receipt_text = self._extract_text_from_file(file_path)
-            if not receipt_text:
+            logger.info(f"Processing file: {file_path}")
+            
+            if not os.path.exists(file_path):
+                error_msg = f"File does not exist: {file_path}"
+                logger.error(f"❌ {error_msg}")
                 receipt_record.status = 'error'
-                receipt_record.error_message = "Nie udało się wyodrębnić tekstu z obrazu paragonu."
+                receipt_record.error_message = error_msg
                 await sync_to_async(receipt_record.save)()
-                logger.error("No text extracted from receipt image.")
-                return False
+                return
+            
+            # Check file size
+            file_size = os.path.getsize(file_path)
+            logger.info(f"File size: {file_size} bytes")
+            
+            # Detect file type
+            file_type = get_file_type(file_path)
+            logger.info(f"Detected file type: {file_type}")
+            
+            # Extract text from file
+            logger.info(f"🔍 Starting text extraction from {file_type} file...")
+            receipt_text = self._extract_text_from_file(file_path)
+            
+            if not receipt_text:
+                error_msg = "Nie udało się wyodrębnić tekstu z pliku paragonu."
+                logger.error(f"❌ {error_msg}")
+                receipt_record.status = 'error'
+                receipt_record.error_message = error_msg
+                await sync_to_async(receipt_record.save)()
+                return
+            
+            # OCR completed successfully
+            logger.info(f"✅ OCR text extraction completed. Extracted {len(receipt_text)} characters")
+            logger.debug(f"Extracted text preview: {receipt_text[:200]}...")
             
             receipt_record.raw_ocr_text = receipt_text
             receipt_record.status = 'ocr_done'
             await sync_to_async(receipt_record.save)()
+            logger.info(f"Receipt {receipt_processing_id} status updated to 'ocr_done'")
 
+            # Start LLM processing
+            logger.info(f"🤖 Starting LLM product extraction for receipt {receipt_processing_id}")
             receipt_record.status = 'llm_in_progress'
             await sync_to_async(receipt_record.save)()
+            logger.debug(f"Receipt {receipt_processing_id} status updated to 'llm_in_progress'")
 
             products_data = await self._extract_products_with_llm(receipt_text)
+            logger.info(f"LLM processing completed. Found {len(products_data) if products_data else 0} products")
+            
             if not products_data:
+                error_msg = "Nie udało się wyodrębnić produktów przez LLM."
+                logger.error(f"❌ {error_msg}")
                 receipt_record.status = 'error'
-                receipt_record.error_message = "Nie udało się wyodrębnić produktów przez LLM."
+                receipt_record.error_message = error_msg
                 await sync_to_async(receipt_record.save)()
-                logger.warning("No products extracted by LLM.")
                 return False
             
+            # Processing completed successfully
+            logger.info(f"✅ Product extraction successful: {products_data}")
             receipt_record.extracted_data = products_data
             receipt_record.status = 'ready_for_review'
             receipt_record.processed_at = timezone.now()
             await sync_to_async(receipt_record.save)()
-            logger.info(f"Receipt {receipt_processing_id} ready for review.")
+            
+            logger.info(f"🎉 Receipt {receipt_processing_id} processing COMPLETED and ready for review!")
+            logger.info(f"=== RECEIPT PROCESSING SUMMARY ===")
+            logger.info(f"Receipt ID: {receipt_processing_id}")
+            logger.info(f"Text length: {len(receipt_text)} characters")
+            logger.info(f"Products found: {len(products_data)}")
+            logger.info(f"Status: ready_for_review")
+            logger.info(f"===================================")
             return True
 
         except ReceiptProcessing.DoesNotExist:
-            logger.error(f"ReceiptProcessing record with ID {receipt_processing_id} not found.")
+            logger.error(f"❌ ReceiptProcessing record with ID {receipt_processing_id} not found in database")
             return False
         except Exception as e:
+            logger.error(f"❌ CRITICAL ERROR during receipt processing for ID {receipt_processing_id}: {e}", exc_info=True)
             if receipt_record:
-                receipt_record.status = 'error'
-                receipt_record.error_message = str(e)
-                await sync_to_async(receipt_record.save)()
-            logger.error(f"Error during receipt processing for ID {receipt_processing_id}: {e}", exc_info=True)
+                try:
+                    receipt_record.status = 'error'
+                    receipt_record.error_message = str(e)
+                    await sync_to_async(receipt_record.save)()
+                    logger.info(f"Marked receipt {receipt_processing_id} as error in database")
+                except Exception as save_error:
+                    logger.error(f"Failed to save error status for receipt {receipt_processing_id}: {save_error}")
             return False
 
     def update_pantry(self, products_data):

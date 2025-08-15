@@ -160,7 +160,7 @@ class ReceiptLineItemAdmin(admin.ModelAdmin):
         'get_receipt_info', 'product_name', 'quantity', 'unit_price', 
         'line_total', 'vat_code', 'matched_product', 'get_validation_status'
     ]
-    list_filter = ['vat_code', 'matched_product__isnull', 'receipt__status']
+    list_filter = ['vat_code', 'receipt__status']
     search_fields = ['product_name', 'receipt__store_name']
     ordering = ['-receipt__purchased_at', 'product_name']
     

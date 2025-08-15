@@ -1,5 +1,6 @@
 from django.urls import path
 from . import views
+from . import receipt_views
 
 app_name = 'chatbot_api'
 
@@ -15,6 +16,10 @@ urlpatterns = [
     # Chat endpoints
     path('chat/message/', views.ChatMessageView.as_view(), name='chat-message'),
     
-    # Receipt processing endpoints
-    path('receipts/<int:receipt_id>/status/', views.ReceiptProcessingStatusAPIView.as_view(), name='receipt-status'),
+    # Receipt upload endpoints (new)
+    path('receipts/upload/', receipt_views.upload_receipt, name='receipt-upload'),
+    path('receipts/<int:receipt_id>/status/', receipt_views.receipt_status, name='receipt-status'),
+    
+    # Receipt processing endpoints (legacy) - using different URL pattern
+    path('receipt-processing/<int:receipt_id>/status/', views.ReceiptProcessingStatusAPIView.as_view(), name='receipt-status-legacy'),
 ]

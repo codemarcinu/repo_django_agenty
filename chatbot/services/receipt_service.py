@@ -52,39 +52,57 @@ class ReceiptService:
         Returns:
             True if processing started successfully, False otherwise
         """
+        logger.info(f"🔄 Starting processing for receipt ID: {receipt_id}")
+        
         try:
             receipt = ReceiptProcessing.objects.get(id=receipt_id)
+            logger.debug(f"Found receipt: {receipt}, current status: {receipt.status}")
+            
+            logger.info(f"Marking receipt {receipt_id} as processing...")
             receipt.mark_as_processing()
+            logger.debug(f"Receipt {receipt_id} status updated to: {receipt.status}")
             
             # Try to trigger Celery task
+            logger.info(f"Attempting to start Celery task for receipt {receipt_id}")
             try:
                 from ..tasks import process_receipt_task
-                process_receipt_task.delay(receipt_id)
-                logger.info(f"Started Celery processing for receipt {receipt_id}")
+                logger.debug("Celery task imported successfully")
+                
+                task_result = process_receipt_task.delay(receipt_id)
+                logger.info(f"✅ Celery task started successfully for receipt {receipt_id}, task ID: {task_result.id}")
+                
             except Exception as celery_error:
-                logger.warning(f"Celery task failed for receipt {receipt_id}: {celery_error}")
+                logger.warning(f"⚠️ Celery task failed for receipt {receipt_id}: {celery_error}")
+                logger.info(f"Falling back to synchronous processing for receipt {receipt_id}")
+                
                 # Fallback to synchronous processing
                 try:
                     from ..receipt_processor import receipt_processor
+                    logger.debug("Receipt processor imported successfully")
+                    
+                    logger.info(f"Starting synchronous OCR processing for receipt {receipt_id}")
                     receipt_processor.process_receipt(receipt_id)
-                    logger.info(f"Completed synchronous processing for receipt {receipt_id}")
+                    logger.info(f"✅ Completed synchronous processing for receipt {receipt_id}")
+                    
                 except Exception as sync_error:
-                    logger.error(f"Both Celery and synchronous processing failed for receipt {receipt_id}: {sync_error}")
+                    logger.error(f"❌ Both Celery and synchronous processing failed for receipt {receipt_id}: {sync_error}", exc_info=True)
                     receipt.mark_as_error(f"Przetwarzanie nie powiodło się: {sync_error}")
                     return False
             
+            logger.info(f"✅ Processing workflow completed for receipt {receipt_id}")
             return True
             
         except ReceiptProcessing.DoesNotExist:
-            logger.error(f"Receipt {receipt_id} not found")
+            logger.error(f"❌ Receipt {receipt_id} not found in database")
             return False
         except Exception as e:
-            logger.error(f"Error starting receipt processing {receipt_id}: {e}")
+            logger.error(f"❌ Unexpected error starting receipt processing {receipt_id}: {e}", exc_info=True)
             try:
                 receipt = ReceiptProcessing.objects.get(id=receipt_id)
                 receipt.mark_as_error(f"Nie udało się rozpocząć przetwarzania: {e}")
-            except:
-                pass
+                logger.info(f"Marked receipt {receipt_id} as error due to processing failure")
+            except Exception as mark_error_ex:
+                logger.error(f"Failed to mark receipt {receipt_id} as error: {mark_error_ex}")
             return False
     
     def update_processing_status(

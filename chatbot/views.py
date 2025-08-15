@@ -95,23 +95,44 @@ class ReceiptUploadView(FormView):
     form_class = ReceiptUploadForm
 
     def form_valid(self, form):
+        logger.info("=== STARTING RECEIPT UPLOAD PROCESS ===")
+        logger.debug(f"Form data: {form.cleaned_data}")
+        
+        uploaded_file = form.cleaned_data['receipt_file']
+        logger.info(f"Uploaded file: {uploaded_file.name}, size: {uploaded_file.size} bytes, content_type: {uploaded_file.content_type}")
+        
         receipt_service = ReceiptService()
         
-        # Create receipt record using service
-        receipt_record = receipt_service.create_receipt_record(
-            form.cleaned_data['receipt_file']
-        )
+        try:
+            # Create receipt record using service
+            logger.info("Creating receipt record...")
+            receipt_record = receipt_service.create_receipt_record(uploaded_file)
+            logger.info(f"✅ Receipt record created successfully with ID: {receipt_record.id}")
+            logger.debug(f"Receipt record details: status={receipt_record.status}, file_path={receipt_record.receipt_file.name if receipt_record.receipt_file else 'None'}")
 
-        # Start processing using service
-        receipt_service.start_processing(receipt_record.id)
-        
-        # Set success_url with the receipt_id
-        self.success_url = reverse_lazy(
-            'chatbot:receipt_processing_status', 
-            kwargs={'receipt_id': receipt_record.id}
-        )
-        
-        return super().form_valid(form)
+            # Start processing using service
+            logger.info(f"Starting processing for receipt ID: {receipt_record.id}")
+            processing_started = receipt_service.start_processing(receipt_record.id)
+            
+            if processing_started:
+                logger.info(f"✅ Processing started successfully for receipt {receipt_record.id}")
+            else:
+                logger.error(f"❌ Failed to start processing for receipt {receipt_record.id}")
+            
+            # Set success_url with the receipt_id
+            success_url = reverse_lazy(
+                'chatbot:receipt_processing_status', 
+                kwargs={'receipt_id': receipt_record.id}
+            )
+            self.success_url = success_url
+            logger.info(f"Success URL set to: {success_url}")
+            
+            logger.info("=== RECEIPT UPLOAD PROCESS COMPLETED ===")
+            return super().form_valid(form)
+            
+        except Exception as e:
+            logger.error(f"❌ CRITICAL ERROR in receipt upload process: {e}", exc_info=True)
+            raise
 
 class ReceiptProcessingStatusView(View):
     def get(self, request, receipt_id):
