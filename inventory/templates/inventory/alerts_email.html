@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Alerty magazynowe</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .alert-section {
+            margin-bottom: 30px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .alert-header {
+            padding: 15px;
+            font-weight: bold;
+            color: white;
+        }
+        .expired { background-color: #dc3545; }
+        .expiring { background-color: #ffc107; color: #212529; }
+        .low-stock { background-color: #fd7e14; }
+        .alert-content {
+            padding: 15px;
+            background-color: #f8f9fa;
+        }
+        .item {
+            background-color: white;
+            margin: 10px 0;
+            padding: 15px;
+            border-radius: 4px;
+            border-left: 4px solid #007bff;
+        }
+        .item-name {
+            font-weight: bold;
+            font-size: 1.1em;
+            margin-bottom: 5px;
+        }
+        .item-details {
+            color: #666;
+            font-size: 0.9em;
+        }
+        .footer {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 0.9em;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🚨 Alerty magazynowe</h1>
+        <p>Sprawdzenie z dnia: {{ check_date }}</p>
+        <p><strong>{{ total_alerts }}</strong> pozycji wymaga uwagi</p>
+    </div>
+
+    {% if expired_items %}
+    <div class="alert-section">
+        <div class="alert-header expired">
+            ⚠️ Produkty przeterminowane ({{ expired_items|length }})
+        </div>
+        <div class="alert-content">
+            {% for item in expired_items %}
+            <div class="item">
+                <div class="item-name">{{ item.product_name }}</div>
+                <div class="item-details">
+                    Ilość: {{ item.quantity }} {{ item.unit }} | 
+                    Lokalizacja: {{ item.storage_location }} | 
+                    Data ważności: {{ item.expiry_date }}
+                    {% if item.days_until_expiry %}
+                        ({{ item.days_until_expiry }} dni temu)
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    {% if expiring_items %}
+    <div class="alert-section">
+        <div class="alert-header expiring">
+            ⏰ Produkty tracące ważność ({{ expiring_items|length }})
+        </div>
+        <div class="alert-content">
+            {% for item in expiring_items %}
+            <div class="item">
+                <div class="item-name">{{ item.product_name }}</div>
+                <div class="item-details">
+                    Ilość: {{ item.quantity }} {{ item.unit }} | 
+                    Lokalizacja: {{ item.storage_location }} | 
+                    Data ważności: {{ item.expiry_date }}
+                    {% if item.days_until_expiry %}
+                        (za {{ item.days_until_expiry }} 
+                        {% if item.days_until_expiry == 1 %}dzień{% else %}dni{% endif %})
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    {% if low_stock_items %}
+    <div class="alert-section">
+        <div class="alert-header low-stock">
+            📦 Produkty o niskim stanie ({{ low_stock_items|length }})
+        </div>
+        <div class="alert-content">
+            {% for item in low_stock_items %}
+            <div class="item">
+                <div class="item-name">{{ item.product_name }}</div>
+                <div class="item-details">
+                    Pozostało: {{ item.quantity }} {{ item.unit }} | 
+                    Próg: {{ item.reorder_point }} {{ item.unit }} | 
+                    Lokalizacja: {{ item.storage_location }}
+                    {% if item.expiry_date %}
+                        | Ważne do: {{ item.expiry_date }}
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="footer">
+        <p>Ten email został wygenerowany automatycznie przez system zarządzania magazynem.</p>
+        <p>Aby zaktualizować stany, użyj panelu administracyjnego lub aplikacji mobilnej.</p>
+    </div>
+</body>
+</html>

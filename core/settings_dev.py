@@ -144,6 +144,16 @@ CELERY_BROKER_URL = 'redis://localhost:6379/0'
 CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
 CELERY_TASK_ALWAYS_EAGER = False  # Set to True to run tasks synchronously when debugging
 
+# Celery Beat Configuration (Periodic Tasks)
+CELERY_BEAT_SCHEDULE = {
+    'check-inventory-alerts': {
+        'task': 'chatbot.tasks_alerts.check_inventory_alerts',
+        'schedule': 86400.0,  # Run daily (24 hours in seconds)
+        # 'schedule': 60.0,  # For testing: run every minute
+    },
+}
+CELERY_TIMEZONE = 'UTC'
+
 # Django REST Framework Configuration
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
@@ -297,3 +307,8 @@ OCR_CONFIG = {
     'fallback_enabled': True,
     'confidence_threshold': 0.5,  # Minimum confidence to accept results
 }
+
+# Email Configuration for Inventory Alerts
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'  # For development
+DEFAULT_FROM_EMAIL = 'agenty@example.com'
+INVENTORY_ALERTS_EMAIL = 'admin@example.com'  # Where to send inventory alerts

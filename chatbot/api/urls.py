@@ -22,4 +22,7 @@ urlpatterns = [
     
     # Receipt processing endpoints (legacy) - using different URL pattern
     path('receipt-processing/<int:receipt_id>/status/', views.ReceiptProcessingStatusAPIView.as_view(), name='receipt-status-legacy'),
+    
+    # Inventory endpoints (Prompt 9)
+    path('inventory/<int:inventory_id>/consume/', views.ConsumeInventoryView.as_view(), name='inventory-consume'),
 ]

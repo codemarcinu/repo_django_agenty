@@ -382,6 +382,18 @@ class InventoryService:
             logger.error(f"Error getting low stock items: {e}")
             return []
     
+    def get_expired_items(self) -> List[InventoryItem]:
+        """Get items that have already expired."""
+        try:
+            return list(InventoryItem.objects.filter(
+                quantity_remaining__gt=0,
+                expiry_date__lt=timezone.now().date()
+            ).select_related('product', 'product__category').order_by('expiry_date'))
+            
+        except Exception as e:
+            logger.error(f"Error getting expired items: {e}")
+            return []
+    
     def cleanup_empty_items(self) -> int:
         """Remove inventory items with zero remaining quantity."""
         try:

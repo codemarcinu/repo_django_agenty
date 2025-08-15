@@ -10,8 +10,14 @@ from django.utils.decorators import method_decorator
 from django.utils import timezone
 
 from ..models import Agent, Conversation, ReceiptProcessing
+from inventory.models import InventoryItem
 from ..services.agent_factory import agent_factory
 from ..conversation_manager import conversation_manager
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework import status
+from decimal import Decimal, InvalidOperation
 
 logger = logging.getLogger(__name__)
 
@@ -135,3 +141,79 @@ class ConversationInfoView(View):
         except Exception as e:
             logger.error(f"Error getting conversation info: {str(e)}")
             return JsonResponse({'success': False, 'error': 'Internal server error'}, status=500)
+
+
+class ConsumeInventoryView(View):
+    """API endpoint for consuming inventory items - POST /api/inventory/{id}/consume"""
+    
+    @method_decorator(csrf_exempt)
+    def dispatch(self, *args, **kwargs):
+        return super().dispatch(*args, **kwargs)
+    
+    def post(self, request, inventory_id):
+        """Consume quantity from inventory item"""
+        try:
+            data = json.loads(request.body.decode('utf-8'))
+            consumed_qty = data.get('consumed_qty')
+            notes = data.get('notes', '')
+            
+            # Validate input
+            if consumed_qty is None:
+                return JsonResponse({
+                    'success': False, 
+                    'error': 'consumed_qty is required'
+                }, status=400)
+            
+            try:
+                consumed_qty = Decimal(str(consumed_qty))
+            except (InvalidOperation, ValueError):
+                return JsonResponse({
+                    'success': False, 
+                    'error': 'consumed_qty must be a valid number'
+                }, status=400)
+            
+            if consumed_qty <= 0:
+                return JsonResponse({
+                    'success': False, 
+                    'error': 'consumed_qty must be greater than 0'
+                }, status=400)
+            
+            # Get inventory item
+            try:
+                inventory_item = InventoryItem.objects.select_related('product').get(id=inventory_id)
+            except InventoryItem.DoesNotExist:
+                return JsonResponse({
+                    'success': False, 
+                    'error': 'Inventory item not found'
+                }, status=404)
+            
+            # Check if enough quantity available
+            if consumed_qty > inventory_item.quantity_remaining:
+                return JsonResponse({
+                    'success': False, 
+                    'error': f'Not enough quantity available. Current: {inventory_item.quantity_remaining}, requested: {consumed_qty}'
+                }, status=400)
+            
+            # Consume the quantity (this will create ConsumptionEvent)
+            consumption_event = inventory_item.consume(consumed_qty, notes)
+            
+            return JsonResponse({
+                'success': True,
+                'message': f'Consumed {consumed_qty} {inventory_item.unit} of {inventory_item.product.name}',
+                'consumption_event_id': consumption_event.id,
+                'remaining_quantity': float(inventory_item.quantity_remaining),
+                'product_name': inventory_item.product.name,
+                'consumed_at': consumption_event.consumed_at.isoformat()
+            })
+            
+        except json.JSONDecodeError:
+            return JsonResponse({
+                'success': False, 
+                'error': 'Invalid JSON in request body'
+            }, status=400)
+        except Exception as e:
+            logger.error(f"Error consuming inventory {inventory_id}: {str(e)}")
+            return JsonResponse({
+                'success': False, 
+                'error': 'Internal server error'
+            }, status=500)

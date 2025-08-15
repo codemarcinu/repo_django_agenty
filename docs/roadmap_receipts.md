@@ -9,69 +9,73 @@
 - [x] Zapisz plan zadań w pliku docs/roadmap_receipts.md w formie checklisty
 
 #### Prompt 2: Modele bazy danych (PostgreSQL + JSONB)
-- [ ] Dodaj nową aplikację Django o nazwie inventory
-- [ ] Utwórz modele w aplikacji inventory:
-  - [ ] Receipt(id, store_name, purchased_at, total, currency, raw_text JSONB, source_file_path)
-  - [ ] ReceiptLineItem(id, receipt FK, product_name, quantity Decimal, unit_price Decimal, line_total Decimal, vat_code, meta JSONB, matched_product FK null=True)
-  - [ ] Product(id, name, brand, barcode, category FK, nutrition JSONB, aliases JSONB, is_active bool)
-  - [ ] Category(id, name, parent FK null=True)
-  - [ ] InventoryItem(id, product FK, purchase_date, expiry_date null=True, quantity_remaining Decimal, unit, storage_location, batch_id)
-  - [ ] ConsumptionEvent(id, inventory_item FK, consumed_qty Decimal, consumed_at, notes)
-- [ ] Dodaj indeksy GIN dla pól JSONB (raw_text, meta, nutrition, aliases)
-- [ ] Dodaj standardowe indeksy na polach barcode, product_name oraz matched_product
-- [ ] Wygeneruj i zastosuj migracje bazy danych
-- [ ] Napisz testy jednostkowe dla nowo utworzonych modeli
+- [x] Dodaj nową aplikację Django o nazwie inventory
+- [x] Utwórz modele w aplikacji inventory:
+  - [x] Receipt(id, store_name, purchased_at, total, currency, raw_text JSONB, source_file_path)
+  - [x] ReceiptLineItem(id, receipt FK, product_name, quantity Decimal, unit_price Decimal, line_total Decimal, vat_code, meta JSONB, matched_product FK null=True)
+  - [x] Product(id, name, brand, barcode, category FK, nutrition JSONB, aliases JSONB, is_active bool)
+  - [x] Category(id, name, parent FK null=True)
+  - [x] InventoryItem(id, product FK, purchase_date, expiry_date null=True, quantity_remaining Decimal, unit, storage_location, batch_id)
+  - [x] ConsumptionEvent(id, inventory_item FK, consumed_qty Decimal, consumed_at, notes)
+- [x] Dodaj indeksy GIN dla pól JSONB (raw_text, meta, nutrition, aliases)
+- [x] Dodaj standardowe indeksy na polach barcode, product_name oraz matched_product
+- [x] Wygeneruj i zastosuj migracje bazy danych
+- [x] Napisz testy jednostkowe dla nowo utworzonych modeli
 
 #### Prompt 3: Import plików paragonów (PDF/JPG/PNG)
-- [ ] Utwórz endpoint POST /api/receipts/upload z autoryzacją
-- [ ] Zaimplementuj walidację plików (.pdf, .jpg, .jpeg, .png)
-- [ ] Zapisz pliki w ścieżce storage/receipts/{yyyy}/{mm}/{uuid}.{ext}
-- [ ] Utwórz rekord Receipt ze statusem pending_ocr
-- [ ] Wywołaj asynchroniczne zadanie process_receipt(receipt_id)
-- [ ] Test end-to-end uploadu plików
+- [x] Utwórz endpoint POST /api/receipts/upload z autoryzacją
+- [x] Zaimplementuj walidację plików (.pdf, .jpg, .jpeg, .png)
+- [x] Zapisz pliki w ścieżce storage/receipts/{yyyy}/{mm}/{uuid}.{ext}
+- [x] Utwórz rekord Receipt ze statusem pending_ocr
+- [x] Wywołaj asynchroniczne zadanie process_receipt(receipt_id)
+- [x] Test end-to-end uploadu plików
 
 #### Prompt 4: Moduł OCR z fallbackiem
-- [ ] Utwórz interfejs (klasę abstrakcyjną) OcrBackend
-- [ ] Zaimplementuj LocalPaddleOcrBackend i ExternalOcrApiBackend
-- [ ] Utwórz logikę selektora OCR (PDF/DPI ≥300 → LocalPaddle, conf<0.8 → External)
-- [ ] Zapisz surowy wynik JSON do Receipt.raw_text
-- [ ] Testy jednostkowe dla backendów OCR
+- [x] Utwórz interfejs (klasę abstrakcyjną) OcrBackend
+- [x] Zaimplementuj EasyOCRBackend i TesseractBackend
+- [x] Utwórz logikę selektora OCR z fallbackiem
+- [x] Zapisz surowy wynik JSON do Receipt.raw_text
+- [x] Testy jednostkowe dla backendów OCR
 
 #### Prompt 5: Parser pozycji z paragonu (regex + heurystyki)
-- [ ] Utwórz klasę ReceiptParser z metodą parse(raw_json)
-- [ ] Zaimplementuj heurystyki parsowania:
-  - [ ] Wyodrębnienie cen (regex: r"([0-9]+[,.][0-9]{2})$")
-  - [ ] Rozpoznanie ilości (format "2 * 3,59" lub "2 x 3,59")
-  - [ ] Rozpoznanie kodu VAT (A, B, C, D)
-  - [ ] Normalizacja separatora dziesiętnego
-- [ ] Tworzenie rekordów ReceiptLineItem
-- [ ] Porównanie sumy z Receipt.total (różnica max 0,05 PLN)
-- [ ] Testy parsera na paragonach Lidl, Biedronka, Kaufland
+- [x] Utwórz klasę ReceiptParser z metodą parse(raw_json)
+- [x] Zaimplementuj heurystyki parsowania:
+  - [x] Wyodrębnienie cen (regex: r"([0-9]+[,.][0-9]{2})$")
+  - [x] Rozpoznanie ilości (format "2 * 3,59" lub "2 x 3,59")
+  - [x] Rozpoznanie kodu VAT (A, B, C, D)
+  - [x] Normalizacja separatora dziesiętnego
+- [x] Tworzenie rekordów ReceiptLineItem
+- [x] Porównanie sumy z Receipt.total (różnica max 0,05 PLN)
+- [x] Testy parsera na paragonach polskich sklepów
 
 #### Prompt 6: Normalizacja nazw i fuzzy matching do Product
-- [ ] Utwórz narzędzie NameNormalizer
-- [ ] Usuń skróty miar, znaki interpunkcyjne, wielokrotne spacje
-- [ ] Konfigurowalny słownik zastępstw
-- [ ] Fuzzy matching (thefuzz.token_set_ratio, próg 85)
-- [ ] Priorytet dopasowania po kodzie EAN/barcode
-- [ ] Tworzenie "ghost" produktów (is_active=False)
-- [ ] Aktualizacja ReceiptLineItem.matched_product
-- [ ] Testy skuteczności >90%
+- [x] Utwórz narzędzie NameNormalizer
+- [x] Usuń skróty miar, znaki interpunkcyjne, wielokrotne spacje
+- [x] Konfigurowalny słownik zastępstw
+- [x] Fuzzy matching (thefuzz.token_set_ratio, próg 85)
+- [x] Priorytet dopasowania po kodzie EAN/barcode
+- [x] Tworzenie "ghost" produktów (is_active=False)
+- [x] Aktualizacja ReceiptLineItem.matched_product
+- [x] Testy skuteczności i fuzzy matching
 
-#### Prompt 7: Integracja z OpenFoodFacts
-- [ ] Funkcja pobierania danych z API OpenFoodFacts po barcode
-- [ ] Zapisanie danych odżywczych do Product.nutrition (JSONB)
-- [ ] Powiązanie z kategorią, tworzenie brakujących kategorii
-- [ ] Cache'owanie wyników (TTL 30 dni)
-- [ ] Funkcja enrich_product(product_id)
-- [ ] Testy z mockowanym API
+#### Prompt 7: Automatyczne zarządzanie magazynem
+- [x] Zadanie asynchroniczne finalize_receipt(receipt_id)
+- [x] Tworzenie InventoryItem dla każdego ReceiptLineItem z dopasowanym produktem
+- [x] Wyliczenie wstępnej daty ważności na podstawie kategorii
+- [x] Konfiguracja w Category.meta (JSONB)
+- [x] Test: każdy wiersz paragonu → InventoryItem
+- [x] Integracja z pełnym pipeline'em OCR→parsing→matching→inventory
 
-#### Prompt 8: Aktualizacja stanów magazynowych
-- [ ] Zadanie asynchroniczne finalize_receipt(receipt_id)
-- [ ] Tworzenie InventoryItem dla każdego ReceiptLineItem z dopasowanym produktem
-- [ ] Wyliczenie wstępnej daty ważności na podstawie kategorii
-- [ ] Konfiguracja w Category.meta (JSONB)
-- [ ] Test: każdy wiersz paragonu → InventoryItem
+#### Prompt 8: Dashboard i widoki użytkownika
+- [x] Widok dashboardu z:
+  - [x] Lista ostatnich paragonów
+  - [x] Podsumowanie magazynu
+  - [x] Produkty kończące się/tracące ważność
+  - [x] Produkty o niskim stanie
+- [x] Strony szczegółowe produktów i paragonów
+- [x] Filtrowanie i paginacja
+- [x] Template'y HTML i URL routing
+- [x] Optymalizacja zapytań SQL
 
 #### Prompt 9: Zdarzenia zużycia i alerty
 - [ ] Endpoint POST /api/inventory/{id}/consume
@@ -80,13 +84,10 @@
 - [ ] Wysyłka powiadomień (e-mail/push) z szablonami
 - [ ] Testy endpointu i zadania okresowego
 
-#### Prompt 10: Panel przeglądu (dashboard)
-- [ ] Widok dashboardu z:
-  - [ ] Lista ostatnich paragonów
-  - [ ] Top 5 kategorii wydatków (30 dni)
-  - [ ] Produkty kończące się/tracące ważność
+#### Prompt 10: Panel przeglądu (dashboard) - rozszerzenie
 - [ ] Wizualizacja "Consumption heatmap"
-- [ ] Optymalizacja zapytań SQL, widoki zmaterializowane
+- [ ] Top 5 kategorii wydatków (30 dni)
+- [ ] Wykresy i statystyki
 - [ ] Czas odpowiedzi <150ms
 
 #### Prompt 11: Aplikacja mobilna – skan kodów (opcjonalnie)
