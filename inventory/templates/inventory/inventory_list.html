@@ -1,0 +1,209 @@
+{% extends 'inventory/base.html' %}
+
+{% block title %}Lista magazynu{% endblock %}
+{% block page_title %}Magazyn{% endblock %}
+
+{% block page_actions %}
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            <a href="{% url 'inventory:upload_receipt' %}" class="btn btn-sm btn-primary">
+                <i class="bi bi-cloud-upload"></i> Dodaj paragon
+            </a>
+        </div>
+    </div>
+{% endblock %}
+
+{% block content %}
+    <!-- Filters -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-3">
+                    <label for="search" class="form-label">Szukaj</label>
+                    <input type="text" class="form-control" id="search" name="search" 
+                           value="{{ current_search }}" placeholder="Nazwa produktu, marka...">
+                </div>
+                
+                <div class="col-md-2">
+                    <label for="location" class="form-label">Lokalizacja</label>
+                    <select class="form-select" id="location" name="location">
+                        <option value="">Wszystkie</option>
+                        {% for value, display in locations %}
+                            <option value="{{ value }}" {% if current_location == value %}selected{% endif %}>
+                                {{ display }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="col-md-2">
+                    <label for="category" class="form-label">Kategoria</label>
+                    <select class="form-select" id="category" name="category">
+                        <option value="">Wszystkie</option>
+                        {% for cat in categories %}
+                            <option value="{{ cat.id }}" {% if current_category == cat.id|stringformat:"s" %}selected{% endif %}>
+                                {{ cat.name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="col-md-2">
+                    <label for="status" class="form-label">Status</label>
+                    <select class="form-select" id="status" name="status">
+                        <option value="">Wszystkie</option>
+                        <option value="expiring" {% if current_status == 'expiring' %}selected{% endif %}>Wygasające</option>
+                        <option value="expired" {% if current_status == 'expired' %}selected{% endif %}>Przeterminowane</option>
+                        <option value="low_stock" {% if current_status == 'low_stock' %}selected{% endif %}>Niski stan</option>
+                    </select>
+                </div>
+                
+                <div class="col-md-3 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary me-2">
+                        <i class="bi bi-search"></i> Filtruj
+                    </button>
+                    <a href="{% url 'inventory:inventory_list' %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-x"></i> Wyczyść
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Results -->
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">
+                <i class="bi bi-box-seam"></i> 
+                Pozycje magazynowe ({{ page_obj.paginator.count }})
+            </h5>
+        </div>
+        
+        <div class="card-body p-0">
+            {% if items %}
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Produkt</th>
+                                <th>Kategoria</th>
+                                <th>Ilość</th>
+                                <th>Lokalizacja</th>
+                                <th>Data zakupu</th>
+                                <th>Data ważności</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in items %}
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div>
+                                            <div class="fw-bold">
+                                                <a href="{% url 'inventory:product_detail' item.product.pk %}" 
+                                                   class="text-decoration-none">
+                                                    {{ item.product.name }}
+                                                </a>
+                                            </div>
+                                            {% if item.product.brand %}
+                                                <small class="text-muted">{{ item.product.brand }}</small>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    {% if item.product.category %}
+                                        <span class="badge bg-secondary">{{ item.product.category.name }}</span>
+                                    {% else %}
+                                        <span class="text-muted">Brak kategorii</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="fw-bold">{{ item.quantity_remaining }}</span>
+                                    <small class="text-muted">{{ item.unit }}</small>
+                                </td>
+                                <td>
+                                    <i class="bi {% if item.storage_location == 'fridge' %}bi-snow{% elif item.storage_location == 'freezer' %}bi-snow2{% elif item.storage_location == 'pantry' %}bi-house{% else %}bi-cabinet-door{% endif %}"></i>
+                                    {{ item.get_storage_location_display }}
+                                </td>
+                                <td>
+                                    <span class="text-muted">{{ item.purchase_date|date:"d.m.Y" }}</span>
+                                </td>
+                                <td>
+                                    {% if item.expiry_date %}
+                                        <span class="{% if item.is_expired %}text-danger{% elif item.is_expiring_soon %}text-warning{% endif %}">
+                                            {{ item.expiry_date|date:"d.m.Y" }}
+                                        </span>
+                                        {% if item.is_expired %}
+                                            <br><small class="text-danger">Przeterminowane</small>
+                                        {% elif item.is_expiring_soon %}
+                                            <br><small class="text-warning">Wygasa wkrótce</small>
+                                        {% endif %}
+                                    {% else %}
+                                        <span class="text-muted">Brak daty</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if item.is_expired %}
+                                        <span class="badge bg-danger">Przeterminowane</span>
+                                    {% elif item.is_expiring_soon %}
+                                        <span class="badge bg-warning">Wygasa wkrótce</span>
+                                    {% elif item.quantity_remaining <= item.product.reorder_point %}
+                                        <span class="badge bg-orange">Niski stan</span>
+                                    {% else %}
+                                        <span class="badge bg-success">OK</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="text-center py-4">
+                    <i class="bi bi-inbox" style="font-size: 3rem; color: #ddd;"></i>
+                    <p class="text-muted mt-3">Brak pozycji w magazynie spełniających kryteria</p>
+                    <a href="{% url 'inventory:upload_receipt' %}" class="btn btn-primary">
+                        <i class="bi bi-cloud-upload"></i> Dodaj pierwszy paragon
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    {% if page_obj.has_other_pages %}
+    <nav aria-label="Nawigacja" class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.location %}&location={{ request.GET.location }}{% endif %}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">
+                        <i class="bi bi-chevron-left"></i> Poprzednia
+                    </a>
+                </li>
+            {% endif %}
+            
+            {% for num in page_obj.paginator.page_range %}
+                {% if page_obj.number == num %}
+                    <li class="page-item active">
+                        <span class="page-link">{{ num }}</span>
+                    </li>
+                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ num }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.location %}&location={{ request.GET.location }}{% endif %}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">{{ num }}</a>
+                    </li>
+                {% endif %}
+            {% endfor %}
+            
+            {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.location %}&location={{ request.GET.location }}{% endif %}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">
+                        Następna <i class="bi bi-chevron-right"></i>
+                    </a>
+                </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+{% endblock %}

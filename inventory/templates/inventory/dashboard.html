@@ -1,0 +1,272 @@
+{% extends 'inventory/base.html' %}
+
+{% block title %}Dashboard{% endblock %}
+{% block page_title %}Dashboard Magazynu{% endblock %}
+
+{% block page_actions %}
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            <a href="{% url 'inventory:upload_receipt' %}" class="btn btn-sm btn-primary">
+                <i class="bi bi-cloud-upload"></i> Upload Paragonu
+            </a>
+            <a href="{% url 'inventory:inventory_list' %}" class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-box-seam"></i> Pokaż Magazyn
+            </a>
+        </div>
+    </div>
+{% endblock %}
+
+{% block content %}
+    <!-- Stats Cards -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6">
+            <div class="card stats-card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Całkowite pozycje
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                {{ summary.total_items|default:0 }}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-boxes fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <div class="card stats-card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Aktywne pozycje
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                {{ summary.active_items|default:0 }}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-check-circle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <div class="card stats-card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                Wygasające wkrótce
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                {{ summary.soon_expiring|default:0 }}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-exclamation-triangle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <div class="card stats-card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col">
+                            <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
+                                Przeterminowane
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                {{ summary.expired|default:0 }}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-x-circle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Storage Breakdown -->
+    {% if summary.storage_breakdown %}
+    <div class="row mb-4">
+        <div class="col-xl-8">
+            <div class="card shadow-sm">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">Rozkład według lokalizacji</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for location, count in summary.storage_breakdown.items %}
+                        <div class="col-md-3 mb-3">
+                            <div class="text-center">
+                                {% if location == 'fridge' %}
+                                    <i class="bi bi-snow text-info" style="font-size: 2rem;"></i>
+                                    <h6 class="mt-2">Lodówka</h6>
+                                {% elif location == 'freezer' %}
+                                    <i class="bi bi-snow2 text-primary" style="font-size: 2rem;"></i>
+                                    <h6 class="mt-2">Zamrażarka</h6>
+                                {% elif location == 'pantry' %}
+                                    <i class="bi bi-house text-success" style="font-size: 2rem;"></i>
+                                    <h6 class="mt-2">Spiżarnia</h6>
+                                {% else %}
+                                    <i class="bi bi-cabinet-door text-secondary" style="font-size: 2rem;"></i>
+                                    <h6 class="mt-2">{{ location|title }}</h6>
+                                {% endif %}
+                                <span class="h5 font-weight-bold">{{ count }}</span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-4">
+            <div class="card shadow-sm">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">Ostatnia aktywność</h6>
+                </div>
+                <div class="card-body">
+                    {% if recent_receipts %}
+                        {% for receipt in recent_receipts %}
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="me-3">
+                                <div class="icon-circle bg-primary">
+                                    <i class="bi bi-receipt text-white"></i>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="small text-gray-500">{{ receipt.purchased_at|date:"d.m.Y H:i" }}</div>
+                                <div class="font-weight-bold">{{ receipt.store_name }}</div>
+                                <div class="text-gray-800">{{ receipt.total }} zł</div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-muted text-center">Brak ostatnich paragonów</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Alerts and Low Stock Items -->
+    <div class="row">
+        <!-- Expiring Items -->
+        <div class="col-xl-6">
+            <div class="card shadow-sm">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-warning">Wygasające produkty</h6>
+                    <a href="{% url 'inventory:expiring_items' %}" class="text-warning">Zobacz wszystkie</a>
+                </div>
+                <div class="card-body">
+                    {% if expiring_items %}
+                        {% for item in expiring_items %}
+                        <div class="alert-item border rounded p-3 mb-2 {% if item.is_expired %}expired-item{% endif %}">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h6 class="mb-1">
+                                        {{ item.product.name }}
+                                        {% if item.product.brand %}
+                                            <small class="text-muted">{{ item.product.brand }}</small>
+                                        {% endif %}
+                                    </h6>
+                                    <p class="mb-1 text-muted">
+                                        <i class="bi bi-geo-alt"></i> {{ item.get_storage_location_display }}
+                                        <span class="ms-2">{{ item.quantity_remaining }} {{ item.unit }}</span>
+                                    </p>
+                                    <small class="text-muted">
+                                        {% if item.is_expired %}
+                                            <i class="bi bi-x-circle text-danger"></i> Przeterminowane {{ item.expiry_date|timesince }} temu
+                                        {% else %}
+                                            <i class="bi bi-exclamation-triangle text-warning"></i> Wygasa {{ item.expiry_date|timeuntil }}
+                                        {% endif %}
+                                    </small>
+                                </div>
+                                <div class="text-end">
+                                    <span class="badge {% if item.is_expired %}bg-danger{% else %}bg-warning{% endif %}">
+                                        {{ item.expiry_date|date:"d.m" }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-muted text-center">Brak wygasających produktów</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Low Stock Items -->
+        <div class="col-xl-6">
+            <div class="card shadow-sm">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-danger">Niski stan magazynu</h6>
+                    <a href="{% url 'inventory:low_stock_items' %}" class="text-danger">Zobacz wszystkie</a>
+                </div>
+                <div class="card-body">
+                    {% if low_stock_items %}
+                        {% for item in low_stock_items %}
+                        <div class="low-stock-item border rounded p-3 mb-2">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h6 class="mb-1">
+                                        {{ item.product.name }}
+                                        {% if item.product.brand %}
+                                            <small class="text-muted">{{ item.product.brand }}</small>
+                                        {% endif %}
+                                    </h6>
+                                    <p class="mb-1 text-muted">
+                                        <i class="bi bi-geo-alt"></i> {{ item.get_storage_location_display }}
+                                    </p>
+                                    <small class="text-muted">
+                                        <i class="bi bi-arrow-down-circle text-danger"></i> 
+                                        Pozostało {{ item.quantity_remaining }} {{ item.unit }}, 
+                                        minimum {{ item.product.reorder_point }} {{ item.unit }}
+                                    </small>
+                                </div>
+                                <div class="text-end">
+                                    <span class="badge bg-danger">
+                                        {{ item.quantity_remaining }} {{ item.unit }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-muted text-center">Wszystko w dobrej ilości</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .icon-circle {
+        height: 2rem;
+        width: 2rem;
+        border-radius: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+</style>
+{% endblock %}

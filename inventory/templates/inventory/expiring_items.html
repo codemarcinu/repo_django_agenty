@@ -1,0 +1,151 @@
+{% extends 'inventory/base.html' %}
+
+{% block title %}Wygasające produkty{% endblock %}
+{% block page_title %}Produkty wygasające w ciągu {{ days }} dni{% endblock %}
+
+{% block page_actions %}
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            <a href="?days=3" class="btn btn-sm btn-outline-primary {% if days == 3 %}active{% endif %}">3 dni</a>
+            <a href="?days=7" class="btn btn-sm btn-outline-primary {% if days == 7 %}active{% endif %}">7 dni</a>
+            <a href="?days=14" class="btn btn-sm btn-outline-primary {% if days == 14 %}active{% endif %}">14 dni</a>
+        </div>
+    </div>
+{% endblock %}
+
+{% block content %}
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">
+                <i class="bi bi-exclamation-triangle text-warning"></i>
+                Produkty wygasające ({{ page_obj.paginator.count }})
+            </h5>
+        </div>
+        
+        <div class="card-body p-0">
+            {% if items %}
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Produkt</th>
+                                <th>Lokalizacja</th>
+                                <th>Ilość</th>
+                                <th>Data ważności</th>
+                                <th>Status</th>
+                                <th>Priorytet</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in items %}
+                            <tr class="{% if item.is_expired %}table-danger{% elif item.is_expiring_soon %}table-warning{% endif %}">
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div>
+                                            <div class="fw-bold">
+                                                <a href="{% url 'inventory:product_detail' item.product.pk %}" 
+                                                   class="text-decoration-none">
+                                                    {{ item.product.name }}
+                                                </a>
+                                            </div>
+                                            {% if item.product.brand %}
+                                                <small class="text-muted">{{ item.product.brand }}</small>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <i class="bi {% if item.storage_location == 'fridge' %}bi-snow{% elif item.storage_location == 'freezer' %}bi-snow2{% elif item.storage_location == 'pantry' %}bi-house{% else %}bi-cabinet-door{% endif %}"></i>
+                                    {{ item.get_storage_location_display }}
+                                </td>
+                                <td>
+                                    <span class="fw-bold">{{ item.quantity_remaining }}</span>
+                                    <small class="text-muted">{{ item.unit }}</small>
+                                </td>
+                                <td>
+                                    <div class="{% if item.is_expired %}text-danger{% elif item.is_expiring_soon %}text-warning{% endif %}">
+                                        {{ item.expiry_date|date:"d.m.Y" }}
+                                        <br>
+                                        <small>
+                                            {% if item.is_expired %}
+                                                <i class="bi bi-x-circle"></i> Przeterminowane {{ item.expiry_date|timesince }} temu
+                                            {% else %}
+                                                <i class="bi bi-clock"></i> Wygasa {{ item.expiry_date|timeuntil }}
+                                            {% endif %}
+                                        </small>
+                                    </div>
+                                </td>
+                                <td>
+                                    {% if item.is_expired %}
+                                        <span class="badge bg-danger">Przeterminowane</span>
+                                    {% elif item.is_expiring_soon %}
+                                        <span class="badge bg-warning">Wygasa wkrótce</span>
+                                    {% else %}
+                                        <span class="badge bg-info">Do obserwacji</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% with days_until=item.expiry_date|timeuntil %}
+                                        {% if item.is_expired %}
+                                            <span class="badge bg-danger">Krytyczny</span>
+                                        {% elif "1 day" in days_until or "0 day" in days_until %}
+                                            <span class="badge bg-danger">Wysoki</span>
+                                        {% elif "2 day" in days_until or "3 day" in days_until %}
+                                            <span class="badge bg-warning">Średni</span>
+                                        {% else %}
+                                            <span class="badge bg-info">Niski</span>
+                                        {% endif %}
+                                    {% endwith %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="text-center py-4">
+                    <i class="bi bi-check-circle" style="font-size: 3rem; color: #28a745;"></i>
+                    <p class="text-success mt-3">Świetnie! Żaden produkt nie wygasa w ciągu {{ days }} dni.</p>
+                    <a href="{% url 'inventory:inventory_list' %}" class="btn btn-success">
+                        <i class="bi bi-box-seam"></i> Zobacz cały magazyn
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    {% if page_obj.has_other_pages %}
+    <nav aria-label="Nawigacja" class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}&days={{ days }}">
+                        <i class="bi bi-chevron-left"></i> Poprzednia
+                    </a>
+                </li>
+            {% endif %}
+            
+            {% for num in page_obj.paginator.page_range %}
+                {% if page_obj.number == num %}
+                    <li class="page-item active">
+                        <span class="page-link">{{ num }}</span>
+                    </li>
+                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ num }}&days={{ days }}">{{ num }}</a>
+                    </li>
+                {% endif %}
+            {% endfor %}
+            
+            {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}&days={{ days }}">
+                        Następna <i class="bi bi-chevron-right"></i>
+                    </a>
+                </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+{% endblock %}

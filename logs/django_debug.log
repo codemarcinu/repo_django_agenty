@@ -331,3 +331,207 @@ DEBUG 2025-08-15 16:21:37,654 receipt_parser 65856 140543460137920 Parsing produ
 DEBUG 2025-08-15 16:21:37,654 receipt_parser 65856 140543460137920 Parsing product line 7: Chleb graham 3,50
 DEBUG 2025-08-15 16:21:37,654 receipt_parser 65856 140543460137920 Parsing product line 8: Masło extra 200g 5,99
 INFO 2025-08-15 16:21:37,654 receipt_parser 65856 140543460137920 Parsed receipt: 5 products, total: 12.48
+INFO 2025-08-15 16:44:40,585 product_matcher 66855 140531877350336 Batch matching 4 products
+DEBUG 2025-08-15 16:44:40,585 product_matcher 66855 140531877350336 Matching product: 
+INFO 2025-08-15 16:44:40,591 product_matcher 66855 140531877350336 No match found for '', creating ghost product
+INFO 2025-08-15 16:44:40,591 product_matcher 66855 140531877350336 Created ghost product:  (category: None)
+DEBUG 2025-08-15 16:44:40,592 product_matcher 66855 140531877350336 Matching product: 123456
+INFO 2025-08-15 16:44:40,594 product_matcher 66855 140531877350336 No match found for '123456', creating ghost product
+INFO 2025-08-15 16:44:40,595 product_matcher 66855 140531877350336 Created ghost product: 123456 (category: None)
+DEBUG 2025-08-15 16:44:40,595 product_matcher 66855 140531877350336 Matching product: A
+INFO 2025-08-15 16:44:40,597 product_matcher 66855 140531877350336 No match found for 'a', creating ghost product
+INFO 2025-08-15 16:44:40,598 product_matcher 66855 140531877350336 Created ghost product: A (category: None)
+DEBUG 2025-08-15 16:44:40,598 product_matcher 66855 140531877350336 Matching product: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+INFO 2025-08-15 16:44:40,600 product_matcher 66855 140531877350336 No match found for 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx', creating ghost product
+INFO 2025-08-15 16:44:40,601 product_matcher 66855 140531877350336 Created ghost product: Xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx (category: None)
+INFO 2025-08-15 16:44:40,601 product_matcher 66855 140531877350336 Batch matching completed: 4 results
+INFO 2025-08-15 16:44:40,621 product_matcher 66855 140531877350336 Batch matching 3 products
+DEBUG 2025-08-15 16:44:40,621 product_matcher 66855 140531877350336 Matching product: Product 50
+INFO 2025-08-15 16:44:40,622 product_matcher 66855 140531877350336 Exact match found: Product 50
+DEBUG 2025-08-15 16:44:40,622 product_matcher 66855 140531877350336 Matching product: prod 25
+INFO 2025-08-15 16:44:40,624 product_matcher 66855 140531877350336 Alias match found: Product 25 (alias: prod 25)
+DEBUG 2025-08-15 16:44:40,624 product_matcher 66855 140531877350336 Matching product: Unknown Item
+INFO 2025-08-15 16:44:40,630 product_matcher 66855 140531877350336 No match found for 'unknown item', creating ghost product
+INFO 2025-08-15 16:44:40,631 product_matcher 66855 140531877350336 Created ghost product: Unknown Item (category: None)
+INFO 2025-08-15 16:44:40,631 product_matcher 66855 140531877350336 Batch matching completed: 3 results
+INFO 2025-08-15 16:44:40,632 product_matcher 66855 140531877350336 Batch matching 5 products
+DEBUG 2025-08-15 16:44:40,632 product_matcher 66855 140531877350336 Matching product: Mleko UHT Łaciate 2% 1L
+INFO 2025-08-15 16:44:40,634 product_matcher 66855 140531877350336 No match found for 'mleko uht łaciate 2', creating ghost product
+INFO 2025-08-15 16:44:40,635 product_matcher 66855 140531877350336 Created ghost product: Mleko Uht Łaciate 2 (category: Dairy)
+DEBUG 2025-08-15 16:44:40,635 product_matcher 66855 140531877350336 Matching product: Chleb żytni Putka 500g
+INFO 2025-08-15 16:44:40,636 product_matcher 66855 140531877350336 Fuzzy match found: Chleb żytni (similarity: 0.75)
+DEBUG 2025-08-15 16:44:40,636 product_matcher 66855 140531877350336 Matching product: Jogurt nat. Danone 4x125g
+INFO 2025-08-15 16:44:40,638 product_matcher 66855 140531877350336 No match found for 'jogurt nat danone', creating ghost product
+INFO 2025-08-15 16:44:40,639 product_matcher 66855 140531877350336 Created ghost product: Jogurt Nat Danone (category: Dairy)
+DEBUG 2025-08-15 16:44:40,639 product_matcher 66855 140531877350336 Matching product: Banan kg
+INFO 2025-08-15 16:44:40,640 product_matcher 66855 140531877350336 No match found for 'banan kg', creating ghost product
+INFO 2025-08-15 16:44:40,641 product_matcher 66855 140531877350336 Auto-created category: Fruits
+INFO 2025-08-15 16:44:40,641 product_matcher 66855 140531877350336 Created ghost product: Banan Kg (category: Fruits)
+DEBUG 2025-08-15 16:44:40,641 product_matcher 66855 140531877350336 Matching product: MLEKO 2%
+INFO 2025-08-15 16:44:40,643 product_matcher 66855 140531877350336 Fuzzy match found: Mleko UHT 2% (similarity: 0.75)
+INFO 2025-08-15 16:44:40,643 product_matcher 66855 140531877350336 Batch matching completed: 5 results
+DEBUG 2025-08-15 16:44:40,645 product_matcher 66855 140531877350336 Matching product: milk
+INFO 2025-08-15 16:44:40,646 product_matcher 66855 140531877350336 Alias match found: Mleko 3,2% (alias: milk)
+INFO 2025-08-15 16:44:40,647 product_matcher 66855 140531877350336 Batch matching 3 products
+DEBUG 2025-08-15 16:44:40,647 product_matcher 66855 140531877350336 Matching product: Mleko 3,2%
+INFO 2025-08-15 16:44:40,649 product_matcher 66855 140531877350336 No match found for 'mleko 3 2', creating ghost product
+INFO 2025-08-15 16:44:40,650 product_matcher 66855 140531877350336 Created ghost product: Mleko 3 2 (category: Dairy)
+DEBUG 2025-08-15 16:44:40,650 product_matcher 66855 140531877350336 Matching product: Chleb graham
+INFO 2025-08-15 16:44:40,650 product_matcher 66855 140531877350336 Exact match found: Chleb graham
+DEBUG 2025-08-15 16:44:40,650 product_matcher 66855 140531877350336 Matching product: Unknown Item
+INFO 2025-08-15 16:44:40,652 product_matcher 66855 140531877350336 No match found for 'unknown item', creating ghost product
+INFO 2025-08-15 16:44:40,654 product_matcher 66855 140531877350336 Created ghost product: Unknown Item (category: None)
+INFO 2025-08-15 16:44:40,654 product_matcher 66855 140531877350336 Batch matching completed: 3 results
+DEBUG 2025-08-15 16:44:40,663 product_matcher 66855 140531877350336 Matching product: Mleko 3,2%
+INFO 2025-08-15 16:44:40,665 product_matcher 66855 140531877350336 No match found for 'mleko 3 2', creating ghost product
+INFO 2025-08-15 16:44:40,666 product_matcher 66855 140531877350336 Created ghost product: Mleko 3 2 (category: Dairy)
+DEBUG 2025-08-15 16:44:40,667 product_matcher 66855 140531877350336 Matching product: Mleko Laciate 3.2%
+INFO 2025-08-15 16:44:40,669 product_matcher 66855 140531877350336 Fuzzy match found: Mleko 3,2% (similarity: 0.76)
+DEBUG 2025-08-15 16:44:40,674 product_matcher 66855 140531877350336 Matching product: Unknown Product XYZ
+INFO 2025-08-15 16:44:40,676 product_matcher 66855 140531877350336 No match found for 'unknown product xyz', creating ghost product
+INFO 2025-08-15 16:44:40,676 product_matcher 66855 140531877350336 Created ghost product: Unknown Product Xyz (category: None)
+INFO 2025-08-15 16:44:40,682 product_matcher 66855 140531877350336 Added alias 'new milk name' to product 'Mleko 3,2%'
+INFO 2025-08-15 16:44:40,683 product_matcher 66855 140531877350336 Added alias 'mleko 3 2' to product 'Mleko 3,2%'
+INFO 2025-08-15 16:46:30,507 product_matcher 67022 140689348705216 Batch matching 4 products
+DEBUG 2025-08-15 16:46:30,507 product_matcher 67022 140689348705216 Matching product: 
+INFO 2025-08-15 16:46:30,510 product_matcher 67022 140689348705216 No match found for '', creating ghost product
+INFO 2025-08-15 16:46:30,511 product_matcher 67022 140689348705216 Created ghost product:  (category: None)
+DEBUG 2025-08-15 16:46:30,511 product_matcher 67022 140689348705216 Matching product: 123456
+INFO 2025-08-15 16:46:30,513 product_matcher 67022 140689348705216 No match found for '123456', creating ghost product
+INFO 2025-08-15 16:46:30,513 product_matcher 67022 140689348705216 Created ghost product: 123456 (category: None)
+DEBUG 2025-08-15 16:46:30,513 product_matcher 67022 140689348705216 Matching product: A
+INFO 2025-08-15 16:46:30,515 product_matcher 67022 140689348705216 No match found for 'a', creating ghost product
+INFO 2025-08-15 16:46:30,515 product_matcher 67022 140689348705216 Created ghost product: A (category: None)
+DEBUG 2025-08-15 16:46:30,515 product_matcher 67022 140689348705216 Matching product: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+INFO 2025-08-15 16:46:30,518 product_matcher 67022 140689348705216 No match found for 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx', creating ghost product
+INFO 2025-08-15 16:46:30,518 product_matcher 67022 140689348705216 Created ghost product: Xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx (category: None)
+INFO 2025-08-15 16:46:30,518 product_matcher 67022 140689348705216 Batch matching completed: 4 results
+INFO 2025-08-15 16:46:30,538 product_matcher 67022 140689348705216 Batch matching 3 products
+DEBUG 2025-08-15 16:46:30,538 product_matcher 67022 140689348705216 Matching product: Product 50
+INFO 2025-08-15 16:46:30,539 product_matcher 67022 140689348705216 Exact match found: Product 50
+DEBUG 2025-08-15 16:46:30,539 product_matcher 67022 140689348705216 Matching product: prod 25
+INFO 2025-08-15 16:46:30,540 product_matcher 67022 140689348705216 Alias match found: Product 25 (alias: prod 25)
+DEBUG 2025-08-15 16:46:30,540 product_matcher 67022 140689348705216 Matching product: Unknown Item
+INFO 2025-08-15 16:46:30,546 product_matcher 67022 140689348705216 No match found for 'unknown item', creating ghost product
+INFO 2025-08-15 16:46:30,547 product_matcher 67022 140689348705216 Created ghost product: Unknown Item (category: None)
+INFO 2025-08-15 16:46:30,547 product_matcher 67022 140689348705216 Batch matching completed: 3 results
+INFO 2025-08-15 16:46:30,548 product_matcher 67022 140689348705216 Batch matching 5 products
+DEBUG 2025-08-15 16:46:30,548 product_matcher 67022 140689348705216 Matching product: Mleko UHT Łaciate 2% 1L
+INFO 2025-08-15 16:46:30,550 product_matcher 67022 140689348705216 Fuzzy match found: Mleko UHT 2% (similarity: 0.75)
+DEBUG 2025-08-15 16:46:30,550 product_matcher 67022 140689348705216 Matching product: Chleb żytni Putka 500g
+INFO 2025-08-15 16:46:30,552 product_matcher 67022 140689348705216 Fuzzy match found: Chleb żytni (similarity: 0.75)
+DEBUG 2025-08-15 16:46:30,552 product_matcher 67022 140689348705216 Matching product: Jogurt nat. Danone 4x125g
+INFO 2025-08-15 16:46:30,554 product_matcher 67022 140689348705216 No match found for 'jogurt nat, danone', creating ghost product
+INFO 2025-08-15 16:46:30,554 product_matcher 67022 140689348705216 Created ghost product: Jogurt Nat, Danone (category: Dairy)
+DEBUG 2025-08-15 16:46:30,554 product_matcher 67022 140689348705216 Matching product: Banan kg
+INFO 2025-08-15 16:46:30,556 product_matcher 67022 140689348705216 No match found for 'banan kg', creating ghost product
+INFO 2025-08-15 16:46:30,557 product_matcher 67022 140689348705216 Auto-created category: Fruits
+INFO 2025-08-15 16:46:30,558 product_matcher 67022 140689348705216 Created ghost product: Banan Kg (category: Fruits)
+DEBUG 2025-08-15 16:46:30,558 product_matcher 67022 140689348705216 Matching product: MLEKO 2%
+INFO 2025-08-15 16:46:30,560 product_matcher 67022 140689348705216 Alias match found: Mleko UHT 2% (alias: mleko 2%)
+INFO 2025-08-15 16:46:30,560 product_matcher 67022 140689348705216 Batch matching completed: 5 results
+DEBUG 2025-08-15 16:46:30,562 product_matcher 67022 140689348705216 Matching product: milk
+INFO 2025-08-15 16:46:30,563 product_matcher 67022 140689348705216 Alias match found: Mleko 3,2% (alias: milk)
+INFO 2025-08-15 16:46:30,565 product_matcher 67022 140689348705216 Batch matching 3 products
+DEBUG 2025-08-15 16:46:30,565 product_matcher 67022 140689348705216 Matching product: Mleko 3,2%
+INFO 2025-08-15 16:46:30,566 product_matcher 67022 140689348705216 Exact match found: Mleko 3,2%
+DEBUG 2025-08-15 16:46:30,566 product_matcher 67022 140689348705216 Matching product: Chleb graham
+INFO 2025-08-15 16:46:30,567 product_matcher 67022 140689348705216 Exact match found: Chleb graham
+DEBUG 2025-08-15 16:46:30,567 product_matcher 67022 140689348705216 Matching product: Unknown Item
+INFO 2025-08-15 16:46:30,569 product_matcher 67022 140689348705216 No match found for 'unknown item', creating ghost product
+INFO 2025-08-15 16:46:30,569 product_matcher 67022 140689348705216 Created ghost product: Unknown Item (category: None)
+INFO 2025-08-15 16:46:30,569 product_matcher 67022 140689348705216 Batch matching completed: 3 results
+DEBUG 2025-08-15 16:46:30,572 product_matcher 67022 140689348705216 Matching product: Mleko 3,2%
+INFO 2025-08-15 16:46:30,573 product_matcher 67022 140689348705216 Exact match found: Mleko 3,2%
+DEBUG 2025-08-15 16:46:30,575 product_matcher 67022 140689348705216 Matching product: Mleko Laciate 3.2%
+INFO 2025-08-15 16:46:30,576 product_matcher 67022 140689348705216 Fuzzy match found: Mleko 3,2% (similarity: 0.79)
+DEBUG 2025-08-15 16:46:30,580 product_matcher 67022 140689348705216 Matching product: Unknown Product XYZ
+INFO 2025-08-15 16:46:30,582 product_matcher 67022 140689348705216 No match found for 'unknown product xyz', creating ghost product
+INFO 2025-08-15 16:46:30,582 product_matcher 67022 140689348705216 Created ghost product: Unknown Product Xyz (category: None)
+INFO 2025-08-15 16:46:30,587 product_matcher 67022 140689348705216 Added alias 'new milk name' to product 'Mleko 3,2%'
+INFO 2025-08-15 16:47:06,962 product_matcher 67105 139965845732288 Batch matching 4 products
+DEBUG 2025-08-15 16:47:06,962 product_matcher 67105 139965845732288 Matching product: 
+INFO 2025-08-15 16:47:06,966 product_matcher 67105 139965845732288 No match found for '', creating ghost product
+INFO 2025-08-15 16:47:06,966 product_matcher 67105 139965845732288 Created ghost product:  (category: None)
+DEBUG 2025-08-15 16:47:06,967 product_matcher 67105 139965845732288 Matching product: 123456
+INFO 2025-08-15 16:47:06,969 product_matcher 67105 139965845732288 No match found for '123456', creating ghost product
+INFO 2025-08-15 16:47:06,969 product_matcher 67105 139965845732288 Created ghost product: 123456 (category: None)
+DEBUG 2025-08-15 16:47:06,969 product_matcher 67105 139965845732288 Matching product: A
+INFO 2025-08-15 16:47:06,971 product_matcher 67105 139965845732288 No match found for 'a', creating ghost product
+INFO 2025-08-15 16:47:06,971 product_matcher 67105 139965845732288 Created ghost product: A (category: None)
+DEBUG 2025-08-15 16:47:06,971 product_matcher 67105 139965845732288 Matching product: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+INFO 2025-08-15 16:47:06,974 product_matcher 67105 139965845732288 No match found for 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx', creating ghost product
+INFO 2025-08-15 16:47:06,975 product_matcher 67105 139965845732288 Created ghost product: Xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx (category: None)
+INFO 2025-08-15 16:47:06,975 product_matcher 67105 139965845732288 Batch matching completed: 4 results
+INFO 2025-08-15 16:47:06,994 product_matcher 67105 139965845732288 Batch matching 3 products
+DEBUG 2025-08-15 16:47:06,994 product_matcher 67105 139965845732288 Matching product: Product 50
+INFO 2025-08-15 16:47:06,996 product_matcher 67105 139965845732288 Exact match found: Product 50
+DEBUG 2025-08-15 16:47:06,996 product_matcher 67105 139965845732288 Matching product: prod 25
+INFO 2025-08-15 16:47:06,998 product_matcher 67105 139965845732288 Alias match found: Product 25 (alias: prod 25)
+DEBUG 2025-08-15 16:47:06,998 product_matcher 67105 139965845732288 Matching product: Unknown Item
+INFO 2025-08-15 16:47:07,005 product_matcher 67105 139965845732288 No match found for 'unknown item', creating ghost product
+INFO 2025-08-15 16:47:07,005 product_matcher 67105 139965845732288 Created ghost product: Unknown Item (category: None)
+INFO 2025-08-15 16:47:07,005 product_matcher 67105 139965845732288 Batch matching completed: 3 results
+INFO 2025-08-15 16:47:07,008 product_matcher 67105 139965845732288 Batch matching 5 products
+DEBUG 2025-08-15 16:47:07,008 product_matcher 67105 139965845732288 Matching product: Mleko UHT Łaciate 2% 1L
+INFO 2025-08-15 16:47:07,010 product_matcher 67105 139965845732288 Fuzzy match found: Mleko UHT 2% (similarity: 0.75)
+DEBUG 2025-08-15 16:47:07,010 product_matcher 67105 139965845732288 Matching product: Chleb żytni Putka 500g
+INFO 2025-08-15 16:47:07,012 product_matcher 67105 139965845732288 Fuzzy match found: Chleb żytni (similarity: 0.75)
+DEBUG 2025-08-15 16:47:07,012 product_matcher 67105 139965845732288 Matching product: Jogurt nat. Danone 4x125g
+INFO 2025-08-15 16:47:07,014 product_matcher 67105 139965845732288 No match found for 'jogurt nat, danone', creating ghost product
+INFO 2025-08-15 16:47:07,014 product_matcher 67105 139965845732288 Created ghost product: Jogurt Nat, Danone (category: Dairy)
+DEBUG 2025-08-15 16:47:07,014 product_matcher 67105 139965845732288 Matching product: Banan kg
+INFO 2025-08-15 16:47:07,016 product_matcher 67105 139965845732288 No match found for 'banan kg', creating ghost product
+INFO 2025-08-15 16:47:07,016 product_matcher 67105 139965845732288 Auto-created category: Fruits
+INFO 2025-08-15 16:47:07,017 product_matcher 67105 139965845732288 Created ghost product: Banan Kg (category: Fruits)
+DEBUG 2025-08-15 16:47:07,017 product_matcher 67105 139965845732288 Matching product: MLEKO 2%
+INFO 2025-08-15 16:47:07,018 product_matcher 67105 139965845732288 Alias match found: Mleko UHT 2% (alias: mleko 2%)
+INFO 2025-08-15 16:47:07,018 product_matcher 67105 139965845732288 Batch matching completed: 5 results
+DEBUG 2025-08-15 16:47:07,020 product_matcher 67105 139965845732288 Matching product: milk
+INFO 2025-08-15 16:47:07,022 product_matcher 67105 139965845732288 Alias match found: Mleko 3,2% (alias: milk)
+INFO 2025-08-15 16:47:07,024 product_matcher 67105 139965845732288 Batch matching 3 products
+DEBUG 2025-08-15 16:47:07,024 product_matcher 67105 139965845732288 Matching product: Mleko 3,2%
+INFO 2025-08-15 16:47:07,025 product_matcher 67105 139965845732288 Exact match found: Mleko 3,2%
+DEBUG 2025-08-15 16:47:07,025 product_matcher 67105 139965845732288 Matching product: Chleb graham
+INFO 2025-08-15 16:47:07,026 product_matcher 67105 139965845732288 Exact match found: Chleb graham
+DEBUG 2025-08-15 16:47:07,026 product_matcher 67105 139965845732288 Matching product: Unknown Item
+INFO 2025-08-15 16:47:07,028 product_matcher 67105 139965845732288 No match found for 'unknown item', creating ghost product
+INFO 2025-08-15 16:47:07,028 product_matcher 67105 139965845732288 Created ghost product: Unknown Item (category: None)
+INFO 2025-08-15 16:47:07,028 product_matcher 67105 139965845732288 Batch matching completed: 3 results
+DEBUG 2025-08-15 16:47:07,032 product_matcher 67105 139965845732288 Matching product: Mleko 3,2%
+INFO 2025-08-15 16:47:07,033 product_matcher 67105 139965845732288 Exact match found: Mleko 3,2%
+DEBUG 2025-08-15 16:47:07,034 product_matcher 67105 139965845732288 Matching product: Mleko Laciate 3.2%
+INFO 2025-08-15 16:47:07,036 product_matcher 67105 139965845732288 Fuzzy match found: Mleko 3,2% (similarity: 0.79)
+DEBUG 2025-08-15 16:47:07,041 product_matcher 67105 139965845732288 Matching product: Unknown Product XYZ
+INFO 2025-08-15 16:47:07,043 product_matcher 67105 139965845732288 No match found for 'unknown product xyz', creating ghost product
+INFO 2025-08-15 16:47:07,044 product_matcher 67105 139965845732288 Created ghost product: Unknown Product Xyz (category: None)
+INFO 2025-08-15 16:47:07,050 product_matcher 67105 139965845732288 Added alias 'new milk name' to product 'Mleko 3,2%'
+INFO 2025-08-15 17:06:37,015 inventory_service 68129 140434068347840 Processing 3 line items for inventory update
+INFO 2025-08-15 17:06:37,017 inventory_service 68129 140434068347840 Created inventory item 1: Mleko UHT 2% x3.000
+INFO 2025-08-15 17:06:37,018 inventory_service 68129 140434068347840 Created inventory item 2: Chleb żytni x2.000
+INFO 2025-08-15 17:06:37,020 inventory_service 68129 140434068347840 Created inventory item 3: Filet z kurczaka x0.850
+INFO 2025-08-15 17:06:37,020 inventory_service 68129 140434068347840 Inventory update completed for receipt 1: 3 items created, 0 items updated
+INFO 2025-08-15 17:06:37,027 inventory_service 68129 140434068347840 Processing 1 line items for inventory update
+INFO 2025-08-15 17:06:37,029 inventory_service 68129 140434068347840 Created inventory item 1: Mleko UHT 2% x2.000
+INFO 2025-08-15 17:06:37,029 inventory_service 68129 140434068347840 Inventory update completed for receipt 1: 1 items created, 0 items updated
+INFO 2025-08-15 17:06:37,030 inventory_service 68129 140434068347840 Processing 1 line items for inventory update
+INFO 2025-08-15 17:06:37,032 inventory_service 68129 140434068347840 Updated inventory item 1: 2.000 + 1.000 = 3.000
+INFO 2025-08-15 17:06:37,032 inventory_service 68129 140434068347840 Inventory update completed for receipt 2: 0 items created, 1 items updated
+INFO 2025-08-15 17:06:37,036 inventory_service 68129 140434068347840 Bulk expiry update: 1 updated, 0 errors
+INFO 2025-08-15 17:06:37,045 inventory_service 68129 140434068347840 Cleaned up 1 empty inventory items
+INFO 2025-08-15 17:06:37,056 inventory_service 68129 140434068347840 Processing 3 line items for inventory update
+INFO 2025-08-15 17:06:37,058 inventory_service 68129 140434068347840 Created inventory item 1: Mleko 3,2% x2.000
+INFO 2025-08-15 17:06:37,059 inventory_service 68129 140434068347840 Created inventory item 2: Chleb graham x1.000
+INFO 2025-08-15 17:06:37,060 inventory_service 68129 140434068347840 Created inventory item 3: Filet z kurczaka x0.650
+INFO 2025-08-15 17:06:37,060 inventory_service 68129 140434068347840 Inventory update completed for receipt 1: 3 items created, 0 items updated
+ERROR 2025-08-15 17:06:37,073 inventory_service 68129 140434068347840 Receipt 99999 not found
+INFO 2025-08-15 17:06:37,076 inventory_service 68129 140434068347840 Processing 3 line items for inventory update
+INFO 2025-08-15 17:06:37,078 inventory_service 68129 140434068347840 Created inventory item 1: Mleko 3,2% x2.000
+INFO 2025-08-15 17:06:37,079 inventory_service 68129 140434068347840 Created inventory item 2: Chleb graham x1.000
+INFO 2025-08-15 17:06:37,080 inventory_service 68129 140434068347840 Created inventory item 3: Filet z kurczaka x0.650
+INFO 2025-08-15 17:06:37,080 inventory_service 68129 140434068347840 Inventory update completed for receipt 1: 3 items created, 0 items updated
+INFO 2025-08-15 17:06:37,084 inventory_service 68129 140434068347840 Processing 3 line items for inventory update
+INFO 2025-08-15 17:06:37,086 inventory_service 68129 140434068347840 Updated inventory item 1: 1.000 + 2.000 = 3.000
+INFO 2025-08-15 17:06:37,087 inventory_service 68129 140434068347840 Created inventory item 2: Chleb graham x1.000
+INFO 2025-08-15 17:06:37,088 inventory_service 68129 140434068347840 Created inventory item 3: Filet z kurczaka x0.650
+INFO 2025-08-15 17:06:37,088 inventory_service 68129 140434068347840 Inventory update completed for receipt 1: 2 items created, 1 items updated

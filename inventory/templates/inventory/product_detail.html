@@ -1,0 +1,218 @@
+{% extends 'inventory/base.html' %}
+
+{% block title %}{{ product.name }}{% endblock %}
+{% block page_title %}{{ product.name }}{% endblock %}
+
+{% block page_actions %}
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            <a href="{% url 'inventory:product_list' %}" class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Powrót do listy
+            </a>
+        </div>
+    </div>
+{% endblock %}
+
+{% block content %}
+    <!-- Product Info -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5>Informacje o produkcie</h5>
+                            <table class="table table-sm">
+                                <tr>
+                                    <td class="text-muted">Nazwa:</td>
+                                    <td class="fw-bold">{{ product.name }}</td>
+                                </tr>
+                                {% if product.brand %}
+                                <tr>
+                                    <td class="text-muted">Marka:</td>
+                                    <td>{{ product.brand }}</td>
+                                </tr>
+                                {% endif %}
+                                {% if product.category %}
+                                <tr>
+                                    <td class="text-muted">Kategoria:</td>
+                                    <td><span class="badge bg-secondary">{{ product.category.name }}</span></td>
+                                </tr>
+                                {% endif %}
+                                {% if product.ean %}
+                                <tr>
+                                    <td class="text-muted">EAN:</td>
+                                    <td class="font-monospace">{{ product.ean }}</td>
+                                </tr>
+                                {% endif %}
+                                <tr>
+                                    <td class="text-muted">Punkt dokupienia:</td>
+                                    <td>{{ product.reorder_point }} {{ product.default_unit|default:"szt" }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <h5>Statystyki magazynowe</h5>
+                            <table class="table table-sm">
+                                <tr>
+                                    <td class="text-muted">Całkowita ilość:</td>
+                                    <td class="fw-bold {% if is_low_stock %}text-danger{% endif %}">
+                                        {{ total_inventory|default:0 }} {{ product.default_unit|default:"szt" }}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted">Pozycje w magazynie:</td>
+                                    <td>{{ inventory_items.count }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted">Status:</td>
+                                    <td>
+                                        {% if total_inventory == 0 %}
+                                            <span class="badge bg-warning">Brak w magazynie</span>
+                                        {% elif is_low_stock %}
+                                            <span class="badge bg-danger">Niski stan</span>
+                                        {% else %}
+                                            <span class="badge bg-success">W magazynie</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            {% if product.aliases %}
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h6>Aliasy produktu</h6>
+                    {% for alias in product.aliases %}
+                        <span class="badge bg-light text-dark me-1">{{ alias }}</span>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Current Inventory -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="bi bi-box-seam"></i> Aktualny stan magazynu</h5>
+        </div>
+        <div class="card-body">
+            {% if inventory_items %}
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Lokalizacja</th>
+                                <th>Ilość</th>
+                                <th>Data zakupu</th>
+                                <th>Data ważności</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in inventory_items %}
+                            <tr>
+                                <td>
+                                    <i class="bi {% if item.storage_location == 'fridge' %}bi-snow{% elif item.storage_location == 'freezer' %}bi-snow2{% elif item.storage_location == 'pantry' %}bi-house{% else %}bi-cabinet-door{% endif %}"></i>
+                                    {{ item.get_storage_location_display }}
+                                </td>
+                                <td>
+                                    <span class="fw-bold">{{ item.quantity_remaining }}</span>
+                                    <small class="text-muted">{{ item.unit }}</small>
+                                </td>
+                                <td>{{ item.purchase_date|date:"d.m.Y" }}</td>
+                                <td>
+                                    {% if item.expiry_date %}
+                                        <span class="{% if item.is_expired %}text-danger{% elif item.is_expiring_soon %}text-warning{% endif %}">
+                                            {{ item.expiry_date|date:"d.m.Y" }}
+                                        </span>
+                                    {% else %}
+                                        <span class="text-muted">Brak</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if item.is_expired %}
+                                        <span class="badge bg-danger">Przeterminowane</span>
+                                    {% elif item.is_expiring_soon %}
+                                        <span class="badge bg-warning">Wygasa wkrótce</span>
+                                    {% else %}
+                                        <span class="badge bg-success">OK</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p class="text-muted text-center">Brak pozycji w magazynie</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Purchase History -->
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="bi bi-receipt"></i> Historia zakupów</h6>
+                </div>
+                <div class="card-body">
+                    {% if receipt_items %}
+                        {% for item in receipt_items %}
+                        <div class="d-flex justify-content-between align-items-start mb-3 pb-2 border-bottom">
+                            <div>
+                                <div class="fw-bold">{{ item.receipt.store_name }}</div>
+                                <div class="text-muted small">{{ item.receipt.purchased_at|date:"d.m.Y H:i" }}</div>
+                                <div class="small">{{ item.quantity }} {{ item.unit|default:"szt" }} × {{ item.unit_price }} zł</div>
+                            </div>
+                            <div class="text-end">
+                                <div class="fw-bold">{{ item.line_total }} zł</div>
+                                <a href="{% url 'inventory:receipt_detail' item.receipt.pk %}" class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-muted text-center">Brak historii zakupów</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="bi bi-arrow-down"></i> Historia zużycia</h6>
+                </div>
+                <div class="card-body">
+                    {% if consumption_events %}
+                        {% for event in consumption_events %}
+                        <div class="d-flex justify-content-between align-items-start mb-3 pb-2 border-bottom">
+                            <div>
+                                <div class="fw-bold text-danger">-{{ event.quantity_consumed }} {{ event.inventory_item.unit }}</div>
+                                <div class="text-muted small">{{ event.consumed_at|date:"d.m.Y H:i" }}</div>
+                                {% if event.notes %}
+                                    <div class="small">{{ event.notes }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="text-end">
+                                <small class="text-muted">{{ event.inventory_item.get_storage_location_display }}</small>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-muted text-center">Brak historii zużycia</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
