@@ -1,0 +1,144 @@
+{% extends 'inventory/base.html' %}
+
+{% block title %}Lista paragonów{% endblock %}
+{% block page_title %}Paragony{% endblock %}
+
+{% block content %}
+    <!-- Filters -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-4">
+                    <label for="search" class="form-label">Szukaj</label>
+                    <input type="text" class="form-control" id="search" name="search" 
+                           value="{{ current_search }}" placeholder="Nazwa sklepu...">
+                </div>
+                
+                <div class="col-md-3">
+                    <label for="status" class="form-label">Status</label>
+                    <select class="form-select" id="status" name="status">
+                        <option value="">Wszystkie</option>
+                        {% for val, name in status_choices %}
+                            <option value="{{ val }}" {% if current_status == val %}selected{% endif %}>
+                                {{ name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="col-md-5 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary me-2">
+                        <i class="bi bi-search"></i> Filtruj
+                    </button>
+                    <a href="{% url 'inventory:receipt_list' %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-x"></i> Wyczyść
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Results -->
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">
+                <i class="bi bi-receipt"></i> 
+                Paragony ({{ page_obj.paginator.count }})
+            </h5>
+            <a href="{% url 'inventory:upload_receipt' %}" class="btn btn-success">
+                <i class="bi bi-plus-circle"></i> Dodaj nowy paragon
+            </a>
+        </div>
+        
+        <div class="card-body p-0">
+            {% if receipts %}
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Sklep</th>
+                                <th>Data zakupu</th>
+                                <th>Suma</th>
+                                <th>Status</th>
+                                <th>Akcje</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for receipt in receipts %}
+                            <tr>
+                                <td>
+                                    <div class="fw-bold">{{ receipt.store_name }}</div>
+                                    <small class="text-muted">{{ receipt.location }}</small>
+                                </td>
+                                <td>{{ receipt.purchased_at|date:"Y-m-d H:i" }}</td>
+                                <td>
+                                    {% if receipt.total_amount %}
+                                        <span class="fw-bold">{{ receipt.total_amount }} zł</span>
+                                    {% else %}
+                                        <span class="text-muted">Brak</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="badge 
+                                        {% if receipt.status == 'completed' %}bg-success
+                                        {% elif receipt.status == 'processing' %}bg-info
+                                        {% elif receipt.status == 'failed' %}bg-danger
+                                        {% else %}bg-secondary{% endif %}">
+                                        {{ receipt.get_status_display }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <a href="{% url 'inventory:receipt_detail' receipt.pk %}" 
+                                       class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-eye"></i> Szczegóły
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="text-center py-4">
+                    <i class="bi bi-receipt" style="font-size: 3rem; color: #ddd;"></i>
+                    <p class="text-muted mt-3">Brak paragonów spełniających kryteria</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    {% if page_obj.has_other_pages %}
+    <nav aria-label="Nawigacja" class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">
+                        <i class="bi bi-chevron-left"></i> Poprzednia
+                    </a>
+                </li>
+            {% endif %}
+            
+            {% for num in page_obj.paginator.page_range %}
+                {% if page_obj.number == num %}
+                    <li class="page-item active">
+                        <span class="page-link">{{ num }}</span>
+                    </li>
+                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ num }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">{{ num }}</a>
+                    </li>
+                {% endif %}
+            {% endfor %}
+            
+            {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">
+                        Następna <i class="bi bi-chevron-right"></i>
+                    </a>
+                </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+{% endblock %}

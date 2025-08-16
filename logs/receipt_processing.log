@@ -602,3 +602,87 @@ Sprzedaż opodatkowana C 74,85 PTU C 5% 3,56 Sprzedaż opodatkowana 27,98 PTU A 
 [2025-08-15 17:59:40] INFO in chatbot.receipt_processor: Sending request to LLM model...
 [2025-08-15 17:59:40] DEBUG in chatbot.receipt_processor: Initializing OllamaAgent for product extraction...
 [2025-08-15 17:59:40] INFO in chatbot.receipt_processor: Calling LLM to process receipt text...
+[2025-08-15 18:02:57] INFO in chatbot.services.receipt_service: Created receipt processing record: 17
+[2025-08-15 18:02:57] INFO in chatbot.services.receipt_service: 🔄 Starting processing for receipt ID: 17
+[2025-08-15 18:02:57] DEBUG in chatbot.services.receipt_service: Found receipt: Paragon 17 - Status: Plik przesłany, current status: uploaded
+[2025-08-15 18:02:57] INFO in chatbot.services.receipt_service: Marking receipt 17 as processing...
+[2025-08-15 18:02:57] DEBUG in chatbot.services.receipt_service: Receipt 17 status updated to: ocr_in_progress
+[2025-08-15 18:02:57] INFO in chatbot.services.receipt_service: Attempting to start Celery task for receipt 17
+[2025-08-15 18:02:57] DEBUG in chatbot.services.receipt_service: Celery task imported successfully
+[2025-08-15 18:02:57] INFO in chatbot.services.receipt_service: ✅ Celery task started successfully for receipt 17, task ID: af0745aa-e10c-4f8d-ac2e-025c21a66316
+[2025-08-15 18:02:57] INFO in chatbot.services.receipt_service: ✅ Processing workflow completed for receipt 17
+[2025-08-15 18:02:57] INFO in chatbot.tasks: Receipt 17 processed successfully by Celery task.
+[2025-08-15 20:20:23] INFO in chatbot.services.receipt_service: Starting parsing for receipt 2: 71 characters
+[2025-08-15 20:20:23] INFO in chatbot.services.receipt_service: Parsing completed for receipt 2: 2 products extracted
+[2025-08-15 20:20:23] INFO in chatbot.services.receipt_service: Starting product matching for receipt 2: 2 products
+[2025-08-15 20:20:23] WARNING in chatbot.services.receipt_service: Inventory update failed for receipt 2: Receipt 2 is not completed (status: matching)
+[2025-08-15 20:20:23] INFO in chatbot.services.receipt_service: Matching completed for receipt 2: 2 line items created
+[2025-08-15 20:20:23] ERROR in chatbot.services.receipt_service: Receipt 3 has no valid OCR text data
+[2025-08-15 20:20:23] INFO in chatbot.services.receipt_service: Starting parsing for receipt 4: 83 characters
+[2025-08-15 20:20:23] INFO in chatbot.services.receipt_service: Parsing completed for receipt 4: 2 products extracted
+[2025-08-15 20:20:23] INFO in chatbot.services.receipt_service: Starting product matching for receipt 4: 2 products
+[2025-08-15 20:20:23] WARNING in chatbot.services.receipt_service: Inventory update failed for receipt 4: Receipt 4 is not completed (status: matching)
+[2025-08-15 20:20:23] INFO in chatbot.services.receipt_service: Matching completed for receipt 4: 2 line items created
+[2025-08-15 20:20:24] INFO in chatbot.services.receipt_service: Starting parsing for receipt 5: 285 characters
+[2025-08-15 20:20:24] INFO in chatbot.services.receipt_service: Parsing completed for receipt 5: 3 products extracted
+[2025-08-15 20:20:24] INFO in chatbot.services.receipt_service: Starting product matching for receipt 5: 3 products
+[2025-08-15 20:20:24] WARNING in chatbot.services.receipt_service: Inventory update failed for receipt 5: Receipt 5 is not completed (status: matching)
+[2025-08-15 20:20:24] INFO in chatbot.services.receipt_service: Matching completed for receipt 5: 3 line items created
+[2025-08-15 20:22:51] INFO in chatbot.services.receipt_service: Starting parsing for receipt 6: 71 characters
+[2025-08-15 20:22:51] INFO in chatbot.services.receipt_service: Parsing completed for receipt 6: 2 products extracted
+[2025-08-15 20:22:51] INFO in chatbot.services.receipt_service: Starting product matching for receipt 6: 2 products
+[2025-08-15 20:22:51] WARNING in chatbot.services.receipt_service: Inventory update failed for receipt 6: Receipt 6 is not completed (status: matching)
+[2025-08-15 20:22:51] INFO in chatbot.services.receipt_service: Matching completed for receipt 6: 2 line items created
+[2025-08-15 20:22:52] ERROR in chatbot.services.receipt_service: Receipt 7 has no valid OCR text data
+[2025-08-15 20:22:52] INFO in chatbot.services.receipt_service: Starting parsing for receipt 8: 83 characters
+[2025-08-15 20:22:52] INFO in chatbot.services.receipt_service: Parsing completed for receipt 8: 2 products extracted
+[2025-08-15 20:22:52] INFO in chatbot.services.receipt_service: Starting product matching for receipt 8: 2 products
+[2025-08-15 20:22:52] WARNING in chatbot.services.receipt_service: Inventory update failed for receipt 8: Receipt 8 is not completed (status: matching)
+[2025-08-15 20:22:52] INFO in chatbot.services.receipt_service: Matching completed for receipt 8: 2 line items created
+[2025-08-15 20:22:52] INFO in chatbot.services.receipt_service: Starting parsing for receipt 9: 285 characters
+[2025-08-15 20:22:52] INFO in chatbot.services.receipt_service: Parsing completed for receipt 9: 3 products extracted
+[2025-08-15 20:22:52] INFO in chatbot.services.receipt_service: Starting product matching for receipt 9: 3 products
+[2025-08-15 20:22:52] WARNING in chatbot.services.receipt_service: Inventory update failed for receipt 9: Receipt 9 is not completed (status: matching)
+[2025-08-15 20:22:52] INFO in chatbot.services.receipt_service: Matching completed for receipt 9: 3 line items created
+[2025-08-15 20:23:35] INFO in chatbot.services.receipt_service: Starting parsing for receipt 10: 71 characters
+[2025-08-15 20:23:35] INFO in chatbot.services.receipt_service: Parsing completed for receipt 10: 2 products extracted
+[2025-08-15 20:23:35] INFO in chatbot.services.receipt_service: Starting product matching for receipt 10: 2 products
+[2025-08-15 20:23:35] WARNING in chatbot.services.receipt_service: Inventory update failed for receipt 10: Receipt 10 is not completed (status: matching)
+[2025-08-15 20:23:35] INFO in chatbot.services.receipt_service: Matching completed for receipt 10: 2 line items created
+[2025-08-15 20:23:35] ERROR in chatbot.services.receipt_service: Receipt 11 has no valid OCR text data
+[2025-08-15 20:23:35] INFO in chatbot.services.receipt_service: Starting parsing for receipt 12: 83 characters
+[2025-08-15 20:23:35] INFO in chatbot.services.receipt_service: Parsing completed for receipt 12: 2 products extracted
+[2025-08-15 20:23:35] INFO in chatbot.services.receipt_service: Starting product matching for receipt 12: 2 products
+[2025-08-15 20:23:35] WARNING in chatbot.services.receipt_service: Inventory update failed for receipt 12: Receipt 12 is not completed (status: matching)
+[2025-08-15 20:23:35] INFO in chatbot.services.receipt_service: Matching completed for receipt 12: 2 line items created
+[2025-08-15 20:23:35] INFO in chatbot.services.receipt_service: Starting parsing for receipt 13: 285 characters
+[2025-08-15 20:23:35] INFO in chatbot.services.receipt_service: Parsing completed for receipt 13: 3 products extracted
+[2025-08-15 20:23:35] INFO in chatbot.services.receipt_service: Starting product matching for receipt 13: 3 products
+[2025-08-15 20:23:35] WARNING in chatbot.services.receipt_service: Inventory update failed for receipt 13: Receipt 13 is not completed (status: matching)
+[2025-08-15 20:23:35] INFO in chatbot.services.receipt_service: Matching completed for receipt 13: 3 line items created
+[2025-08-15 20:24:49] INFO in chatbot.services.receipt_service: Starting parsing for receipt 14: 71 characters
+[2025-08-15 20:24:50] INFO in chatbot.services.receipt_service: Parsing completed for receipt 14: 2 products extracted
+[2025-08-15 20:24:50] INFO in chatbot.services.receipt_service: Starting product matching for receipt 14: 2 products
+[2025-08-15 20:24:50] WARNING in chatbot.services.receipt_service: Inventory update failed for receipt 14: Receipt 14 is not completed (status: matching)
+[2025-08-15 20:24:50] INFO in chatbot.services.receipt_service: Matching completed for receipt 14: 2 line items created
+[2025-08-15 20:24:50] ERROR in chatbot.services.receipt_service: Receipt 15 has no valid OCR text data
+[2025-08-15 20:24:50] INFO in chatbot.services.receipt_service: Starting parsing for receipt 16: 83 characters
+[2025-08-15 20:24:50] INFO in chatbot.services.receipt_service: Parsing completed for receipt 16: 2 products extracted
+[2025-08-15 20:24:50] INFO in chatbot.services.receipt_service: Starting product matching for receipt 16: 2 products
+[2025-08-15 20:24:50] WARNING in chatbot.services.receipt_service: Inventory update failed for receipt 16: Receipt 16 is not completed (status: matching)
+[2025-08-15 20:24:50] INFO in chatbot.services.receipt_service: Matching completed for receipt 16: 2 line items created
+[2025-08-15 20:24:50] INFO in chatbot.services.receipt_service: Starting parsing for receipt 17: 285 characters
+[2025-08-15 20:24:50] INFO in chatbot.services.receipt_service: Parsing completed for receipt 17: 3 products extracted
+[2025-08-15 20:24:50] INFO in chatbot.services.receipt_service: Starting product matching for receipt 17: 3 products
+[2025-08-15 20:24:50] WARNING in chatbot.services.receipt_service: Inventory update failed for receipt 17: Receipt 17 is not completed (status: matching)
+[2025-08-15 20:24:50] INFO in chatbot.services.receipt_service: Matching completed for receipt 17: 3 line items created
+[2025-08-15 20:29:48] INFO in chatbot.services.receipt_service: Created receipt processing record: 18
+[2025-08-15 20:29:48] INFO in chatbot.services.receipt_service: 🔄 Starting processing for receipt ID: 18
+[2025-08-15 20:29:48] DEBUG in chatbot.services.receipt_service: Found receipt: Paragon 18 - Status: Plik przesłany, current status: uploaded
+[2025-08-15 20:29:48] INFO in chatbot.services.receipt_service: Marking receipt 18 as processing...
+[2025-08-15 20:29:48] DEBUG in chatbot.services.receipt_service: Receipt 18 status updated to: ocr_in_progress
+[2025-08-15 20:29:48] INFO in chatbot.services.receipt_service: Attempting to start Celery task for receipt 18
+[2025-08-15 20:29:48] DEBUG in chatbot.services.receipt_service: Celery task imported successfully
+[2025-08-15 20:29:48] INFO in chatbot.services.receipt_service: ✅ Celery task started successfully for receipt 18, task ID: 4795598a-fba5-44ba-afc6-685d43fd04ba
+[2025-08-15 20:29:48] INFO in chatbot.services.receipt_service: ✅ Processing workflow completed for receipt 18
+[2025-08-15 20:29:48] INFO in chatbot.tasks: Receipt 18 processed successfully by Celery task.

@@ -85,10 +85,10 @@
 - [x] Testy endpointu i zadania okresowego
 
 #### Prompt 10: Panel przeglądu (dashboard) - rozszerzenie
-- [ ] Wizualizacja "Consumption heatmap"
-- [ ] Top 5 kategorii wydatków (30 dni)
-- [ ] Wykresy i statystyki
-- [ ] Czas odpowiedzi <150ms
+- [x] Wizualizacja "Consumption heatmap"
+- [x] Top 5 kategorii wydatków (30 dni)
+- [x] Wykresy i statystyki
+- [x] Czas odpowiedzi <150ms
 
 #### Prompt 11: Aplikacja mobilna – skan kodów (opcjonalnie)
 - [ ] Ekran ze skanerem kodów kreskowych (tryb batch)

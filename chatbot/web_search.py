@@ -12,6 +12,7 @@ except ImportError:
 
 logger = logging.getLogger(__name__)
 
+
 def ddg_search(query: str, max_results: int = 5) -> str:
     """
     Performs a DuckDuckGo search and returns a formatted string of results.
@@ -19,7 +20,7 @@ def ddg_search(query: str, max_results: int = 5) -> str:
     if DDGS is None:
         logger.error("DuckDuckGo search library not available.")
         return "Search functionality is not available."
-        
+
     logger.info(f"Performing DDG search for query: '{query}'")
     try:
         with DDGS() as ddgs:
@@ -36,7 +37,7 @@ def ddg_search(query: str, max_results: int = 5) -> str:
                     f"Snippet: {result.get('body')}\n"
                     f"URL: {result.get('href')}"
                 )
-            
+
             logger.info(f"Found {len(results)} results.")
             return "\n\n---\n\n".join(formatted_results)
 

@@ -93,10 +93,10 @@
             </label>
             <div class="relative">
                 <select id="agentSelect" class="w-full px-4 py-3 bg-white border border-secondary-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-200">
-                    <option value="">-- Wybierz agenta --</option>
                     {% for agent in agents %}
                         <option value="{{ agent.name }}" data-type="{{ agent.agent_type }}" 
-                                data-description="{{ agent.persona_prompt|slice:":100" }}">
+                                data-description="{{ agent.persona_prompt|slice:":100" }}"
+                                {% if default_agent and agent.name == default_agent.name %}selected{% endif %}>
                             {{ agent.name }} ({{ agent.get_agent_type_display }})
                         </option>
                     {% endfor %}
@@ -205,6 +205,7 @@ class ModernChatInterface {
         this.isTyping = false;
         this.initializeElements();
         this.attachEventListeners();
+        this.autoSelectDefaultAgent();
     }
     
     initializeElements() {
@@ -257,6 +258,17 @@ class ModernChatInterface {
                 }
             });
         });
+    }
+    
+    autoSelectDefaultAgent() {
+        // Auto-select the default agent if one is selected in the dropdown
+        const selectedValue = this.agentSelect.value;
+        if (selectedValue) {
+            // Small delay to ensure DOM is ready
+            setTimeout(() => {
+                this.selectAgent(selectedValue);
+            }, 500);
+        }
     }
     
     async selectAgent(agentName) {

@@ -648,3 +648,1227 @@ INFO 2025-08-15 17:58:17,978 autoreload 73303 140005206891456 /home/marcin/Pycha
 INFO 2025-08-15 17:58:19,569 autoreload 73623 139740215241664 Watching for file changes with StatReloader
 INFO 2025-08-15 17:58:30,811 basehttp 73623 139732881241792 "POST /api/receipts/upload/ HTTP/1.1" 201 222
 INFO 2025-08-15 17:58:43,431 basehttp 73623 139732881241792 "GET /api/receipts/16/status/ HTTP/1.1" 200 216
+INFO 2025-08-15 18:02:37,191 autoreload 74253 140477535632320 Watching for file changes with StatReloader
+INFO 2025-08-15 18:02:48,759 basehttp 74253 140470206330560 "GET / HTTP/1.1" 200 27336
+INFO 2025-08-15 18:02:54,202 basehttp 74253 140470206330560 "GET /receipts/upload/ HTTP/1.1" 200 21255
+INFO 2025-08-15 18:02:57,897 views 74253 140470206330560 === STARTING RECEIPT UPLOAD PROCESS ===
+INFO 2025-08-15 18:02:57,897 views 74253 140470206330560 === STARTING RECEIPT UPLOAD PROCESS ===
+DEBUG 2025-08-15 18:02:57,898 views 74253 140470206330560 Form data: {'receipt_file': <InMemoryUploadedFile: 2508020118133218.pdf (application/pdf)>}
+DEBUG 2025-08-15 18:02:57,898 views 74253 140470206330560 Form data: {'receipt_file': <InMemoryUploadedFile: 2508020118133218.pdf (application/pdf)>}
+INFO 2025-08-15 18:02:57,898 views 74253 140470206330560 Uploaded file: 2508020118133218.pdf, size: 655865 bytes, content_type: application/pdf
+INFO 2025-08-15 18:02:57,898 views 74253 140470206330560 Uploaded file: 2508020118133218.pdf, size: 655865 bytes, content_type: application/pdf
+INFO 2025-08-15 18:02:57,898 views 74253 140470206330560 Creating receipt record...
+INFO 2025-08-15 18:02:57,898 views 74253 140470206330560 Creating receipt record...
+INFO 2025-08-15 18:02:57,906 views 74253 140470206330560 ✅ Receipt record created successfully with ID: 17
+INFO 2025-08-15 18:02:57,906 views 74253 140470206330560 ✅ Receipt record created successfully with ID: 17
+DEBUG 2025-08-15 18:02:57,906 views 74253 140470206330560 Receipt record details: status=uploaded, file_path=receipt_files/2508020118133218_GaMf6fV.pdf
+DEBUG 2025-08-15 18:02:57,906 views 74253 140470206330560 Receipt record details: status=uploaded, file_path=receipt_files/2508020118133218_GaMf6fV.pdf
+INFO 2025-08-15 18:02:57,906 views 74253 140470206330560 Starting processing for receipt ID: 17
+INFO 2025-08-15 18:02:57,906 views 74253 140470206330560 Starting processing for receipt ID: 17
+INFO 2025-08-15 18:02:57,941 views 74253 140470206330560 ✅ Processing started successfully for receipt 17
+INFO 2025-08-15 18:02:57,941 views 74253 140470206330560 ✅ Processing started successfully for receipt 17
+INFO 2025-08-15 18:02:57,941 views 74253 140470206330560 Success URL set to: /receipts/17/status/
+INFO 2025-08-15 18:02:57,941 views 74253 140470206330560 Success URL set to: /receipts/17/status/
+INFO 2025-08-15 18:02:57,941 views 74253 140470206330560 === RECEIPT UPLOAD PROCESS COMPLETED ===
+INFO 2025-08-15 18:02:57,941 views 74253 140470206330560 === RECEIPT UPLOAD PROCESS COMPLETED ===
+INFO 2025-08-15 18:02:57,941 basehttp 74253 140470206330560 "POST /receipts/upload/ HTTP/1.1" 302 0
+INFO 2025-08-15 18:02:57,945 basehttp 74253 140470206330560 "GET /receipts/17/status/ HTTP/1.1" 200 29337
+INFO 2025-08-15 18:03:00,103 basehttp 74253 140470206330560 "GET /api/receipts/17/status/ HTTP/1.1" 200 216
+INFO 2025-08-15 18:03:02,289 basehttp 74253 140470206330560 "GET /api/receipts/17/status/ HTTP/1.1" 200 216
+INFO 2025-08-15 18:03:04,294 basehttp 74253 140470206330560 "GET /api/receipts/17/status/ HTTP/1.1" 200 216
+INFO 2025-08-15 18:03:06,299 basehttp 74253 140470206330560 "GET /api/receipts/17/status/ HTTP/1.1" 200 216
+INFO 2025-08-15 18:03:08,507 basehttp 74253 140470206330560 "GET /api/receipts/17/status/ HTTP/1.1" 200 216
+INFO 2025-08-15 18:03:10,512 basehttp 74253 140470206330560 "GET /api/receipts/17/status/ HTTP/1.1" 200 216
+INFO 2025-08-15 18:03:12,517 basehttp 74253 140470206330560 "GET /api/receipts/17/status/ HTTP/1.1" 200 216
+INFO 2025-08-15 18:03:14,522 basehttp 74253 140470206330560 "GET /api/receipts/17/status/ HTTP/1.1" 200 216
+INFO 2025-08-15 18:03:16,527 basehttp 74253 140470206330560 "GET /api/receipts/17/status/ HTTP/1.1" 200 216
+INFO 2025-08-15 18:03:18,532 basehttp 74253 140470206330560 "GET /api/receipts/17/status/ HTTP/1.1" 200 216
+INFO 2025-08-15 18:03:20,536 basehttp 74253 140470206330560 "GET /api/receipts/17/status/ HTTP/1.1" 200 216
+INFO 2025-08-15 18:03:22,541 basehttp 74253 140470206330560 "GET /api/receipts/17/status/ HTTP/1.1" 200 216
+INFO 2025-08-15 18:03:24,546 basehttp 74253 140470206330560 "GET /api/receipts/17/status/ HTTP/1.1" 200 216
+INFO 2025-08-15 18:03:27,516 basehttp 74253 140470206330560 "GET /api/receipts/17/status/ HTTP/1.1" 200 216
+INFO 2025-08-15 18:03:29,544 basehttp 74253 140470206330560 "GET /api/receipts/17/status/ HTTP/1.1" 200 216
+INFO 2025-08-15 18:03:32,549 basehttp 74253 140470206330560 "GET /api/receipts/17/status/ HTTP/1.1" 200 216
+INFO 2025-08-15 18:03:34,554 basehttp 74253 140470206330560 "GET /api/receipts/17/status/ HTTP/1.1" 200 216
+INFO 2025-08-15 18:03:37,559 basehttp 74253 140470206330560 "GET /api/receipts/17/status/ HTTP/1.1" 200 216
+INFO 2025-08-15 18:03:39,564 basehttp 74253 140470206330560 "GET /api/receipts/17/status/ HTTP/1.1" 200 216
+INFO 2025-08-15 18:03:42,673 basehttp 74253 140470206330560 "GET /api/receipts/17/status/ HTTP/1.1" 200 216
+INFO 2025-08-15 18:03:44,679 basehttp 74253 140470206330560 "GET /api/receipts/17/status/ HTTP/1.1" 200 216
+INFO 2025-08-15 18:03:47,301 basehttp 74253 140470206330560 "GET /api/receipts/17/status/ HTTP/1.1" 200 216
+INFO 2025-08-15 18:03:49,307 basehttp 74253 140470206330560 "GET /api/receipts/17/status/ HTTP/1.1" 200 216
+INFO 2025-08-15 18:03:51,311 basehttp 74253 140470206330560 "GET /api/receipts/17/status/ HTTP/1.1" 200 216
+INFO 2025-08-15 18:03:53,316 basehttp 74253 140470206330560 "GET /api/receipts/17/status/ HTTP/1.1" 200 216
+INFO 2025-08-15 18:03:55,321 basehttp 74253 140470206330560 "GET /api/receipts/17/status/ HTTP/1.1" 200 216
+INFO 2025-08-15 18:03:57,326 basehttp 74253 140470206330560 "GET /api/receipts/17/status/ HTTP/1.1" 200 216
+INFO 2025-08-15 18:03:59,345 basehttp 74253 140470206330560 "GET /api/receipts/17/status/ HTTP/1.1" 200 216
+INFO 2025-08-15 18:04:01,350 basehttp 74253 140470206330560 "GET /api/receipts/17/status/ HTTP/1.1" 200 216
+INFO 2025-08-15 18:04:03,354 basehttp 74253 140470206330560 "GET /api/receipts/17/status/ HTTP/1.1" 200 216
+INFO 2025-08-15 18:04:06,178 basehttp 74253 140470206330560 "GET /api/receipts/17/status/ HTTP/1.1" 200 216
+INFO 2025-08-15 18:04:08,187 basehttp 74253 140470206330560 "GET /api/receipts/17/status/ HTTP/1.1" 200 216
+INFO 2025-08-15 18:04:10,202 basehttp 74253 140470206330560 "GET /api/receipts/17/status/ HTTP/1.1" 200 216
+INFO 2025-08-15 18:04:12,220 basehttp 74253 140470206330560 "GET /api/receipts/17/status/ HTTP/1.1" 200 216
+INFO 2025-08-15 18:04:14,271 basehttp 74253 140470206330560 "GET /api/receipts/17/status/ HTTP/1.1" 200 216
+INFO 2025-08-15 18:04:17,272 basehttp 74253 140470206330560 "GET /api/receipts/17/status/ HTTP/1.1" 200 216
+INFO 2025-08-15 18:04:20,273 basehttp 74253 140470206330560 "GET /api/receipts/17/status/ HTTP/1.1" 200 216
+INFO 2025-08-15 18:04:23,278 basehttp 74253 140470206330560 "GET /api/receipts/17/status/ HTTP/1.1" 200 216
+INFO 2025-08-15 18:04:26,278 basehttp 74253 140470206330560 "GET /api/receipts/17/status/ HTTP/1.1" 200 216
+INFO 2025-08-15 18:04:29,279 basehttp 74253 140470206330560 "GET /api/receipts/17/status/ HTTP/1.1" 200 216
+INFO 2025-08-15 18:04:31,297 basehttp 74253 140470206330560 "GET /api/receipts/17/status/ HTTP/1.1" 200 216
+INFO 2025-08-15 18:04:34,298 basehttp 74253 140470206330560 "GET /api/receipts/17/status/ HTTP/1.1" 200 216
+INFO 2025-08-15 18:04:36,303 basehttp 74253 140470206330560 "GET /api/receipts/17/status/ HTTP/1.1" 200 216
+INFO 2025-08-15 18:04:39,308 basehttp 74253 140470206330560 "GET /api/receipts/17/status/ HTTP/1.1" 200 216
+INFO 2025-08-15 18:04:41,313 basehttp 74253 140470206330560 "GET /api/receipts/17/status/ HTTP/1.1" 200 216
+INFO 2025-08-15 18:04:44,317 basehttp 74253 140470206330560 "GET /api/receipts/17/status/ HTTP/1.1" 200 216
+INFO 2025-08-15 18:04:46,323 basehttp 74253 140470206330560 "GET /api/receipts/17/status/ HTTP/1.1" 200 216
+INFO 2025-08-15 18:04:49,327 basehttp 74253 140470206330560 "GET /api/receipts/17/status/ HTTP/1.1" 200 216
+INFO 2025-08-15 18:04:51,339 basehttp 74253 140470206330560 "GET /api/receipts/17/status/ HTTP/1.1" 200 216
+INFO 2025-08-15 18:04:54,343 basehttp 74253 140470206330560 "GET /api/receipts/17/status/ HTTP/1.1" 200 216
+INFO 2025-08-15 18:04:56,348 basehttp 74253 140470206330560 "GET /api/receipts/17/status/ HTTP/1.1" 200 216
+INFO 2025-08-15 18:04:59,352 basehttp 74253 140470206330560 "GET /api/receipts/17/status/ HTTP/1.1" 200 216
+INFO 2025-08-15 18:06:40,912 autoreload 74702 139746179505088 Watching for file changes with StatReloader
+INFO 2025-08-15 18:06:52,987 basehttp 74702 139738673575616 "GET /inventory/ HTTP/1.1" 200 16388
+INFO 2025-08-15 18:08:02,964 basehttp 74702 139738673575616 "GET /inventory/ HTTP/1.1" 200 16388
+INFO 2025-08-15 19:09:54,600 autoreload 74702 139746179505088 /home/marcin/PycharmProjects/agenty/chatbot/api/urls.py changed, reloading.
+INFO 2025-08-15 19:09:56,351 autoreload 75903 140188925889472 Watching for file changes with StatReloader
+INFO 2025-08-15 19:10:18,746 autoreload 75903 140188925889472 /home/marcin/PycharmProjects/agenty/chatbot/api/views.py changed, reloading.
+INFO 2025-08-15 19:10:19,339 autoreload 75959 140219022396352 Watching for file changes with StatReloader
+INFO 2025-08-15 19:10:56,815 autoreload 75959 140219022396352 /home/marcin/PycharmProjects/agenty/chatbot/api/views.py changed, reloading.
+INFO 2025-08-15 19:10:57,814 autoreload 76030 140335596911552 Watching for file changes with StatReloader
+INFO 2025-08-15 19:13:11,359 autoreload 76030 140335596911552 /home/marcin/PycharmProjects/agenty/core/settings_dev.py changed, reloading.
+INFO 2025-08-15 19:13:13,088 autoreload 76143 140129582754752 Watching for file changes with StatReloader
+INFO 2025-08-15 19:13:27,870 autoreload 76143 140129582754752 /home/marcin/PycharmProjects/agenty/core/settings_dev.py changed, reloading.
+INFO 2025-08-15 19:13:29,218 autoreload 76214 140540494343104 Watching for file changes with StatReloader
+WARNING 2025-08-15 19:16:17,994 log 76551 139632514137024 Bad Request: /api/inventory/1/consume/
+WARNING 2025-08-15 19:16:17,997 log 76551 139632514137024 Bad Request: /api/inventory/1/consume/
+WARNING 2025-08-15 19:16:17,999 log 76551 139632514137024 Bad Request: /api/inventory/1/consume/
+WARNING 2025-08-15 19:16:18,000 log 76551 139632514137024 Bad Request: /api/inventory/1/consume/
+WARNING 2025-08-15 19:16:18,000 log 76551 139632514137024 Bad Request: /api/inventory/1/consume/
+WARNING 2025-08-15 19:16:18,002 log 76551 139632514137024 Bad Request: /api/inventory/1/consume/
+WARNING 2025-08-15 19:16:18,004 log 76551 139632514137024 Not Found: /api/inventory/99999/consume/
+INFO 2025-08-15 19:16:18,014 tasks_alerts 76551 139632514137024 Starting inventory alerts check...
+INFO 2025-08-15 19:16:18,016 tasks_alerts 76551 139632514137024 Found 3 inventory alerts
+INFO 2025-08-15 19:16:18,044 tasks_alerts 76551 139632514137024 Inventory alerts summary: 0 expired, 1 expiring, 2 low stock
+INFO 2025-08-15 19:16:18,047 tasks_alerts 76551 139632514137024 Starting inventory alerts check...
+INFO 2025-08-15 19:16:18,049 tasks_alerts 76551 139632514137024 Found 3 inventory alerts
+INFO 2025-08-15 19:16:18,049 tasks_alerts 76551 139632514137024 Inventory alerts summary: 0 expired, 1 expiring, 2 low stock
+INFO 2025-08-15 19:16:18,052 tasks_alerts 76551 139632514137024 No alerts to send
+INFO 2025-08-15 19:16:18,060 tasks_alerts 76551 139632514137024 Inventory alerts email sent to admin@example.com
+INFO 2025-08-15 19:16:18,066 tasks_alerts 76551 139632514137024 Test alert task executed: Test message
+INFO 2025-08-15 19:16:18,079 tasks_alerts 76551 139632514137024 Starting inventory alerts check...
+INFO 2025-08-15 19:16:18,081 tasks_alerts 76551 139632514137024 Found 1 inventory alerts
+INFO 2025-08-15 19:16:18,082 tasks_alerts 76551 139632514137024 Inventory alerts summary: 0 expired, 1 expiring, 0 low stock
+INFO 2025-08-15 19:17:59,149 autoreload 76214 140540494343104 /home/marcin/PycharmProjects/agenty/chatbot/services/inventory_service.py changed, reloading.
+INFO 2025-08-15 19:18:00,574 autoreload 77402 140454455413696 Watching for file changes with StatReloader
+WARNING 2025-08-15 19:19:07,993 log 78117 140492618996672 Bad Request: /api/inventory/1/consume/
+WARNING 2025-08-15 19:19:07,997 log 78117 140492618996672 Bad Request: /api/inventory/1/consume/
+WARNING 2025-08-15 19:19:07,999 log 78117 140492618996672 Bad Request: /api/inventory/1/consume/
+WARNING 2025-08-15 19:19:07,999 log 78117 140492618996672 Bad Request: /api/inventory/1/consume/
+WARNING 2025-08-15 19:19:08,000 log 78117 140492618996672 Bad Request: /api/inventory/1/consume/
+WARNING 2025-08-15 19:19:08,002 log 78117 140492618996672 Bad Request: /api/inventory/1/consume/
+WARNING 2025-08-15 19:19:08,005 log 78117 140492618996672 Not Found: /api/inventory/99999/consume/
+INFO 2025-08-15 19:19:08,017 tasks_alerts 78117 140492618996672 Starting inventory alerts check...
+INFO 2025-08-15 19:19:08,020 tasks_alerts 78117 140492618996672 Found 3 inventory alerts
+INFO 2025-08-15 19:19:08,045 tasks_alerts 78117 140492618996672 Inventory alerts summary: 1 expired, 1 expiring, 1 low stock
+INFO 2025-08-15 19:19:08,047 tasks_alerts 78117 140492618996672 Starting inventory alerts check...
+INFO 2025-08-15 19:19:08,050 tasks_alerts 78117 140492618996672 Found 3 inventory alerts
+INFO 2025-08-15 19:19:08,050 tasks_alerts 78117 140492618996672 Inventory alerts summary: 1 expired, 1 expiring, 1 low stock
+INFO 2025-08-15 19:19:08,052 tasks_alerts 78117 140492618996672 No alerts to send
+INFO 2025-08-15 19:19:08,061 tasks_alerts 78117 140492618996672 Inventory alerts email sent to admin@example.com
+INFO 2025-08-15 19:19:08,066 tasks_alerts 78117 140492618996672 Test alert task executed: Test message
+INFO 2025-08-15 19:19:08,067 tasks_alerts 78117 140492618996672 Inventory alerts email sent to admin@example.com
+INFO 2025-08-15 19:19:08,071 tasks_alerts 78117 140492618996672 Starting inventory alerts check...
+INFO 2025-08-15 19:19:08,074 tasks_alerts 78117 140492618996672 Found 1 inventory alerts
+INFO 2025-08-15 19:19:08,075 tasks_alerts 78117 140492618996672 Inventory alerts summary: 0 expired, 1 expiring, 0 low stock
+WARNING 2025-08-15 19:19:44,120 log 77402 140447127172800 Not Found: /api/inventory/1/consume/
+WARNING 2025-08-15 19:19:44,120 basehttp 77402 140447127172800 "POST /api/inventory/1/consume/ HTTP/1.1" 404 55
+INFO 2025-08-15 19:20:16,911 tasks_alerts 78331 140512520711104 Test alert task executed: Manual test from command line
+INFO 2025-08-15 19:20:16,974 tasks_alerts 78331 140512520711104 Inventory alerts email sent to admin@example.com
+INFO 2025-08-15 19:26:01,945 autoreload 77402 140454455413696 /home/marcin/PycharmProjects/agenty/chatbot/services/inventory_service.py changed, reloading.
+INFO 2025-08-15 19:26:03,517 autoreload 78882 139706612702144 Watching for file changes with StatReloader
+INFO 2025-08-15 19:26:23,431 autoreload 78882 139706612702144 /home/marcin/PycharmProjects/agenty/inventory/views.py changed, reloading.
+INFO 2025-08-15 19:26:25,278 autoreload 78954 139736855088064 Watching for file changes with StatReloader
+INFO 2025-08-15 19:28:38,891 autoreload 78954 139736855088064 /home/marcin/PycharmProjects/agenty/chatbot/services/inventory_service.py changed, reloading.
+INFO 2025-08-15 19:28:40,627 autoreload 79209 139960015317952 Watching for file changes with StatReloader
+INFO 2025-08-15 19:28:53,481 autoreload 79209 139960015317952 /home/marcin/PycharmProjects/agenty/chatbot/services/inventory_service.py changed, reloading.
+INFO 2025-08-15 19:28:54,856 autoreload 79281 140151640943552 Watching for file changes with StatReloader
+INFO 2025-08-15 19:29:08,655 autoreload 79281 140151640943552 /home/marcin/PycharmProjects/agenty/chatbot/services/inventory_service.py changed, reloading.
+INFO 2025-08-15 19:29:10,063 autoreload 79368 140079750335424 Watching for file changes with StatReloader
+INFO 2025-08-15 19:29:21,933 autoreload 79368 140079750335424 /home/marcin/PycharmProjects/agenty/chatbot/services/inventory_service.py changed, reloading.
+INFO 2025-08-15 19:29:23,223 autoreload 79489 139761991498688 Watching for file changes with StatReloader
+ERROR 2025-08-15 19:29:31,000 inventory_service 79489 139754491209408 Error getting top spending categories: name 'models' is not defined
+ERROR 2025-08-15 19:29:31,001 inventory_service 79489 139754491209408 Error getting consumption heatmap data: Cannot resolve keyword 'weekday' into field. Choices are: consumed_at, consumed_qty, created_at, date, id, inventory_item, inventory_item_id, notes, weekday
+ERROR 2025-08-15 19:29:31,002 inventory_service 79489 139754491209408 Error getting recent activity: name 'ConsumptionEvent' is not defined
+INFO 2025-08-15 19:29:31,016 basehttp 79489 139754491209408 "GET /inventory/ HTTP/1.1" 200 17967
+INFO 2025-08-15 19:29:47,480 autoreload 79489 139761991498688 /home/marcin/PycharmProjects/agenty/chatbot/services/inventory_service.py changed, reloading.
+INFO 2025-08-15 19:29:48,984 autoreload 79579 140386775669696 Watching for file changes with StatReloader
+INFO 2025-08-15 19:30:00,747 autoreload 79579 140386775669696 /home/marcin/PycharmProjects/agenty/chatbot/services/inventory_service.py changed, reloading.
+INFO 2025-08-15 19:30:02,120 autoreload 79652 139793216990144 Watching for file changes with StatReloader
+INFO 2025-08-15 19:30:20,050 autoreload 79652 139793216990144 /home/marcin/PycharmProjects/agenty/chatbot/services/inventory_service.py changed, reloading.
+INFO 2025-08-15 19:30:22,077 autoreload 79798 140600466701248 Watching for file changes with StatReloader
+INFO 2025-08-15 19:30:40,605 autoreload 79798 140600466701248 /home/marcin/PycharmProjects/agenty/chatbot/services/inventory_service.py changed, reloading.
+INFO 2025-08-15 19:30:42,326 autoreload 80907 140708386212800 Watching for file changes with StatReloader
+INFO 2025-08-15 19:30:54,631 autoreload 80907 140708386212800 /home/marcin/PycharmProjects/agenty/chatbot/services/inventory_service.py changed, reloading.
+INFO 2025-08-15 19:30:56,308 autoreload 81081 139855336467392 Watching for file changes with StatReloader
+INFO 2025-08-15 19:31:03,601 basehttp 81081 139847840687808 "GET /inventory/ HTTP/1.1" 200 17967
+INFO 2025-08-15 20:04:04,153 autoreload 81081 139855336467392 /home/marcin/PycharmProjects/agenty/inventory/views.py changed, reloading.
+INFO 2025-08-15 20:04:05,824 autoreload 89539 140269741984704 Watching for file changes with StatReloader
+INFO 2025-08-15 20:12:41,723 autoreload 89539 140269741984704 /home/marcin/PycharmProjects/agenty/chatbot/services/inventory_service.py changed, reloading.
+INFO 2025-08-15 20:12:43,385 autoreload 91942 140174422420416 Watching for file changes with StatReloader
+INFO 2025-08-15 20:16:37,972 autoreload 91942 140174422420416 /home/marcin/PycharmProjects/agenty/chatbot/services/receipt_service.py changed, reloading.
+INFO 2025-08-15 20:16:39,436 autoreload 93783 140479956016064 Watching for file changes with StatReloader
+INFO 2025-08-15 20:20:23,676 receipt_parser 94068 140703596366784 Parsing receipt text: 71 characters
+DEBUG 2025-08-15 20:20:23,676 receipt_parser 94068 140703596366784 Found store: tesco in line: TESCO
+DEBUG 2025-08-15 20:20:23,677 receipt_parser 94068 140703596366784 Product lines range: 1 to 4
+DEBUG 2025-08-15 20:20:23,677 receipt_parser 94068 140703596366784 Parsing product line 2: Mleko Łaciate 1L 4,99 A
+DEBUG 2025-08-15 20:20:23,678 receipt_parser 94068 140703596366784 Parsing product line 3: Mleko Łaciate 1L 4,99 A
+INFO 2025-08-15 20:20:23,678 receipt_parser 94068 140703596366784 Parsed receipt: 2 products, total: 9.98
+INFO 2025-08-15 20:20:23,688 product_matcher 94068 140703596366784 Batch matching 2 products
+DEBUG 2025-08-15 20:20:23,688 product_matcher 94068 140703596366784 Matching product: Mleko Łaciate 1L
+INFO 2025-08-15 20:20:23,691 product_matcher 94068 140703596366784 No match found for 'mleko łaciate', creating ghost product
+INFO 2025-08-15 20:20:23,696 product_matcher 94068 140703596366784 Auto-created category: Dairy
+INFO 2025-08-15 20:20:23,701 product_matcher 94068 140703596366784 Created ghost product: Mleko Łaciate (category: Dairy)
+DEBUG 2025-08-15 20:20:23,701 product_matcher 94068 140703596366784 Matching product: Mleko Łaciate 1L
+INFO 2025-08-15 20:20:23,703 product_matcher 94068 140703596366784 No match found for 'mleko łaciate', creating ghost product
+INFO 2025-08-15 20:20:23,708 product_matcher 94068 140703596366784 Created ghost product: Mleko Łaciate (category: Dairy)
+INFO 2025-08-15 20:20:23,708 product_matcher 94068 140703596366784 Batch matching completed: 2 results
+INFO 2025-08-15 20:20:23,940 receipt_parser 94068 140703596366784 Parsing receipt text: 83 characters
+DEBUG 2025-08-15 20:20:23,941 receipt_parser 94068 140703596366784 Found store: lidl in line: LIDL
+DEBUG 2025-08-15 20:20:23,941 receipt_parser 94068 140703596366784 Product lines range: 1 to 4
+DEBUG 2025-08-15 20:20:23,941 receipt_parser 94068 140703596366784 Parsing product line 2: Exotic Fruit XYZ 500g 15,99 A
+DEBUG 2025-08-15 20:20:23,941 receipt_parser 94068 140703596366784 Parsing product line 3: Unknown Brand Juice 1L 5,49 A
+INFO 2025-08-15 20:20:23,941 receipt_parser 94068 140703596366784 Parsed receipt: 2 products, total: 21.48
+INFO 2025-08-15 20:20:23,954 product_matcher 94068 140703596366784 Batch matching 2 products
+DEBUG 2025-08-15 20:20:23,954 product_matcher 94068 140703596366784 Matching product: Exotic Fruit XYZ 500g
+INFO 2025-08-15 20:20:23,956 product_matcher 94068 140703596366784 No match found for 'exotic fruit xyz', creating ghost product
+INFO 2025-08-15 20:20:23,961 product_matcher 94068 140703596366784 Created ghost product: Exotic Fruit Xyz (category: None)
+DEBUG 2025-08-15 20:20:23,961 product_matcher 94068 140703596366784 Matching product: Unknown Brand Juice 1L
+INFO 2025-08-15 20:20:23,963 product_matcher 94068 140703596366784 No match found for 'unknown brand juice', creating ghost product
+INFO 2025-08-15 20:20:23,968 product_matcher 94068 140703596366784 Auto-created category: Beverages
+INFO 2025-08-15 20:20:23,973 product_matcher 94068 140703596366784 Created ghost product: Unknown Brand Juice (category: Beverages)
+INFO 2025-08-15 20:20:23,973 product_matcher 94068 140703596366784 Batch matching completed: 2 results
+INFO 2025-08-15 20:20:24,106 receipt_parser 94068 140703596366784 Parsing receipt text: 285 characters
+DEBUG 2025-08-15 20:20:24,106 receipt_parser 94068 140703596366784 Found store: biedronka in line: BIEDRONKA
+DEBUG 2025-08-15 20:20:24,106 receipt_parser 94068 140703596366784 Product lines range: 0 to 7
+DEBUG 2025-08-15 20:20:24,106 receipt_parser 94068 140703596366784 Parsing product line 1: ul. Testowa 123, Warszawa
+DEBUG 2025-08-15 20:20:24,107 receipt_parser 94068 140703596366784 Parsing product line 4: Mleko Łaciate 3.2% 1L 4,99 A
+DEBUG 2025-08-15 20:20:24,107 receipt_parser 94068 140703596366784 Parsing product line 5: Pierś z kurczaka 500g 12,49 A
+DEBUG 2025-08-15 20:20:24,107 receipt_parser 94068 140703596366784 Parsing product line 6: Chleb graham 3,99 A
+INFO 2025-08-15 20:20:24,107 receipt_parser 94068 140703596366784 Parsed receipt: 3 products, total: 21.47
+INFO 2025-08-15 20:20:24,117 product_matcher 94068 140703596366784 Batch matching 3 products
+DEBUG 2025-08-15 20:20:24,117 product_matcher 94068 140703596366784 Matching product: Mleko Łaciate 3.2% 1L
+INFO 2025-08-15 20:20:24,119 product_matcher 94068 140703596366784 No match found for 'mleko łaciate 3,2%', creating ghost product
+INFO 2025-08-15 20:20:24,124 product_matcher 94068 140703596366784 Auto-created category: Dairy
+INFO 2025-08-15 20:20:24,129 product_matcher 94068 140703596366784 Created ghost product: Mleko Łaciate 3,2% (category: Dairy)
+DEBUG 2025-08-15 20:20:24,130 product_matcher 94068 140703596366784 Matching product: Pierś z kurczaka 500g
+INFO 2025-08-15 20:20:24,131 product_matcher 94068 140703596366784 Exact match found: Pierś z kurczaka
+DEBUG 2025-08-15 20:20:24,131 product_matcher 94068 140703596366784 Matching product: Chleb graham
+INFO 2025-08-15 20:20:24,133 product_matcher 94068 140703596366784 No match found for 'chleb graham', creating ghost product
+INFO 2025-08-15 20:20:24,138 product_matcher 94068 140703596366784 Auto-created category: Meat
+INFO 2025-08-15 20:20:24,143 product_matcher 94068 140703596366784 Created ghost product: Chleb Graham (category: Meat)
+INFO 2025-08-15 20:20:24,143 product_matcher 94068 140703596366784 Batch matching completed: 3 results
+INFO 2025-08-15 20:22:51,933 receipt_parser 94330 140279592762304 Parsing receipt text: 71 characters
+DEBUG 2025-08-15 20:22:51,933 receipt_parser 94330 140279592762304 Found store: tesco in line: TESCO
+DEBUG 2025-08-15 20:22:51,934 receipt_parser 94330 140279592762304 Product lines range: 1 to 4
+DEBUG 2025-08-15 20:22:51,934 receipt_parser 94330 140279592762304 Parsing product line 2: Mleko Łaciate 1L 4,99 A
+DEBUG 2025-08-15 20:22:51,935 receipt_parser 94330 140279592762304 Parsing product line 3: Mleko Łaciate 1L 4,99 A
+INFO 2025-08-15 20:22:51,935 receipt_parser 94330 140279592762304 Parsed receipt: 2 products, total: 9.98
+INFO 2025-08-15 20:22:51,945 product_matcher 94330 140279592762304 Batch matching 2 products
+DEBUG 2025-08-15 20:22:51,945 product_matcher 94330 140279592762304 Matching product: Mleko Łaciate 1L
+INFO 2025-08-15 20:22:51,948 product_matcher 94330 140279592762304 No match found for 'mleko łaciate', creating ghost product
+INFO 2025-08-15 20:22:51,953 product_matcher 94330 140279592762304 Auto-created category: Dairy
+INFO 2025-08-15 20:22:51,957 product_matcher 94330 140279592762304 Created ghost product: Mleko Łaciate (category: Dairy)
+DEBUG 2025-08-15 20:22:51,957 product_matcher 94330 140279592762304 Matching product: Mleko Łaciate 1L
+INFO 2025-08-15 20:22:51,959 product_matcher 94330 140279592762304 No match found for 'mleko łaciate', creating ghost product
+INFO 2025-08-15 20:22:51,964 product_matcher 94330 140279592762304 Created ghost product: Mleko Łaciate (category: Dairy)
+INFO 2025-08-15 20:22:51,964 product_matcher 94330 140279592762304 Batch matching completed: 2 results
+INFO 2025-08-15 20:22:52,195 receipt_parser 94330 140279592762304 Parsing receipt text: 83 characters
+DEBUG 2025-08-15 20:22:52,195 receipt_parser 94330 140279592762304 Found store: lidl in line: LIDL
+DEBUG 2025-08-15 20:22:52,195 receipt_parser 94330 140279592762304 Product lines range: 1 to 4
+DEBUG 2025-08-15 20:22:52,195 receipt_parser 94330 140279592762304 Parsing product line 2: Exotic Fruit XYZ 500g 15,99 A
+DEBUG 2025-08-15 20:22:52,195 receipt_parser 94330 140279592762304 Parsing product line 3: Unknown Brand Juice 1L 5,49 A
+INFO 2025-08-15 20:22:52,195 receipt_parser 94330 140279592762304 Parsed receipt: 2 products, total: 21.48
+INFO 2025-08-15 20:22:52,205 product_matcher 94330 140279592762304 Batch matching 2 products
+DEBUG 2025-08-15 20:22:52,205 product_matcher 94330 140279592762304 Matching product: Exotic Fruit XYZ 500g
+INFO 2025-08-15 20:22:52,206 product_matcher 94330 140279592762304 No match found for 'exotic fruit xyz', creating ghost product
+INFO 2025-08-15 20:22:52,211 product_matcher 94330 140279592762304 Created ghost product: Exotic Fruit Xyz (category: None)
+DEBUG 2025-08-15 20:22:52,211 product_matcher 94330 140279592762304 Matching product: Unknown Brand Juice 1L
+INFO 2025-08-15 20:22:52,213 product_matcher 94330 140279592762304 No match found for 'unknown brand juice', creating ghost product
+INFO 2025-08-15 20:22:52,218 product_matcher 94330 140279592762304 Auto-created category: Beverages
+INFO 2025-08-15 20:22:52,224 product_matcher 94330 140279592762304 Created ghost product: Unknown Brand Juice (category: Beverages)
+INFO 2025-08-15 20:22:52,224 product_matcher 94330 140279592762304 Batch matching completed: 2 results
+INFO 2025-08-15 20:22:52,352 receipt_parser 94330 140279592762304 Parsing receipt text: 285 characters
+DEBUG 2025-08-15 20:22:52,352 receipt_parser 94330 140279592762304 Found store: biedronka in line: BIEDRONKA
+DEBUG 2025-08-15 20:22:52,352 receipt_parser 94330 140279592762304 Product lines range: 0 to 7
+DEBUG 2025-08-15 20:22:52,352 receipt_parser 94330 140279592762304 Parsing product line 1: ul. Testowa 123, Warszawa
+DEBUG 2025-08-15 20:22:52,353 receipt_parser 94330 140279592762304 Parsing product line 4: Mleko Łaciate 3.2% 1L 4,99 A
+DEBUG 2025-08-15 20:22:52,353 receipt_parser 94330 140279592762304 Parsing product line 5: Pierś z kurczaka 500g 12,49 A
+DEBUG 2025-08-15 20:22:52,353 receipt_parser 94330 140279592762304 Parsing product line 6: Chleb graham 3,99 A
+INFO 2025-08-15 20:22:52,353 receipt_parser 94330 140279592762304 Parsed receipt: 3 products, total: 21.47
+INFO 2025-08-15 20:22:52,365 product_matcher 94330 140279592762304 Batch matching 3 products
+DEBUG 2025-08-15 20:22:52,365 product_matcher 94330 140279592762304 Matching product: Mleko Łaciate 3.2% 1L
+INFO 2025-08-15 20:22:52,367 product_matcher 94330 140279592762304 No match found for 'mleko łaciate 3,2%', creating ghost product
+INFO 2025-08-15 20:22:52,373 product_matcher 94330 140279592762304 Auto-created category: Dairy
+INFO 2025-08-15 20:22:52,377 product_matcher 94330 140279592762304 Created ghost product: Mleko Łaciate 3,2% (category: Dairy)
+DEBUG 2025-08-15 20:22:52,377 product_matcher 94330 140279592762304 Matching product: Pierś z kurczaka 500g
+INFO 2025-08-15 20:22:52,378 product_matcher 94330 140279592762304 Exact match found: Pierś z kurczaka
+DEBUG 2025-08-15 20:22:52,378 product_matcher 94330 140279592762304 Matching product: Chleb graham
+INFO 2025-08-15 20:22:52,380 product_matcher 94330 140279592762304 No match found for 'chleb graham', creating ghost product
+INFO 2025-08-15 20:22:52,385 product_matcher 94330 140279592762304 Auto-created category: Meat
+INFO 2025-08-15 20:22:52,389 product_matcher 94330 140279592762304 Created ghost product: Chleb Graham (category: Meat)
+INFO 2025-08-15 20:22:52,389 product_matcher 94330 140279592762304 Batch matching completed: 3 results
+INFO 2025-08-15 20:23:35,054 receipt_parser 94378 139701537508288 Parsing receipt text: 71 characters
+DEBUG 2025-08-15 20:23:35,054 receipt_parser 94378 139701537508288 Found store: tesco in line: TESCO
+DEBUG 2025-08-15 20:23:35,056 receipt_parser 94378 139701537508288 Product lines range: 1 to 4
+DEBUG 2025-08-15 20:23:35,056 receipt_parser 94378 139701537508288 Parsing product line 2: Mleko Łaciate 1L 4,99 A
+DEBUG 2025-08-15 20:23:35,056 receipt_parser 94378 139701537508288 Parsing product line 3: Mleko Łaciate 1L 4,99 A
+INFO 2025-08-15 20:23:35,056 receipt_parser 94378 139701537508288 Parsed receipt: 2 products, total: 9.98
+INFO 2025-08-15 20:23:35,069 product_matcher 94378 139701537508288 Batch matching 2 products
+DEBUG 2025-08-15 20:23:35,069 product_matcher 94378 139701537508288 Matching product: Mleko Łaciate 1L
+INFO 2025-08-15 20:23:35,072 product_matcher 94378 139701537508288 No match found for 'mleko łaciate', creating ghost product
+INFO 2025-08-15 20:23:35,078 product_matcher 94378 139701537508288 Auto-created category: Dairy
+INFO 2025-08-15 20:23:35,083 product_matcher 94378 139701537508288 Created ghost product: Mleko Łaciate (category: Dairy)
+DEBUG 2025-08-15 20:23:35,083 product_matcher 94378 139701537508288 Matching product: Mleko Łaciate 1L
+INFO 2025-08-15 20:23:35,085 product_matcher 94378 139701537508288 No match found for 'mleko łaciate', creating ghost product
+INFO 2025-08-15 20:23:35,090 product_matcher 94378 139701537508288 Created ghost product: Mleko Łaciate (category: Dairy)
+INFO 2025-08-15 20:23:35,090 product_matcher 94378 139701537508288 Batch matching completed: 2 results
+INFO 2025-08-15 20:23:35,342 receipt_parser 94378 139701537508288 Parsing receipt text: 83 characters
+DEBUG 2025-08-15 20:23:35,343 receipt_parser 94378 139701537508288 Found store: lidl in line: LIDL
+DEBUG 2025-08-15 20:23:35,343 receipt_parser 94378 139701537508288 Product lines range: 1 to 4
+DEBUG 2025-08-15 20:23:35,343 receipt_parser 94378 139701537508288 Parsing product line 2: Exotic Fruit XYZ 500g 15,99 A
+DEBUG 2025-08-15 20:23:35,343 receipt_parser 94378 139701537508288 Parsing product line 3: Unknown Brand Juice 1L 5,49 A
+INFO 2025-08-15 20:23:35,343 receipt_parser 94378 139701537508288 Parsed receipt: 2 products, total: 21.48
+INFO 2025-08-15 20:23:35,355 product_matcher 94378 139701537508288 Batch matching 2 products
+DEBUG 2025-08-15 20:23:35,355 product_matcher 94378 139701537508288 Matching product: Exotic Fruit XYZ 500g
+INFO 2025-08-15 20:23:35,357 product_matcher 94378 139701537508288 No match found for 'exotic fruit xyz', creating ghost product
+INFO 2025-08-15 20:23:35,362 product_matcher 94378 139701537508288 Created ghost product: Exotic Fruit Xyz (category: None)
+DEBUG 2025-08-15 20:23:35,362 product_matcher 94378 139701537508288 Matching product: Unknown Brand Juice 1L
+INFO 2025-08-15 20:23:35,364 product_matcher 94378 139701537508288 No match found for 'unknown brand juice', creating ghost product
+INFO 2025-08-15 20:23:35,369 product_matcher 94378 139701537508288 Auto-created category: Beverages
+INFO 2025-08-15 20:23:35,374 product_matcher 94378 139701537508288 Created ghost product: Unknown Brand Juice (category: Beverages)
+INFO 2025-08-15 20:23:35,374 product_matcher 94378 139701537508288 Batch matching completed: 2 results
+INFO 2025-08-15 20:23:35,504 receipt_parser 94378 139701537508288 Parsing receipt text: 285 characters
+DEBUG 2025-08-15 20:23:35,504 receipt_parser 94378 139701537508288 Found store: biedronka in line: BIEDRONKA
+DEBUG 2025-08-15 20:23:35,504 receipt_parser 94378 139701537508288 Product lines range: 0 to 7
+DEBUG 2025-08-15 20:23:35,504 receipt_parser 94378 139701537508288 Parsing product line 1: ul. Testowa 123, Warszawa
+DEBUG 2025-08-15 20:23:35,505 receipt_parser 94378 139701537508288 Parsing product line 4: Mleko Łaciate 3.2% 1L 4,99 A
+DEBUG 2025-08-15 20:23:35,505 receipt_parser 94378 139701537508288 Parsing product line 5: Pierś z kurczaka 500g 12,49 A
+DEBUG 2025-08-15 20:23:35,505 receipt_parser 94378 139701537508288 Parsing product line 6: Chleb graham 3,99 A
+INFO 2025-08-15 20:23:35,505 receipt_parser 94378 139701537508288 Parsed receipt: 3 products, total: 21.47
+INFO 2025-08-15 20:23:35,515 product_matcher 94378 139701537508288 Batch matching 3 products
+DEBUG 2025-08-15 20:23:35,515 product_matcher 94378 139701537508288 Matching product: Mleko Łaciate 3.2% 1L
+INFO 2025-08-15 20:23:35,517 product_matcher 94378 139701537508288 No match found for 'mleko łaciate 3,2%', creating ghost product
+INFO 2025-08-15 20:23:35,522 product_matcher 94378 139701537508288 Auto-created category: Dairy
+INFO 2025-08-15 20:23:35,529 product_matcher 94378 139701537508288 Created ghost product: Mleko Łaciate 3,2% (category: Dairy)
+DEBUG 2025-08-15 20:23:35,529 product_matcher 94378 139701537508288 Matching product: Pierś z kurczaka 500g
+INFO 2025-08-15 20:23:35,530 product_matcher 94378 139701537508288 Exact match found: Pierś z kurczaka
+DEBUG 2025-08-15 20:23:35,530 product_matcher 94378 139701537508288 Matching product: Chleb graham
+INFO 2025-08-15 20:23:35,531 product_matcher 94378 139701537508288 No match found for 'chleb graham', creating ghost product
+INFO 2025-08-15 20:23:35,536 product_matcher 94378 139701537508288 Auto-created category: Meat
+INFO 2025-08-15 20:23:35,541 product_matcher 94378 139701537508288 Created ghost product: Chleb Graham (category: Meat)
+INFO 2025-08-15 20:23:35,541 product_matcher 94378 139701537508288 Batch matching completed: 3 results
+INFO 2025-08-15 20:24:49,991 receipt_parser 94585 140066635234240 Parsing receipt text: 71 characters
+DEBUG 2025-08-15 20:24:49,991 receipt_parser 94585 140066635234240 Found store: tesco in line: TESCO
+DEBUG 2025-08-15 20:24:49,996 receipt_parser 94585 140066635234240 Product lines range: 1 to 4
+DEBUG 2025-08-15 20:24:49,996 receipt_parser 94585 140066635234240 Parsing product line 2: Mleko Łaciate 1L 4,99 A
+DEBUG 2025-08-15 20:24:49,997 receipt_parser 94585 140066635234240 Parsing product line 3: Mleko Łaciate 1L 4,99 A
+INFO 2025-08-15 20:24:49,997 receipt_parser 94585 140066635234240 Parsed receipt: 2 products, total: 9.98
+INFO 2025-08-15 20:24:50,009 product_matcher 94585 140066635234240 Batch matching 2 products
+DEBUG 2025-08-15 20:24:50,009 product_matcher 94585 140066635234240 Matching product: Mleko Łaciate 1L
+INFO 2025-08-15 20:24:50,015 product_matcher 94585 140066635234240 No match found for 'mleko łaciate', creating ghost product
+INFO 2025-08-15 20:24:50,020 product_matcher 94585 140066635234240 Auto-created category: Dairy
+INFO 2025-08-15 20:24:50,025 product_matcher 94585 140066635234240 Created ghost product: Mleko Łaciate (category: Dairy)
+DEBUG 2025-08-15 20:24:50,025 product_matcher 94585 140066635234240 Matching product: Mleko Łaciate 1L
+INFO 2025-08-15 20:24:50,027 product_matcher 94585 140066635234240 No match found for 'mleko łaciate', creating ghost product
+INFO 2025-08-15 20:24:50,035 product_matcher 94585 140066635234240 Created ghost product: Mleko Łaciate (category: Dairy)
+INFO 2025-08-15 20:24:50,035 product_matcher 94585 140066635234240 Batch matching completed: 2 results
+INFO 2025-08-15 20:24:50,289 receipt_parser 94585 140066635234240 Parsing receipt text: 83 characters
+DEBUG 2025-08-15 20:24:50,289 receipt_parser 94585 140066635234240 Found store: lidl in line: LIDL
+DEBUG 2025-08-15 20:24:50,289 receipt_parser 94585 140066635234240 Product lines range: 1 to 4
+DEBUG 2025-08-15 20:24:50,290 receipt_parser 94585 140066635234240 Parsing product line 2: Exotic Fruit XYZ 500g 15,99 A
+DEBUG 2025-08-15 20:24:50,290 receipt_parser 94585 140066635234240 Parsing product line 3: Unknown Brand Juice 1L 5,49 A
+INFO 2025-08-15 20:24:50,290 receipt_parser 94585 140066635234240 Parsed receipt: 2 products, total: 21.48
+INFO 2025-08-15 20:24:50,302 product_matcher 94585 140066635234240 Batch matching 2 products
+DEBUG 2025-08-15 20:24:50,302 product_matcher 94585 140066635234240 Matching product: Exotic Fruit XYZ 500g
+INFO 2025-08-15 20:24:50,305 product_matcher 94585 140066635234240 No match found for 'exotic fruit xyz', creating ghost product
+INFO 2025-08-15 20:24:50,310 product_matcher 94585 140066635234240 Created ghost product: Exotic Fruit Xyz (category: None)
+DEBUG 2025-08-15 20:24:50,310 product_matcher 94585 140066635234240 Matching product: Unknown Brand Juice 1L
+INFO 2025-08-15 20:24:50,313 product_matcher 94585 140066635234240 No match found for 'unknown brand juice', creating ghost product
+INFO 2025-08-15 20:24:50,319 product_matcher 94585 140066635234240 Auto-created category: Beverages
+INFO 2025-08-15 20:24:50,324 product_matcher 94585 140066635234240 Created ghost product: Unknown Brand Juice (category: Beverages)
+INFO 2025-08-15 20:24:50,324 product_matcher 94585 140066635234240 Batch matching completed: 2 results
+INFO 2025-08-15 20:24:50,461 receipt_parser 94585 140066635234240 Parsing receipt text: 285 characters
+DEBUG 2025-08-15 20:24:50,461 receipt_parser 94585 140066635234240 Found store: biedronka in line: BIEDRONKA
+DEBUG 2025-08-15 20:24:50,462 receipt_parser 94585 140066635234240 Product lines range: 0 to 7
+DEBUG 2025-08-15 20:24:50,462 receipt_parser 94585 140066635234240 Parsing product line 1: ul. Testowa 123, Warszawa
+DEBUG 2025-08-15 20:24:50,463 receipt_parser 94585 140066635234240 Parsing product line 4: Mleko Łaciate 3.2% 1L 4,99 A
+DEBUG 2025-08-15 20:24:50,463 receipt_parser 94585 140066635234240 Parsing product line 5: Pierś z kurczaka 500g 12,49 A
+DEBUG 2025-08-15 20:24:50,463 receipt_parser 94585 140066635234240 Parsing product line 6: Chleb graham 3,99 A
+INFO 2025-08-15 20:24:50,463 receipt_parser 94585 140066635234240 Parsed receipt: 3 products, total: 21.47
+INFO 2025-08-15 20:24:50,475 product_matcher 94585 140066635234240 Batch matching 3 products
+DEBUG 2025-08-15 20:24:50,475 product_matcher 94585 140066635234240 Matching product: Mleko Łaciate 3.2% 1L
+INFO 2025-08-15 20:24:50,479 product_matcher 94585 140066635234240 No match found for 'mleko łaciate 3,2%', creating ghost product
+INFO 2025-08-15 20:24:50,485 product_matcher 94585 140066635234240 Auto-created category: Dairy
+INFO 2025-08-15 20:24:50,490 product_matcher 94585 140066635234240 Created ghost product: Mleko Łaciate 3,2% (category: Dairy)
+DEBUG 2025-08-15 20:24:50,490 product_matcher 94585 140066635234240 Matching product: Pierś z kurczaka 500g
+INFO 2025-08-15 20:24:50,491 product_matcher 94585 140066635234240 Exact match found: Pierś z kurczaka
+DEBUG 2025-08-15 20:24:50,492 product_matcher 94585 140066635234240 Matching product: Chleb graham
+INFO 2025-08-15 20:24:50,494 product_matcher 94585 140066635234240 No match found for 'chleb graham', creating ghost product
+INFO 2025-08-15 20:24:50,500 product_matcher 94585 140066635234240 Auto-created category: Meat
+INFO 2025-08-15 20:24:50,506 product_matcher 94585 140066635234240 Created ghost product: Chleb Graham (category: Meat)
+INFO 2025-08-15 20:24:50,506 product_matcher 94585 140066635234240 Batch matching completed: 3 results
+INFO 2025-08-15 20:26:18,004 autoreload 93783 140479956016064 /home/marcin/PycharmProjects/agenty/core/database_config.py changed, reloading.
+INFO 2025-08-15 20:26:19,392 autoreload 94766 139758063762368 Watching for file changes with StatReloader
+INFO 2025-08-15 20:26:38,270 autoreload 94766 139758063762368 /home/marcin/PycharmProjects/agenty/chatbot/services/inventory_service.py changed, reloading.
+INFO 2025-08-15 20:26:39,553 autoreload 94894 140714313202624 Watching for file changes with StatReloader
+INFO 2025-08-15 20:29:02,614 autoreload 95241 140452590193600 Watching for file changes with StatReloader
+INFO 2025-08-15 20:29:21,484 basehttp 95241 140445261756096 "GET / HTTP/1.1" 200 22303
+WARNING 2025-08-15 20:29:21,619 log 95241 140445261756096 Not Found: /favicon.ico
+INFO 2025-08-15 20:29:25,057 basehttp 95241 140445261756096 "GET /receipts/upload/ HTTP/1.1" 200 21255
+INFO 2025-08-15 20:29:28,134 basehttp 95241 140445261756096 "GET /receipts/upload/ HTTP/1.1" 200 21255
+INFO 2025-08-15 20:29:29,471 basehttp 95241 140445261756096 "GET /pantry/ HTTP/1.1" 200 12968
+INFO 2025-08-15 20:29:30,958 basehttp 95241 140445261756096 "GET /receipts/upload/ HTTP/1.1" 200 21255
+INFO 2025-08-15 20:29:31,608 basehttp 95241 140445261756096 "GET /documents/ HTTP/1.1" 200 16365
+INFO 2025-08-15 20:29:33,360 basehttp 95241 140445261756096 "GET /chat/ HTTP/1.1" 200 30706
+INFO 2025-08-15 20:29:44,558 basehttp 95241 140445261756096 "GET /receipts/upload/ HTTP/1.1" 200 21255
+INFO 2025-08-15 20:29:48,823 views 95241 140445261756096 === STARTING RECEIPT UPLOAD PROCESS ===
+INFO 2025-08-15 20:29:48,823 views 95241 140445261756096 === STARTING RECEIPT UPLOAD PROCESS ===
+DEBUG 2025-08-15 20:29:48,824 views 95241 140445261756096 Form data: {'receipt_file': <InMemoryUploadedFile: 2508020118133218.pdf (application/pdf)>}
+DEBUG 2025-08-15 20:29:48,824 views 95241 140445261756096 Form data: {'receipt_file': <InMemoryUploadedFile: 2508020118133218.pdf (application/pdf)>}
+INFO 2025-08-15 20:29:48,824 views 95241 140445261756096 Uploaded file: 2508020118133218.pdf, size: 655865 bytes, content_type: application/pdf
+INFO 2025-08-15 20:29:48,824 views 95241 140445261756096 Uploaded file: 2508020118133218.pdf, size: 655865 bytes, content_type: application/pdf
+INFO 2025-08-15 20:29:48,824 views 95241 140445261756096 Creating receipt record...
+INFO 2025-08-15 20:29:48,824 views 95241 140445261756096 Creating receipt record...
+INFO 2025-08-15 20:29:48,832 views 95241 140445261756096 ✅ Receipt record created successfully with ID: 18
+INFO 2025-08-15 20:29:48,832 views 95241 140445261756096 ✅ Receipt record created successfully with ID: 18
+DEBUG 2025-08-15 20:29:48,832 views 95241 140445261756096 Receipt record details: status=uploaded, file_path=receipt_files/2508020118133218_hYbS9BS.pdf
+DEBUG 2025-08-15 20:29:48,832 views 95241 140445261756096 Receipt record details: status=uploaded, file_path=receipt_files/2508020118133218_hYbS9BS.pdf
+INFO 2025-08-15 20:29:48,832 views 95241 140445261756096 Starting processing for receipt ID: 18
+INFO 2025-08-15 20:29:48,832 views 95241 140445261756096 Starting processing for receipt ID: 18
+INFO 2025-08-15 20:29:48,869 views 95241 140445261756096 ✅ Processing started successfully for receipt 18
+INFO 2025-08-15 20:29:48,869 views 95241 140445261756096 ✅ Processing started successfully for receipt 18
+INFO 2025-08-15 20:29:48,869 views 95241 140445261756096 Success URL set to: /receipts/18/status/
+INFO 2025-08-15 20:29:48,869 views 95241 140445261756096 Success URL set to: /receipts/18/status/
+INFO 2025-08-15 20:29:48,869 views 95241 140445261756096 === RECEIPT UPLOAD PROCESS COMPLETED ===
+INFO 2025-08-15 20:29:48,869 views 95241 140445261756096 === RECEIPT UPLOAD PROCESS COMPLETED ===
+INFO 2025-08-15 20:29:48,869 basehttp 95241 140445261756096 "POST /receipts/upload/ HTTP/1.1" 302 0
+INFO 2025-08-15 20:29:48,874 basehttp 95241 140445261756096 "GET /receipts/18/status/ HTTP/1.1" 200 29337
+INFO 2025-08-15 20:29:51,032 basehttp 95241 140445261756096 "GET /api/receipts/18/status/ HTTP/1.1" 200 216
+INFO 2025-08-15 20:29:53,037 basehttp 95241 140445261756096 "GET /api/receipts/18/status/ HTTP/1.1" 200 216
+INFO 2025-08-15 20:29:55,041 basehttp 95241 140445261756096 "GET /api/receipts/18/status/ HTTP/1.1" 200 216
+INFO 2025-08-15 20:29:57,161 basehttp 95241 140445261756096 "GET /api/receipts/18/status/ HTTP/1.1" 200 216
+INFO 2025-08-15 20:29:59,166 basehttp 95241 140445261756096 "GET /api/receipts/18/status/ HTTP/1.1" 200 216
+INFO 2025-08-15 20:30:01,172 basehttp 95241 140445261756096 "GET /api/receipts/18/status/ HTTP/1.1" 200 216
+INFO 2025-08-15 20:30:03,178 basehttp 95241 140445261756096 "GET /api/receipts/18/status/ HTTP/1.1" 200 216
+INFO 2025-08-15 20:30:05,183 basehttp 95241 140445261756096 "GET /api/receipts/18/status/ HTTP/1.1" 200 216
+INFO 2025-08-15 20:30:07,244 basehttp 95241 140445261756096 "GET /api/receipts/18/status/ HTTP/1.1" 200 216
+INFO 2025-08-15 20:30:09,249 basehttp 95241 140445261756096 "GET /api/receipts/18/status/ HTTP/1.1" 200 216
+INFO 2025-08-15 20:30:11,254 basehttp 95241 140445261756096 "GET /api/receipts/18/status/ HTTP/1.1" 200 216
+INFO 2025-08-15 20:30:13,260 basehttp 95241 140445261756096 "GET /api/receipts/18/status/ HTTP/1.1" 200 216
+INFO 2025-08-15 20:30:15,265 basehttp 95241 140445261756096 "GET /api/receipts/18/status/ HTTP/1.1" 200 216
+INFO 2025-08-15 20:30:17,270 basehttp 95241 140445261756096 "GET /api/receipts/18/status/ HTTP/1.1" 200 216
+INFO 2025-08-15 20:30:21,895 basehttp 95241 140445261756096 "GET /chat/ HTTP/1.1" 200 30706
+INFO 2025-08-15 20:30:27,433 basehttp 95241 140445261756096 "GET /admin HTTP/1.1" 301 0
+INFO 2025-08-15 20:30:27,443 basehttp 95241 140445261756096 "GET /admin/ HTTP/1.1" 302 0
+INFO 2025-08-15 20:30:27,454 basehttp 95241 140445261756096 "GET /admin/login/?next=/admin/ HTTP/1.1" 200 4177
+INFO 2025-08-15 20:30:27,522 basehttp 95241 140445261756096 "GET /static/admin/css/base.css HTTP/1.1" 200 22120
+INFO 2025-08-15 20:30:27,535 basehttp 95241 140444985841344 "GET /static/admin/js/theme.js HTTP/1.1" 304 0
+INFO 2025-08-15 20:30:27,535 basehttp 95241 140445249169088 "GET /static/admin/css/dark_mode.css HTTP/1.1" 200 2808
+INFO 2025-08-15 20:30:27,536 basehttp 95241 140444985841344 "GET /static/admin/js/nav_sidebar.js HTTP/1.1" 304 0
+INFO 2025-08-15 20:30:27,536 basehttp 95241 140445053085376 "GET /static/admin/css/nav_sidebar.css HTTP/1.1" 200 2810
+INFO 2025-08-15 20:30:27,536 basehttp 95241 140444977448640 "GET /static/admin/css/login.css HTTP/1.1" 200 951
+INFO 2025-08-15 20:30:27,536 basehttp 95241 140445044692672 "GET /static/admin/css/responsive.css HTTP/1.1" 200 16565
+INFO 2025-08-16 08:03:52,127 autoreload 156039 140485035477952 Watching for file changes with StatReloader
+ERROR 2025-08-16 08:03:57,756 log 156039 140483145758400 Internal Server Error: /
+Traceback (most recent call last):
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/views/generic/base.py", line 105, in view
+    return self.dispatch(request, *args, **kwargs)
+           ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/utils/decorators.py", line 48, in _wrapper
+    return bound_method(*args, **kwargs)
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/utils/decorators.py", line 192, in _view_wrapper
+    result = _process_exception(request, e)
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/utils/decorators.py", line 190, in _view_wrapper
+    response = view_func(request, *args, **kwargs)
+  File "/home/marcin/PycharmProjects/agenty/chatbot/utils/cache_utils.py", line 90, in dispatch
+    return super().dispatch(*args, **kwargs)
+           ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/views/generic/base.py", line 144, in dispatch
+    return handler(request, *args, **kwargs)
+  File "/home/marcin/PycharmProjects/agenty/chatbot/views.py", line 59, in get
+    return render(request, "chatbot/dashboard.html", context)
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/shortcuts.py", line 25, in render
+    content = loader.render_to_string(template_name, context, request, using=using)
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/template/loader.py", line 62, in render_to_string
+    return template.render(context, request)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/template/backends/django.py", line 107, in render
+    return self.template.render(context)
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/template/base.py", line 171, in render
+    return self._render(context)
+           ~~~~~~~~~~~~^^^^^^^^^
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/template/base.py", line 163, in _render
+    return self.nodelist.render(context)
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/template/base.py", line 1016, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/template/base.py", line 977, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/template/loader_tags.py", line 159, in render
+    return compiled_parent._render(context)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/template/base.py", line 163, in _render
+    return self.nodelist.render(context)
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/template/base.py", line 1016, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/template/base.py", line 977, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/template/defaulttags.py", line 480, in render
+    url = reverse(view_name, args=args, kwargs=kwargs, current_app=current_app)
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/urls/base.py", line 98, in reverse
+    resolved_url = resolver._reverse_with_prefix(view, prefix, *args, **kwargs)
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/urls/resolvers.py", line 831, in _reverse_with_prefix
+    raise NoReverseMatch(msg)
+django.urls.exceptions.NoReverseMatch: Reverse for 'pantry_list' not found. 'pantry_list' is not a valid view function or pattern name.
+ERROR 2025-08-16 08:03:57,759 basehttp 156039 140483145758400 "GET / HTTP/1.1" 500 190413
+INFO 2025-08-16 08:07:15,242 autoreload 156039 140485035477952 /home/marcin/PycharmProjects/agenty/chatbot/views.py changed, reloading.
+INFO 2025-08-16 08:07:16,202 autoreload 156352 139743007034304 Watching for file changes with StatReloader
+INFO 2025-08-16 08:08:11,785 basehttp 156352 139742062573248 "GET / HTTP/1.1" 200 23529
+ERROR 2025-08-16 08:08:21,268 log 156352 139742062573248 Internal Server Error: /inventory/inventory/location/pantry/
+Traceback (most recent call last):
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "/home/marcin/PycharmProjects/agenty/inventory/views.py", line 338, in inventory_by_location
+    return render(request, "inventory/inventory_by_location.html", context)
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/shortcuts.py", line 25, in render
+    content = loader.render_to_string(template_name, context, request, using=using)
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/template/loader.py", line 61, in render_to_string
+    template = get_template(template_name, using=using)
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/template/loader.py", line 19, in get_template
+    raise TemplateDoesNotExist(template_name, chain=chain)
+django.template.exceptions.TemplateDoesNotExist: inventory/inventory_by_location.html
+ERROR 2025-08-16 08:08:21,269 basehttp 156352 139742062573248 "GET /inventory/inventory/location/pantry/ HTTP/1.1" 500 92350
+ERROR 2025-08-16 08:08:30,704 log 156352 139742047889088 Internal Server Error: /inventory/inventory/location/pantry/
+Traceback (most recent call last):
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "/home/marcin/PycharmProjects/agenty/inventory/views.py", line 338, in inventory_by_location
+    return render(request, "inventory/inventory_by_location.html", context)
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/shortcuts.py", line 25, in render
+    content = loader.render_to_string(template_name, context, request, using=using)
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/template/loader.py", line 61, in render_to_string
+    template = get_template(template_name, using=using)
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/template/loader.py", line 19, in get_template
+    raise TemplateDoesNotExist(template_name, chain=chain)
+django.template.exceptions.TemplateDoesNotExist: inventory/inventory_by_location.html
+ERROR 2025-08-16 08:08:30,705 basehttp 156352 139742047889088 "GET /inventory/inventory/location/pantry/ HTTP/1.1" 500 92350
+INFO 2025-08-16 08:10:04,052 basehttp 156352 139742039496384 "GET /inventory/inventory/location/pantry/ HTTP/1.1" 200 10863
+INFO 2025-08-16 08:10:13,261 basehttp 156352 139742039496384 "GET / HTTP/1.1" 200 23529
+INFO 2025-08-16 08:11:57,293 basehttp 156352 139742039496384 "GET / HTTP/1.1" 200 23529
+INFO 2025-08-16 08:12:00,613 basehttp 156352 139742039496384 "GET /chat/ HTTP/1.1" 200 30735
+INFO 2025-08-16 08:15:30,330 autoreload 156352 139743007034304 /home/marcin/PycharmProjects/agenty/chatbot/views.py changed, reloading.
+INFO 2025-08-16 08:15:31,361 autoreload 156821 140304460049344 Watching for file changes with StatReloader
+INFO 2025-08-16 08:16:57,196 autoreload 156959 140489423137728 Watching for file changes with StatReloader
+INFO 2025-08-16 08:17:03,452 basehttp 156821 140303247865536 "GET /chat/ HTTP/1.1" 200 31459
+INFO 2025-08-16 08:18:05,195 autoreload 157163 139658325257152 Watching for file changes with StatReloader
+INFO 2025-08-16 08:18:16,627 basehttp 157163 139657451927232 "GET /chat/ HTTP/1.1" 200 31459
+INFO 2025-08-16 08:26:12,254 autoreload 158924 140564509670336 Watching for file changes with StatReloader
+INFO 2025-08-16 08:26:24,065 basehttp 158924 140563567343296 "GET /chat/ HTTP/1.1" 200 31459
+WARNING 2025-08-16 08:26:24,200 log 158924 140563567343296 Not Found: /favicon.ico
+INFO 2025-08-16 08:26:24,707 async_services 158924 140563556853440 Created conversation 5441412f-88d0-4e3b-b732-d7b3defb0c74 with agent Asystent Ogólny
+INFO 2025-08-16 08:26:24,708 basehttp 158924 140563567343296 "POST /api/conversations/create/ HTTP/1.1" 200 71
+INFO 2025-08-16 08:26:29,510 basehttp 158924 140563567343296 "GET /receipts/upload/ HTTP/1.1" 200 21313
+INFO 2025-08-16 08:26:33,611 basehttp 158924 140563567343296 "GET /inventory/inventory/location/pantry/ HTTP/1.1" 200 10863
+ERROR 2025-08-16 08:26:41,559 log 158924 140563567343296 Internal Server Error: /inventory/products/
+Traceback (most recent call last):
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/views/generic/base.py", line 105, in view
+    return self.dispatch(request, *args, **kwargs)
+           ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/views/generic/base.py", line 144, in dispatch
+    return handler(request, *args, **kwargs)
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/views/generic/list.py", line 158, in get
+    self.object_list = self.get_queryset()
+                       ~~~~~~~~~~~~~~~~~^^
+  File "/home/marcin/PycharmProjects/agenty/inventory/views.py", line 138, in get_queryset
+    .annotate(
+     ~~~~~~~~^
+        inventory_count=Count(
+        ^^^^^^^^^^^^^^^^^^^^^^
+    ...<5 lines>...
+        ),
+        ^^
+    )
+    ^
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/db/models/query.py", line 1649, in annotate
+    return self._annotate(args, kwargs, select=True)
+           ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/db/models/query.py", line 1701, in _annotate
+    clone.query.add_annotation(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        annotation,
+        ^^^^^^^^^^^
+        alias,
+        ^^^^^^
+        select=select,
+        ^^^^^^^^^^^^^^
+    )
+    ^
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/db/models/sql/query.py", line 1218, in add_annotation
+    annotation = annotation.resolve_expression(self, allow_joins=True, reuse=None)
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/db/models/aggregates.py", line 176, in resolve_expression
+    result = super().resolve_expression(*args, **kwargs)
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/db/models/aggregates.py", line 63, in resolve_expression
+    c = super().resolve_expression(query, allow_joins, reuse, summarize)
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/db/models/expressions.py", line 300, in resolve_expression
+    expr.resolve_expression(query, allow_joins, reuse, summarize, for_save)
+    ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/db/models/expressions.py", line 902, in resolve_expression
+    return query.resolve_ref(self.name, allow_joins, reuse, summarize)
+           ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/db/models/sql/query.py", line 2049, in resolve_ref
+    join_info = self.setup_joins(
+        field_list, self.get_meta(), self.get_initial_alias(), can_reuse=reuse
+    )
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/db/models/sql/query.py", line 1900, in setup_joins
+    path, final_field, targets, rest = self.names_to_path(
+                                       ~~~~~~~~~~~~~~~~~~^
+        names[:pivot],
+        ^^^^^^^^^^^^^^
+    ...<2 lines>...
+        fail_on_missing=True,
+        ^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/db/models/sql/query.py", line 1805, in names_to_path
+    raise FieldError(
+    ...<2 lines>...
+    )
+django.core.exceptions.FieldError: Cannot resolve keyword 'inventoryitem' into field. Choices are: aliases, barcode, brand, category, category_id, created_at, id, inventory_items, is_active, name, nutrition, receipt_items, reorder_point, updated_at
+ERROR 2025-08-16 08:26:41,562 basehttp 158924 140563567343296 "GET /inventory/products/ HTTP/1.1" 500 142235
+INFO 2025-08-16 08:29:08,098 autoreload 158924 140564509670336 /home/marcin/PycharmProjects/agenty/inventory/views.py changed, reloading.
+INFO 2025-08-16 08:29:08,799 autoreload 159253 139811295742912 Watching for file changes with StatReloader
+INFO 2025-08-16 08:29:34,273 autoreload 159253 139811295742912 /home/marcin/PycharmProjects/agenty/inventory/views.py changed, reloading.
+INFO 2025-08-16 08:29:35,300 autoreload 159333 140117857201088 Watching for file changes with StatReloader
+INFO 2025-08-16 08:30:08,897 autoreload 159333 140117857201088 /home/marcin/PycharmProjects/agenty/inventory/views.py changed, reloading.
+INFO 2025-08-16 08:30:09,799 autoreload 159415 140708327320512 Watching for file changes with StatReloader
+INFO 2025-08-16 08:30:32,239 autoreload 159415 140708327320512 /home/marcin/PycharmProjects/agenty/inventory/views.py changed, reloading.
+INFO 2025-08-16 08:30:33,290 autoreload 159488 140242669951936 Watching for file changes with StatReloader
+INFO 2025-08-16 08:30:50,801 basehttp 159488 140241727911616 "GET /inventory/products/ HTTP/1.1" 200 12000
+ERROR 2025-08-16 08:31:00,109 log 159488 140241727911616 Internal Server Error: /inventory/categories/
+Traceback (most recent call last):
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/core/handlers/base.py", line 220, in _get_response
+    response = response.render()
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/template/response.py", line 114, in render
+    self.content = self.rendered_content
+                   ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/template/response.py", line 90, in rendered_content
+    template = self.resolve_template(self.template_name)
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/template/response.py", line 72, in resolve_template
+    return select_template(template, using=self.using)
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/template/loader.py", line 47, in select_template
+    raise TemplateDoesNotExist(", ".join(template_name_list), chain=chain)
+django.template.exceptions.TemplateDoesNotExist: inventory/category_list.html, inventory/category_list.html
+ERROR 2025-08-16 08:31:00,110 basehttp 159488 140241727911616 "GET /inventory/categories/ HTTP/1.1" 500 92676
+ERROR 2025-08-16 08:31:09,752 log 159488 140241711130304 Internal Server Error: /inventory/categories/
+Traceback (most recent call last):
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/core/handlers/base.py", line 220, in _get_response
+    response = response.render()
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/template/response.py", line 114, in render
+    self.content = self.rendered_content
+                   ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/template/response.py", line 90, in rendered_content
+    template = self.resolve_template(self.template_name)
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/template/response.py", line 72, in resolve_template
+    return select_template(template, using=self.using)
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/template/loader.py", line 47, in select_template
+    raise TemplateDoesNotExist(", ".join(template_name_list), chain=chain)
+django.template.exceptions.TemplateDoesNotExist: inventory/category_list.html, inventory/category_list.html
+ERROR 2025-08-16 08:31:09,753 basehttp 159488 140241711130304 "GET /inventory/categories/ HTTP/1.1" 500 92676
+INFO 2025-08-16 08:32:27,020 basehttp 159488 140241702737600 "GET /inventory/categories/ HTTP/1.1" 200 9733
+INFO 2025-08-16 09:09:44,448 basehttp 159488 140241702737600 "GET / HTTP/1.1" 200 23529
+INFO 2025-08-16 09:09:44,458 basehttp 159488 140241702737600 "GET /chat/ HTTP/1.1" 200 31459
+INFO 2025-08-16 09:09:44,470 basehttp 159488 140241702737600 "GET /inventory/inventory/ HTTP/1.1" 200 11632
+INFO 2025-08-16 09:09:44,482 basehttp 159488 140241702737600 "GET /inventory/products/ HTTP/1.1" 200 12000
+INFO 2025-08-16 09:09:44,490 basehttp 159488 140241702737600 "GET /inventory/categories/ HTTP/1.1" 200 9733
+INFO 2025-08-16 09:09:44,497 basehttp 159488 140241702737600 "GET /receipts/upload/ HTTP/1.1" 200 21313
+INFO 2025-08-16 09:09:44,508 basehttp 159488 140241702737600 "GET /inventory/inventory/location/pantry/ HTTP/1.1" 200 10863
+INFO 2025-08-16 09:10:44,082 autoreload 161077 140032228539328 Watching for file changes with StatReloader
+INFO 2025-08-16 09:10:46,376 basehttp 161077 140030344427200 "GET / HTTP/1.1" 200 23529
+INFO 2025-08-16 09:10:48,396 basehttp 161077 140030344427200 "GET /chat/ HTTP/1.1" 200 31459
+INFO 2025-08-16 09:10:49,060 async_services 161077 140030333937344 Created conversation 0c18d200-b20c-482f-af57-530b2a32638b with agent Asystent Ogólny
+INFO 2025-08-16 09:10:49,061 basehttp 161077 140030344427200 "POST /api/conversations/create/ HTTP/1.1" 200 71
+INFO 2025-08-16 09:10:52,749 async_services 161077 140030333937344 Added user message to conversation 0c18d200-b20c-482f-af57-530b2a32638b
+INFO 2025-08-16 09:10:52,753 agent_factory 161077 140030333937344 Created agent of type: router
+INFO 2025-08-16 09:10:52,753 agents 161077 140030333937344 Greeting detected, skipping router.
+WARNING 2025-08-16 09:10:52,789 agents 161077 140030333937344 Model ollama failed: Client error '404 Not Found' for url 'http://localhost:11434/api/chat'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404
+INFO 2025-08-16 09:10:52,803 async_services 161077 140030333937344 Added assistant message to conversation 0c18d200-b20c-482f-af57-530b2a32638b
+INFO 2025-08-16 09:10:52,803 basehttp 161077 140030344427200 "POST /api/chat/message/ HTTP/1.1" 200 241
+INFO 2025-08-16 09:11:13,073 async_services 161077 140030333937344 Added user message to conversation 0c18d200-b20c-482f-af57-530b2a32638b
+INFO 2025-08-16 09:11:13,077 agent_factory 161077 140030333937344 Created agent of type: router
+WARNING 2025-08-16 09:11:13,094 agents 161077 140030333937344 Model ollama failed: Client error '404 Not Found' for url 'http://localhost:11434/api/chat'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404
+INFO 2025-08-16 09:11:13,094 agents 161077 140030333937344 LLM-based routing selected: 'general_conversation'
+WARNING 2025-08-16 09:11:13,110 agents 161077 140030333937344 Model ollama failed: Client error '404 Not Found' for url 'http://localhost:11434/api/chat'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404
+INFO 2025-08-16 09:11:13,121 async_services 161077 140030333937344 Added assistant message to conversation 0c18d200-b20c-482f-af57-530b2a32638b
+INFO 2025-08-16 09:11:13,122 basehttp 161077 140030344427200 "POST /api/chat/message/ HTTP/1.1" 200 253
+INFO 2025-08-16 09:18:26,018 autoreload 161077 140032228539328 /home/marcin/PycharmProjects/agenty/chatbot/services/agents.py changed, reloading.
+INFO 2025-08-16 09:18:26,724 autoreload 161601 139921648237504 Watching for file changes with StatReloader
+INFO 2025-08-16 09:22:13,790 autoreload 162035 139878199122880 Watching for file changes with StatReloader
+INFO 2025-08-16 09:22:17,988 basehttp 162035 139876987041472 "GET / HTTP/1.1" 200 23529
+INFO 2025-08-16 09:22:19,943 basehttp 162035 139876987041472 "GET /chat/ HTTP/1.1" 200 31459
+INFO 2025-08-16 09:22:20,614 async_services 162035 139876976551616 Created conversation e644f3a9-cd86-46ef-8c75-06e02258513e with agent Asystent Ogólny
+INFO 2025-08-16 09:22:20,615 basehttp 162035 139876987041472 "POST /api/conversations/create/ HTTP/1.1" 200 71
+INFO 2025-08-16 09:22:23,994 async_services 162035 139876976551616 Added user message to conversation e644f3a9-cd86-46ef-8c75-06e02258513e
+INFO 2025-08-16 09:22:23,997 agent_factory 162035 139876976551616 Created agent of type: router
+INFO 2025-08-16 09:22:23,998 agents 162035 139876976551616 Greeting detected, skipping router.
+WARNING 2025-08-16 09:22:24,022 agents 162035 139876976551616 Model ollama failed: Client error '404 Not Found' for url 'http://localhost:11434/api/chat'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404
+INFO 2025-08-16 09:22:24,032 async_services 162035 139876976551616 Added assistant message to conversation e644f3a9-cd86-46ef-8c75-06e02258513e
+INFO 2025-08-16 09:22:24,033 basehttp 162035 139876987041472 "POST /api/chat/message/ HTTP/1.1" 200 241
+INFO 2025-08-16 09:48:51,584 autoreload 165894 139827175599040 Watching for file changes with StatReloader
+INFO 2025-08-16 09:48:54,881 basehttp 165894 139826300974784 "GET / HTTP/1.1" 200 23529
+INFO 2025-08-16 09:48:56,898 basehttp 165894 139826300974784 "GET /chat/ HTTP/1.1" 200 31459
+INFO 2025-08-16 09:48:57,564 async_services 165894 139825680217792 Created conversation ec431c91-881e-4801-a60c-0400aece0a24 with agent Asystent Ogólny
+INFO 2025-08-16 09:48:57,564 basehttp 165894 139826300974784 "POST /api/conversations/create/ HTTP/1.1" 200 71
+INFO 2025-08-16 09:49:01,557 async_services 165894 139825680217792 Added user message to conversation ec431c91-881e-4801-a60c-0400aece0a24
+INFO 2025-08-16 09:49:01,561 agent_factory 165894 139825680217792 Created agent of type: router
+INFO 2025-08-16 09:49:01,561 agents 165894 139825680217792 Greeting detected, skipping router.
+WARNING 2025-08-16 09:49:01,583 agents 165894 139825680217792 Model ollama failed: Client error '404 Not Found' for url 'http://localhost:11434/api/chat'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404
+INFO 2025-08-16 09:49:01,593 async_services 165894 139825680217792 Added assistant message to conversation ec431c91-881e-4801-a60c-0400aece0a24
+INFO 2025-08-16 09:49:01,594 basehttp 165894 139826300974784 "POST /api/chat/message/ HTTP/1.1" 200 241
+INFO 2025-08-16 10:13:05,478 autoreload 166749 140648797752256 Watching for file changes with StatReloader
+INFO 2025-08-16 10:13:09,599 basehttp 166749 140647584495296 "GET /chat/ HTTP/1.1" 200 31459
+INFO 2025-08-16 10:13:10,228 async_services 166749 140647574005440 Created conversation 3579ee13-4bcd-4218-86de-d358e38abcfa with agent Asystent Ogólny
+INFO 2025-08-16 10:13:10,228 basehttp 166749 140647584495296 "POST /api/conversations/create/ HTTP/1.1" 200 71
+INFO 2025-08-16 10:13:15,098 async_services 166749 140647574005440 Added user message to conversation 3579ee13-4bcd-4218-86de-d358e38abcfa
+INFO 2025-08-16 10:13:15,102 agent_factory 166749 140647574005440 Created agent of type: router
+INFO 2025-08-16 10:13:15,102 agents 166749 140647574005440 Greeting detected, skipping router.
+WARNING 2025-08-16 10:13:15,124 agents 166749 140647574005440 Model ollama failed: Client error '404 Not Found' for url 'http://localhost:11434/api/chat'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404
+INFO 2025-08-16 10:13:15,137 async_services 166749 140647574005440 Added assistant message to conversation 3579ee13-4bcd-4218-86de-d358e38abcfa
+INFO 2025-08-16 10:13:15,138 basehttp 166749 140647584495296 "POST /api/chat/message/ HTTP/1.1" 200 241
+INFO 2025-08-16 10:15:02,517 autoreload 166749 140648797752256 /home/marcin/PycharmProjects/agenty/chatbot/services/agents.py changed, reloading.
+INFO 2025-08-16 10:15:03,519 autoreload 167046 140031547546560 Watching for file changes with StatReloader
+INFO 2025-08-16 10:15:07,682 autoreload 167046 140031547546560 /home/marcin/PycharmProjects/agenty/chatbot/services/agents.py changed, reloading.
+INFO 2025-08-16 10:15:08,489 autoreload 167090 139678825286592 Watching for file changes with StatReloader
+INFO 2025-08-16 10:16:51,232 autoreload 167262 140556439120832 Watching for file changes with StatReloader
+INFO 2025-08-16 10:16:54,553 basehttp 167262 140554616698560 "GET /chat/ HTTP/1.1" 200 31459
+INFO 2025-08-16 10:16:55,191 async_services 167262 140554608305856 Created conversation ad57bdcd-6a68-46c9-af1b-eb01c79f43f1 with agent Asystent Ogólny
+INFO 2025-08-16 10:16:55,192 basehttp 167262 140554616698560 "POST /api/conversations/create/ HTTP/1.1" 200 71
+INFO 2025-08-16 10:16:59,029 async_services 167262 140554608305856 Added user message to conversation ad57bdcd-6a68-46c9-af1b-eb01c79f43f1
+INFO 2025-08-16 10:16:59,033 agent_factory 167262 140554608305856 Created agent of type: router
+INFO 2025-08-16 10:16:59,033 agents 167262 140554608305856 Greeting detected, skipping router.
+WARNING 2025-08-16 10:16:59,033 agents 167262 140554608305856 Ollama server not available, trying next fallback
+INFO 2025-08-16 10:16:59,043 async_services 167262 140554608305856 Added assistant message to conversation ad57bdcd-6a68-46c9-af1b-eb01c79f43f1
+INFO 2025-08-16 10:16:59,044 basehttp 167262 140554616698560 "POST /api/chat/message/ HTTP/1.1" 200 241
+INFO 2025-08-16 10:18:15,622 autoreload 167262 140556439120832 /home/marcin/PycharmProjects/agenty/chatbot/services/agents.py changed, reloading.
+INFO 2025-08-16 10:18:16,241 autoreload 167393 140376484481984 Watching for file changes with StatReloader
+INFO 2025-08-16 10:18:45,971 autoreload 167538 139683520379840 Watching for file changes with StatReloader
+INFO 2025-08-16 10:18:49,563 basehttp 167538 139682174203584 "GET /chat/ HTTP/1.1" 200 31459
+INFO 2025-08-16 10:18:50,194 async_services 167538 139682163713728 Created conversation 605859c1-e2e2-48cf-bc98-1ba0a0bc51ca with agent Asystent Ogólny
+INFO 2025-08-16 10:18:50,195 basehttp 167538 139682174203584 "POST /api/conversations/create/ HTTP/1.1" 200 71
+INFO 2025-08-16 10:18:53,913 async_services 167538 139682163713728 Added user message to conversation 605859c1-e2e2-48cf-bc98-1ba0a0bc51ca
+INFO 2025-08-16 10:18:53,916 agent_factory 167538 139682163713728 Created agent of type: router
+INFO 2025-08-16 10:18:53,916 agents 167538 139682163713728 Greeting detected, skipping router.
+ERROR 2025-08-16 10:18:53,916 agents 167538 139682163713728 Ollama health check failed: AsyncClient.__init__() got an unexpected keyword argument 'proxies'
+Traceback (most recent call last):
+  File "/home/marcin/PycharmProjects/agenty/chatbot/services/agents.py", line 72, in health_check_ollama
+    async with httpx.AsyncClient(timeout=5.0, proxies=proxies) as client:
+               ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: AsyncClient.__init__() got an unexpected keyword argument 'proxies'
+WARNING 2025-08-16 10:18:53,917 agents 167538 139682163713728 Ollama server not available, trying next fallback
+INFO 2025-08-16 10:18:53,927 async_services 167538 139682163713728 Added assistant message to conversation 605859c1-e2e2-48cf-bc98-1ba0a0bc51ca
+INFO 2025-08-16 10:18:53,927 basehttp 167538 139682174203584 "POST /api/chat/message/ HTTP/1.1" 200 241
+INFO 2025-08-16 10:24:20,105 autoreload 168011 140328222690240 Watching for file changes with StatReloader
+INFO 2025-08-16 10:24:23,450 basehttp 168011 140327279130304 "GET / HTTP/1.1" 200 23529
+INFO 2025-08-16 10:24:27,538 basehttp 168011 140327279130304 "GET /chat/ HTTP/1.1" 200 31459
+INFO 2025-08-16 10:24:28,205 async_services 168011 140327268640448 Created conversation 13a93495-e1c0-4140-9221-f085124a628c with agent Asystent Ogólny
+INFO 2025-08-16 10:24:28,205 basehttp 168011 140327279130304 "POST /api/conversations/create/ HTTP/1.1" 200 71
+INFO 2025-08-16 10:24:31,814 async_services 168011 140327268640448 Added user message to conversation 13a93495-e1c0-4140-9221-f085124a628c
+INFO 2025-08-16 10:24:31,817 agent_factory 168011 140327268640448 Created agent of type: router
+INFO 2025-08-16 10:24:31,817 agents 168011 140327268640448 Greeting detected, skipping router.
+WARNING 2025-08-16 10:24:31,840 agents 168011 140327268640448 Model ollama failed: Client error '404 Not Found' for url 'http://localhost:11434/api/chat'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404
+INFO 2025-08-16 10:24:31,850 async_services 168011 140327268640448 Added assistant message to conversation 13a93495-e1c0-4140-9221-f085124a628c
+INFO 2025-08-16 10:24:31,851 basehttp 168011 140327279130304 "POST /api/chat/message/ HTTP/1.1" 200 241
+INFO 2025-08-16 10:25:09,079 autoreload 168011 140328222690240 /home/marcin/PycharmProjects/agenty/chatbot/services/agents.py changed, reloading.
+INFO 2025-08-16 10:25:10,086 autoreload 168164 139641053404096 Watching for file changes with StatReloader
+INFO 2025-08-16 10:25:12,219 autoreload 168164 139641053404096 /home/marcin/PycharmProjects/agenty/chatbot/services/agents.py changed, reloading.
+INFO 2025-08-16 10:25:13,045 autoreload 168213 140524132686784 Watching for file changes with StatReloader
+INFO 2025-08-16 10:26:18,598 autoreload 168353 140598600289216 Watching for file changes with StatReloader
+INFO 2025-08-16 10:26:23,247 basehttp 168353 140597388113600 "GET /inventory/products/ HTTP/1.1" 200 12000
+INFO 2025-08-16 10:26:26,977 basehttp 168353 140597388113600 "GET /inventory/ HTTP/1.1" 200 30597
+INFO 2025-08-16 10:26:28,374 basehttp 168353 140597388113600 "GET /inventory/ HTTP/1.1" 200 30597
+INFO 2025-08-16 10:26:32,775 basehttp 168353 140597388113600 "GET /inventory/ HTTP/1.1" 200 30597
+INFO 2025-08-16 10:26:35,901 basehttp 168353 140597388113600 "GET /inventory/products/ HTTP/1.1" 200 12000
+ERROR 2025-08-16 10:26:36,924 log 168353 140597388113600 Internal Server Error: /inventory/receipts/
+Traceback (most recent call last):
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/core/handlers/base.py", line 220, in _get_response
+    response = response.render()
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/template/response.py", line 114, in render
+    self.content = self.rendered_content
+                   ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/template/response.py", line 90, in rendered_content
+    template = self.resolve_template(self.template_name)
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/template/response.py", line 72, in resolve_template
+    return select_template(template, using=self.using)
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/template/loader.py", line 47, in select_template
+    raise TemplateDoesNotExist(", ".join(template_name_list), chain=chain)
+django.template.exceptions.TemplateDoesNotExist: inventory/receipt_list.html, inventory/receipt_list.html
+ERROR 2025-08-16 10:26:36,925 basehttp 168353 140597388113600 "GET /inventory/receipts/ HTTP/1.1" 500 94745
+INFO 2025-08-16 10:26:41,346 basehttp 168353 140597388113600 "GET /inventory/ HTTP/1.1" 200 30597
+ERROR 2025-08-16 10:26:47,547 log 168353 140597388113600 Internal Server Error: /inventory/receipts/
+Traceback (most recent call last):
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/core/handlers/base.py", line 220, in _get_response
+    response = response.render()
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/template/response.py", line 114, in render
+    self.content = self.rendered_content
+                   ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/template/response.py", line 90, in rendered_content
+    template = self.resolve_template(self.template_name)
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/template/response.py", line 72, in resolve_template
+    return select_template(template, using=self.using)
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/template/loader.py", line 47, in select_template
+    raise TemplateDoesNotExist(", ".join(template_name_list), chain=chain)
+django.template.exceptions.TemplateDoesNotExist: inventory/receipt_list.html, inventory/receipt_list.html
+ERROR 2025-08-16 10:26:47,547 basehttp 168353 140597388113600 "GET /inventory/receipts/ HTTP/1.1" 500 94736
+INFO 2025-08-16 10:30:43,798 autoreload 168668 139799415303104 Watching for file changes with StatReloader
+INFO 2025-08-16 10:30:47,396 basehttp 168668 139798471767744 "GET /inventory/receipts/ HTTP/1.1" 200 12304
+INFO 2025-08-16 10:30:48,951 basehttp 168668 139798471767744 "GET /inventory/ HTTP/1.1" 200 30597
+INFO 2025-08-16 10:30:58,862 basehttp 168668 139798471767744 "GET /inventory/inventory/ HTTP/1.1" 200 11632
+INFO 2025-08-16 10:30:59,784 basehttp 168668 139798471767744 "GET /inventory/products/ HTTP/1.1" 200 12000
+INFO 2025-08-16 10:31:00,550 basehttp 168668 139798471767744 "GET /inventory/receipts/ HTTP/1.1" 200 12304
+INFO 2025-08-16 10:31:01,780 basehttp 168668 139798471767744 "GET /inventory/ HTTP/1.1" 200 30597
+INFO 2025-08-16 10:31:09,554 basehttp 168668 139798471767744 "GET / HTTP/1.1" 200 23503
+INFO 2025-08-16 10:31:15,804 basehttp 168668 139798471767744 "GET /chat/ HTTP/1.1" 200 31459
+INFO 2025-08-16 10:31:16,462 async_services 168668 139798461277888 Created conversation 649d252f-d7f0-4b42-a5e1-8bc46f7869cd with agent Asystent Ogólny
+INFO 2025-08-16 10:31:16,463 basehttp 168668 139798471767744 "POST /api/conversations/create/ HTTP/1.1" 200 71
+INFO 2025-08-16 10:31:20,071 async_services 168668 139798461277888 Added user message to conversation 649d252f-d7f0-4b42-a5e1-8bc46f7869cd
+INFO 2025-08-16 10:31:20,074 agent_factory 168668 139798461277888 Created agent of type: router
+INFO 2025-08-16 10:31:20,074 agents 168668 139798461277888 Greeting detected, skipping router.
+WARNING 2025-08-16 10:31:20,075 agents 168668 139798461277888 Ollama server not available, trying next fallback
+INFO 2025-08-16 10:31:20,085 async_services 168668 139798461277888 Added assistant message to conversation 649d252f-d7f0-4b42-a5e1-8bc46f7869cd
+INFO 2025-08-16 10:31:20,085 basehttp 168668 139798471767744 "POST /api/chat/message/ HTTP/1.1" 200 241
+INFO 2025-08-16 10:33:59,660 autoreload 168668 139799415303104 /home/marcin/PycharmProjects/agenty/chatbot/services/agents.py changed, reloading.
+INFO 2025-08-16 10:34:00,398 autoreload 169910 140062400834496 Watching for file changes with StatReloader
+INFO 2025-08-16 10:34:26,210 autoreload 170058 140204190743488 Watching for file changes with StatReloader
+INFO 2025-08-16 10:34:29,861 basehttp 170058 140203318572736 "GET /chat/ HTTP/1.1" 200 31459
+INFO 2025-08-16 10:34:30,495 async_services 170058 140203232585408 Created conversation 78c5ea13-da36-4413-b44e-61f4bc524d27 with agent Asystent Ogólny
+INFO 2025-08-16 10:34:30,496 basehttp 170058 140203318572736 "POST /api/conversations/create/ HTTP/1.1" 200 71
+INFO 2025-08-16 10:34:32,232 basehttp 170058 140203318572736 "GET /inventory/inventory/location/pantry/ HTTP/1.1" 200 10863
+INFO 2025-08-16 10:34:35,986 basehttp 170058 140203318572736 "GET /inventory/inventory/expiring/ HTTP/1.1" 200 8494
+ERROR 2025-08-16 10:34:36,924 log 170058 140203318572736 Internal Server Error: /inventory/inventory/low-stock/
+Traceback (most recent call last):
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/template/smartif.py", line 180, in translate_token
+    op = OPERATORS[token]
+         ~~~~~~~~~^^^^^^^
+KeyError: 'diff|multiply:0.5'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "/home/marcin/PycharmProjects/agenty/inventory/views.py", line 310, in low_stock_items
+    return render(request, "inventory/low_stock_items.html", context)
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/shortcuts.py", line 25, in render
+    content = loader.render_to_string(template_name, context, request, using=using)
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/template/loader.py", line 61, in render_to_string
+    template = get_template(template_name, using=using)
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/template/loader.py", line 15, in get_template
+    return engine.get_template(template_name)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/template/backends/django.py", line 79, in get_template
+    return Template(self.engine.get_template(template_name), self)
+                    ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/template/engine.py", line 177, in get_template
+    template, origin = self.find_template(template_name)
+                       ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/template/engine.py", line 159, in find_template
+    template = loader.get_template(name, skip=skip)
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/template/loaders/cached.py", line 57, in get_template
+    template = super().get_template(template_name, skip)
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/template/loaders/base.py", line 28, in get_template
+    return Template(
+        contents,
+    ...<2 lines>...
+        self.engine,
+    )
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/template/base.py", line 154, in __init__
+    self.nodelist = self.compile_nodelist()
+                    ~~~~~~~~~~~~~~~~~~~~~^^
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/template/base.py", line 196, in compile_nodelist
+    nodelist = parser.parse()
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/template/base.py", line 518, in parse
+    raise self.error(token, e)
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/template/base.py", line 516, in parse
+    compiled_result = compile_func(self, token)
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/template/loader_tags.py", line 299, in do_extends
+    nodelist = parser.parse()
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/template/base.py", line 518, in parse
+    raise self.error(token, e)
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/template/base.py", line 516, in parse
+    compiled_result = compile_func(self, token)
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/template/loader_tags.py", line 234, in do_block
+    nodelist = parser.parse(("endblock",))
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/template/base.py", line 518, in parse
+    raise self.error(token, e)
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/template/base.py", line 516, in parse
+    compiled_result = compile_func(self, token)
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/template/defaulttags.py", line 962, in do_if
+    nodelist = parser.parse(("elif", "else", "endif"))
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/template/base.py", line 518, in parse
+    raise self.error(token, e)
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/template/base.py", line 516, in parse
+    compiled_result = compile_func(self, token)
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/template/defaulttags.py", line 862, in do_for
+    nodelist_loop = parser.parse(
+        (
+    ...<2 lines>...
+        )
+    )
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/template/base.py", line 518, in parse
+    raise self.error(token, e)
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/template/base.py", line 516, in parse
+    compiled_result = compile_func(self, token)
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/template/defaulttags.py", line 1540, in do_with
+    nodelist = parser.parse(("endwith",))
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/template/base.py", line 518, in parse
+    raise self.error(token, e)
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/template/base.py", line 516, in parse
+    compiled_result = compile_func(self, token)
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/template/defaulttags.py", line 969, in do_if
+    condition = TemplateIfParser(parser, bits).parse()
+                ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/template/defaulttags.py", line 894, in __init__
+    super().__init__(*args, **kwargs)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/template/smartif.py", line 171, in __init__
+    mapped_tokens.append(self.translate_token(token))
+                         ~~~~~~~~~~~~~~~~~~~~^^^^^^^
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/template/smartif.py", line 182, in translate_token
+    return self.create_var(token)
+           ~~~~~~~~~~~~~~~^^^^^^^
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/template/defaulttags.py", line 897, in create_var
+    return TemplateLiteral(self.template_parser.compile_filter(value), value)
+                           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/template/base.py", line 609, in compile_filter
+    return FilterExpression(token, self)
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/template/base.py", line 705, in __init__
+    filter_func = parser.find_filter(filter_name)
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/template/base.py", line 615, in find_filter
+    raise TemplateSyntaxError("Invalid filter: '%s'" % filter_name)
+django.template.exceptions.TemplateSyntaxError: Invalid filter: 'multiply'
+ERROR 2025-08-16 10:34:36,928 basehttp 170058 140203318572736 "GET /inventory/inventory/low-stock/ HTTP/1.1" 500 338408
+INFO 2025-08-16 10:34:43,484 basehttp 170058 140203318572736 "GET /inventory/ HTTP/1.1" 200 30597
+INFO 2025-08-16 10:34:47,873 basehttp 170058 140203318572736 "GET /inventory/ HTTP/1.1" 200 30597
+INFO 2025-08-16 10:34:50,567 basehttp 170058 140203318572736 "GET /inventory/inventory/ HTTP/1.1" 200 11632
+INFO 2025-08-16 10:34:54,945 basehttp 170058 140203318572736 "GET /inventory/inventory/location/cabinet/ HTTP/1.1" 200 10833
+INFO 2025-08-16 10:34:56,212 basehttp 170058 140203318572736 "GET /inventory/inventory/location/freezer/ HTTP/1.1" 200 10861
+INFO 2025-08-16 10:34:57,060 basehttp 170058 140203318572736 "GET /inventory/inventory/location/pantry/ HTTP/1.1" 200 10863
+INFO 2025-08-16 10:34:57,876 basehttp 170058 140203318572736 "GET /inventory/inventory/location/fridge/ HTTP/1.1" 200 10836
+ERROR 2025-08-16 10:34:58,986 log 170058 140203318572736 Internal Server Error: /inventory/receipts/recent/
+Traceback (most recent call last):
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "/home/marcin/PycharmProjects/agenty/inventory/views.py", line 349, in recent_receipts
+    return render(request, "inventory/recent_receipts.html", context)
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/shortcuts.py", line 25, in render
+    content = loader.render_to_string(template_name, context, request, using=using)
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/template/loader.py", line 61, in render_to_string
+    template = get_template(template_name, using=using)
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/template/loader.py", line 19, in get_template
+    raise TemplateDoesNotExist(template_name, chain=chain)
+django.template.exceptions.TemplateDoesNotExist: inventory/recent_receipts.html
+ERROR 2025-08-16 10:34:58,987 basehttp 170058 140203318572736 "GET /inventory/receipts/recent/ HTTP/1.1" 500 92998
+INFO 2025-08-16 10:35:02,856 basehttp 170058 140203318572736 "GET /inventory/inventory/expiring/ HTTP/1.1" 200 8494
+ERROR 2025-08-16 10:35:03,754 log 170058 140203318572736 Internal Server Error: /inventory/inventory/low-stock/
+Traceback (most recent call last):
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/template/smartif.py", line 180, in translate_token
+    op = OPERATORS[token]
+         ~~~~~~~~~^^^^^^^
+KeyError: 'diff|multiply:0.5'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "/home/marcin/PycharmProjects/agenty/inventory/views.py", line 310, in low_stock_items
+    return render(request, "inventory/low_stock_items.html", context)
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/shortcuts.py", line 25, in render
+    content = loader.render_to_string(template_name, context, request, using=using)
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/template/loader.py", line 61, in render_to_string
+    template = get_template(template_name, using=using)
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/template/loader.py", line 15, in get_template
+    return engine.get_template(template_name)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/template/backends/django.py", line 79, in get_template
+    return Template(self.engine.get_template(template_name), self)
+                    ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/template/engine.py", line 177, in get_template
+    template, origin = self.find_template(template_name)
+                       ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/template/engine.py", line 159, in find_template
+    template = loader.get_template(name, skip=skip)
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/template/loaders/cached.py", line 57, in get_template
+    template = super().get_template(template_name, skip)
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/template/loaders/base.py", line 28, in get_template
+    return Template(
+        contents,
+    ...<2 lines>...
+        self.engine,
+    )
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/template/base.py", line 154, in __init__
+    self.nodelist = self.compile_nodelist()
+                    ~~~~~~~~~~~~~~~~~~~~~^^
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/template/base.py", line 196, in compile_nodelist
+    nodelist = parser.parse()
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/template/base.py", line 518, in parse
+    raise self.error(token, e)
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/template/base.py", line 516, in parse
+    compiled_result = compile_func(self, token)
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/template/loader_tags.py", line 299, in do_extends
+    nodelist = parser.parse()
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/template/base.py", line 518, in parse
+    raise self.error(token, e)
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/template/base.py", line 516, in parse
+    compiled_result = compile_func(self, token)
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/template/loader_tags.py", line 234, in do_block
+    nodelist = parser.parse(("endblock",))
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/template/base.py", line 518, in parse
+    raise self.error(token, e)
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/template/base.py", line 516, in parse
+    compiled_result = compile_func(self, token)
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/template/defaulttags.py", line 962, in do_if
+    nodelist = parser.parse(("elif", "else", "endif"))
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/template/base.py", line 518, in parse
+    raise self.error(token, e)
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/template/base.py", line 516, in parse
+    compiled_result = compile_func(self, token)
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/template/defaulttags.py", line 862, in do_for
+    nodelist_loop = parser.parse(
+        (
+    ...<2 lines>...
+        )
+    )
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/template/base.py", line 518, in parse
+    raise self.error(token, e)
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/template/base.py", line 516, in parse
+    compiled_result = compile_func(self, token)
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/template/defaulttags.py", line 1540, in do_with
+    nodelist = parser.parse(("endwith",))
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/template/base.py", line 518, in parse
+    raise self.error(token, e)
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/template/base.py", line 516, in parse
+    compiled_result = compile_func(self, token)
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/template/defaulttags.py", line 969, in do_if
+    condition = TemplateIfParser(parser, bits).parse()
+                ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/template/defaulttags.py", line 894, in __init__
+    super().__init__(*args, **kwargs)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/template/smartif.py", line 171, in __init__
+    mapped_tokens.append(self.translate_token(token))
+                         ~~~~~~~~~~~~~~~~~~~~^^^^^^^
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/template/smartif.py", line 182, in translate_token
+    return self.create_var(token)
+           ~~~~~~~~~~~~~~~^^^^^^^
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/template/defaulttags.py", line 897, in create_var
+    return TemplateLiteral(self.template_parser.compile_filter(value), value)
+                           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/template/base.py", line 609, in compile_filter
+    return FilterExpression(token, self)
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/template/base.py", line 705, in __init__
+    filter_func = parser.find_filter(filter_name)
+  File "/home/marcin/PycharmProjects/agenty/.venv/lib/python3.13/site-packages/django/template/base.py", line 615, in find_filter
+    raise TemplateSyntaxError("Invalid filter: '%s'" % filter_name)
+django.template.exceptions.TemplateSyntaxError: Invalid filter: 'multiply'
+ERROR 2025-08-16 10:35:03,757 basehttp 170058 140203318572736 "GET /inventory/inventory/low-stock/ HTTP/1.1" 500 338408
+INFO 2025-08-16 10:37:53,252 autoreload 170301 139729744432064 Watching for file changes with StatReloader
+INFO 2025-08-16 10:37:56,174 basehttp 170301 139728398579392 "GET /inventory/inventory/expiring/ HTTP/1.1" 200 8722
+INFO 2025-08-16 10:37:58,431 basehttp 170301 139728398579392 "GET / HTTP/1.1" 200 23503
+INFO 2025-08-16 10:38:02,942 basehttp 170301 139728398579392 "GET /chat/ HTTP/1.1" 200 31459
+INFO 2025-08-16 10:38:03,588 async_services 170301 139728388089536 Created conversation 21be4818-fb8d-4962-becb-a8a937f3a8cc with agent Asystent Ogólny
+INFO 2025-08-16 10:38:03,589 basehttp 170301 139728398579392 "POST /api/conversations/create/ HTTP/1.1" 200 71
+INFO 2025-08-16 10:38:09,704 async_services 170301 139728388089536 Added user message to conversation 21be4818-fb8d-4962-becb-a8a937f3a8cc
+INFO 2025-08-16 10:38:09,708 agent_factory 170301 139728388089536 Created agent of type: router
+INFO 2025-08-16 10:38:09,708 agents 170301 139728388089536 Greeting detected, skipping router.
+ERROR 2025-08-16 10:38:09,709 agents 170301 139728388089536 Ollama health check failed: AsyncClient.__init__() got an unexpected keyword argument 'proxies'
+Traceback (most recent call last):
+  File "/home/marcin/PycharmProjects/agenty/chatbot/services/agents.py", line 72, in health_check_ollama
+    async with httpx.AsyncClient(timeout=5.0, proxies=proxies) as client:
+               ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: AsyncClient.__init__() got an unexpected keyword argument 'proxies'
+WARNING 2025-08-16 10:38:09,709 agents 170301 139728388089536 Ollama server not available, trying next fallback
+INFO 2025-08-16 10:38:09,720 async_services 170301 139728388089536 Added assistant message to conversation 21be4818-fb8d-4962-becb-a8a937f3a8cc
+INFO 2025-08-16 10:38:09,721 basehttp 170301 139728398579392 "POST /api/chat/message/ HTTP/1.1" 200 241
+INFO 2025-08-16 10:39:14,626 autoreload 170301 139729744432064 /home/marcin/PycharmProjects/agenty/chatbot/services/agents.py changed, reloading.
+INFO 2025-08-16 10:39:15,289 autoreload 170400 139719685807040 Watching for file changes with StatReloader
+INFO 2025-08-16 10:39:18,443 autoreload 170400 139719685807040 /home/marcin/PycharmProjects/agenty/chatbot/services/agents.py changed, reloading.
+INFO 2025-08-16 10:39:19,257 autoreload 170443 140297126394816 Watching for file changes with StatReloader
+INFO 2025-08-16 10:40:06,449 basehttp 170443 140296180463296 "GET /chat/ HTTP/1.1" 200 31459
+INFO 2025-08-16 10:40:07,086 async_services 170443 140296165779136 Created conversation c03d8ff9-8927-49e4-817a-b9614fdd140d with agent Asystent Ogólny
+INFO 2025-08-16 10:40:07,088 basehttp 170443 140296180463296 "POST /api/conversations/create/ HTTP/1.1" 200 71
+INFO 2025-08-16 10:40:10,716 async_services 170443 140296165779136 Added user message to conversation c03d8ff9-8927-49e4-817a-b9614fdd140d
+INFO 2025-08-16 10:40:10,720 agent_factory 170443 140296165779136 Created agent of type: router
+INFO 2025-08-16 10:40:10,720 agents 170443 140296165779136 Greeting detected, skipping router.
+WARNING 2025-08-16 10:40:10,743 agents 170443 140296165779136 Model ollama failed: Client error '404 Not Found' for url 'http://localhost:11434/api/chat'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404
+INFO 2025-08-16 10:40:10,753 async_services 170443 140296165779136 Added assistant message to conversation c03d8ff9-8927-49e4-817a-b9614fdd140d
+INFO 2025-08-16 10:40:10,754 basehttp 170443 140296180463296 "POST /api/chat/message/ HTTP/1.1" 200 241
+INFO 2025-08-16 10:44:29,919 autoreload 170443 140297126394816 /home/marcin/PycharmProjects/agenty/chatbot/services/agents.py changed, reloading.
+INFO 2025-08-16 10:44:30,878 autoreload 170831 140650402454464 Watching for file changes with StatReloader
+INFO 2025-08-16 10:44:34,044 autoreload 170831 140650402454464 /home/marcin/PycharmProjects/agenty/chatbot/services/agents.py changed, reloading.
+INFO 2025-08-16 10:44:34,855 autoreload 170879 140217434569664 Watching for file changes with StatReloader
+INFO 2025-08-16 10:45:48,726 autoreload 171119 140621052844992 Watching for file changes with StatReloader
+INFO 2025-08-16 10:45:52,356 basehttp 171119 140620106561216 "GET / HTTP/1.1" 200 23503
+INFO 2025-08-16 10:45:54,768 basehttp 171119 140620106561216 "GET /chat/ HTTP/1.1" 200 31459
+INFO 2025-08-16 10:45:55,409 async_services 171119 140620093974208 Created conversation afaa27ea-7684-4479-8e94-d05cd6845de7 with agent Asystent Ogólny
+INFO 2025-08-16 10:45:55,410 basehttp 171119 140620106561216 "POST /api/conversations/create/ HTTP/1.1" 200 71
+INFO 2025-08-16 10:46:02,283 async_services 171119 140620093974208 Added user message to conversation afaa27ea-7684-4479-8e94-d05cd6845de7
+INFO 2025-08-16 10:46:02,286 agent_factory 171119 140620093974208 Created agent of type: router
+INFO 2025-08-16 10:46:02,286 agents 171119 140620093974208 Greeting detected, skipping router.
+ERROR 2025-08-16 10:46:02,286 agents 171119 140620093974208 Ollama health check failed: AsyncClient.__init__() got an unexpected keyword argument 'proxies'
+Traceback (most recent call last):
+  File "/home/marcin/PycharmProjects/agenty/chatbot/services/agents.py", line 72, in health_check_ollama
+    async with httpx.AsyncClient(timeout=5.0, proxies=proxies) as client:
+               ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: AsyncClient.__init__() got an unexpected keyword argument 'proxies'
+WARNING 2025-08-16 10:46:02,286 agents 171119 140620093974208 Ollama server not available, trying next fallback
+INFO 2025-08-16 10:46:02,297 async_services 171119 140620093974208 Added assistant message to conversation afaa27ea-7684-4479-8e94-d05cd6845de7
+INFO 2025-08-16 10:46:02,298 basehttp 171119 140620106561216 "POST /api/chat/message/ HTTP/1.1" 200 241
+INFO 2025-08-16 10:51:12,050 autoreload 171535 139899554233280 Watching for file changes with StatReloader
+INFO 2025-08-16 10:51:14,961 basehttp 171535 139898611824320 "GET / HTTP/1.1" 200 23503
+INFO 2025-08-16 10:51:16,685 basehttp 171535 139898611824320 "GET /chat/ HTTP/1.1" 200 31459
+INFO 2025-08-16 10:51:17,328 async_services 171535 139898601334464 Created conversation ce4dd2be-0a7d-48fe-86e2-97d0d3223867 with agent Asystent Ogólny
+INFO 2025-08-16 10:51:17,330 basehttp 171535 139898611824320 "POST /api/conversations/create/ HTTP/1.1" 200 71
+INFO 2025-08-16 10:51:20,596 async_services 171535 139898601334464 Added user message to conversation ce4dd2be-0a7d-48fe-86e2-97d0d3223867
+INFO 2025-08-16 10:51:20,600 agent_factory 171535 139898601334464 Created agent of type: router
+INFO 2025-08-16 10:51:20,600 agents 171535 139898601334464 Greeting detected, skipping router.
+ERROR 2025-08-16 10:51:20,600 agents 171535 139898601334464 Ollama health check failed: AsyncClient.__init__() got an unexpected keyword argument 'proxies'
+Traceback (most recent call last):
+  File "/home/marcin/PycharmProjects/agenty/chatbot/services/agents.py", line 72, in health_check_ollama
+    async with httpx.AsyncClient(timeout=5.0, proxies=proxies) as client:
+               ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: AsyncClient.__init__() got an unexpected keyword argument 'proxies'
+WARNING 2025-08-16 10:51:20,600 agents 171535 139898601334464 Ollama server not available, trying next fallback
+INFO 2025-08-16 10:51:20,611 async_services 171535 139898601334464 Added assistant message to conversation ce4dd2be-0a7d-48fe-86e2-97d0d3223867
+INFO 2025-08-16 10:51:20,612 basehttp 171535 139898611824320 "POST /api/chat/message/ HTTP/1.1" 200 241
+INFO 2025-08-16 10:52:31,364 autoreload 171535 139899554233280 /home/marcin/PycharmProjects/agenty/chatbot/services/agents.py changed, reloading.
+INFO 2025-08-16 10:52:32,067 autoreload 171642 140481065851840 Watching for file changes with StatReloader
+INFO 2025-08-16 10:52:34,223 autoreload 171642 140481065851840 /home/marcin/PycharmProjects/agenty/chatbot/services/agents.py changed, reloading.
+INFO 2025-08-16 10:52:35,057 autoreload 171685 140173939825600 Watching for file changes with StatReloader
+INFO 2025-08-16 10:53:13,947 autoreload 171841 139663128210368 Watching for file changes with StatReloader
+INFO 2025-08-16 10:53:17,577 basehttp 171841 139661244626624 "GET /chat/ HTTP/1.1" 200 31459
+INFO 2025-08-16 10:53:18,212 async_services 171841 139661234136768 Created conversation 426fdba3-09db-439d-b4a4-5ccf5c0307f2 with agent Asystent Ogólny
+INFO 2025-08-16 10:53:18,214 basehttp 171841 139661244626624 "POST /api/conversations/create/ HTTP/1.1" 200 71
+INFO 2025-08-16 10:53:21,581 async_services 171841 139661234136768 Added user message to conversation 426fdba3-09db-439d-b4a4-5ccf5c0307f2
+INFO 2025-08-16 10:53:21,585 agent_factory 171841 139661234136768 Created agent of type: router
+INFO 2025-08-16 10:53:21,585 agents 171841 139661234136768 Greeting detected, skipping router.
+WARNING 2025-08-16 10:53:21,608 agents 171841 139661234136768 Model ollama failed: Client error '404 Not Found' for url 'http://localhost:11434/api/chat'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404
+INFO 2025-08-16 10:53:21,619 async_services 171841 139661234136768 Added assistant message to conversation 426fdba3-09db-439d-b4a4-5ccf5c0307f2
+INFO 2025-08-16 10:53:21,620 basehttp 171841 139661244626624 "POST /api/chat/message/ HTTP/1.1" 200 241
+INFO 2025-08-16 10:54:02,940 autoreload 171841 139663128210368 /home/marcin/PycharmProjects/agenty/chatbot/services/agents.py changed, reloading.
+INFO 2025-08-16 10:54:03,932 autoreload 171924 140648483486656 Watching for file changes with StatReloader
+INFO 2025-08-16 10:54:07,083 autoreload 171924 140648483486656 /home/marcin/PycharmProjects/agenty/chatbot/services/agents.py changed, reloading.
+INFO 2025-08-16 10:54:07,906 autoreload 171968 140317973932992 Watching for file changes with StatReloader
+INFO 2025-08-16 10:54:33,102 autoreload 172109 140592313256896 Watching for file changes with StatReloader
+INFO 2025-08-16 10:54:46,371 basehttp 172109 140590429763264 "GET /chat/ HTTP/1.1" 200 31459
+INFO 2025-08-16 10:54:47,036 async_services 172109 140590419273408 Created conversation eb16e4ef-39fe-485a-b69f-6812f7ba3984 with agent Asystent Ogólny
+INFO 2025-08-16 10:54:47,037 basehttp 172109 140590429763264 "POST /api/conversations/create/ HTTP/1.1" 200 71
+INFO 2025-08-16 10:54:50,154 async_services 172109 140590419273408 Added user message to conversation eb16e4ef-39fe-485a-b69f-6812f7ba3984
+INFO 2025-08-16 10:54:50,158 agent_factory 172109 140590419273408 Created agent of type: router
+INFO 2025-08-16 10:54:50,158 agents 172109 140590419273408 Greeting detected, skipping router.
+WARNING 2025-08-16 10:54:50,182 agents 172109 140590419273408 Model ollama failed: Client error '404 Not Found' for url 'http://localhost:11434/api/chat'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404
+INFO 2025-08-16 10:54:50,192 async_services 172109 140590419273408 Added assistant message to conversation eb16e4ef-39fe-485a-b69f-6812f7ba3984
+INFO 2025-08-16 10:54:50,193 basehttp 172109 140590429763264 "POST /api/chat/message/ HTTP/1.1" 200 241
+INFO 2025-08-16 10:55:26,122 autoreload 172109 140592313256896 /home/marcin/PycharmProjects/agenty/chatbot/services/agents.py changed, reloading.
+INFO 2025-08-16 10:55:27,100 autoreload 172273 140116397849536 Watching for file changes with StatReloader
+INFO 2025-08-16 10:58:58,108 autoreload 172490 140193235745728 Watching for file changes with StatReloader
+INFO 2025-08-16 10:59:01,192 basehttp 172490 140191817791168 "GET /chat/ HTTP/1.1" 200 31459
+INFO 2025-08-16 10:59:01,824 async_services 172490 140191809398464 Created conversation c57c96f2-7739-4287-ba85-6025a7d7c802 with agent Asystent Ogólny
+INFO 2025-08-16 10:59:01,825 basehttp 172490 140191817791168 "POST /api/conversations/create/ HTTP/1.1" 200 71
+INFO 2025-08-16 10:59:05,309 async_services 172490 140191809398464 Added user message to conversation c57c96f2-7739-4287-ba85-6025a7d7c802
+INFO 2025-08-16 10:59:05,312 agent_factory 172490 140191809398464 Created agent of type: router
+INFO 2025-08-16 10:59:05,312 agents 172490 140191809398464 Greeting detected, skipping router.
+WARNING 2025-08-16 10:59:05,333 agents 172490 140191809398464 Model ollama failed: Client error '404 Not Found' for url 'http://127.0.0.1:11434/api/chat'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404
+INFO 2025-08-16 10:59:05,343 async_services 172490 140191809398464 Added assistant message to conversation c57c96f2-7739-4287-ba85-6025a7d7c802
+INFO 2025-08-16 10:59:05,343 basehttp 172490 140191817791168 "POST /api/chat/message/ HTTP/1.1" 200 241
+INFO 2025-08-16 11:00:28,653 autoreload 172490 140193235745728 /home/marcin/PycharmProjects/agenty/chatbot/services/agents.py changed, reloading.
+INFO 2025-08-16 11:00:29,622 autoreload 172575 139694946151360 Watching for file changes with StatReloader
+INFO 2025-08-16 11:00:53,060 autoreload 172575 139694946151360 /home/marcin/PycharmProjects/agenty/chatbot/services/agents.py changed, reloading.
+INFO 2025-08-16 11:00:54,077 autoreload 172642 140348517653440 Watching for file changes with StatReloader
+INFO 2025-08-16 11:01:10,398 autoreload 172642 140348517653440 /home/marcin/PycharmProjects/agenty/chatbot/services/agents.py changed, reloading.
+INFO 2025-08-16 11:01:11,052 autoreload 172687 139939312638912 Watching for file changes with StatReloader
+INFO 2025-08-16 11:01:46,659 autoreload 172839 140026289417152 Watching for file changes with StatReloader
+INFO 2025-08-16 11:01:48,956 basehttp 172839 140025345865408 "GET / HTTP/1.1" 200 23503
+INFO 2025-08-16 11:01:52,360 basehttp 172839 140025345865408 "GET /chat/ HTTP/1.1" 200 31459
+INFO 2025-08-16 11:01:53,025 async_services 172839 140024322455232 Created conversation bbc1213a-e3f8-4db8-af60-cfe279c0048f with agent Asystent Ogólny
+INFO 2025-08-16 11:01:53,026 basehttp 172839 140025345865408 "POST /api/conversations/create/ HTTP/1.1" 200 71
+INFO 2025-08-16 11:01:56,207 async_services 172839 140024322455232 Added user message to conversation bbc1213a-e3f8-4db8-af60-cfe279c0048f
+INFO 2025-08-16 11:01:56,210 agent_factory 172839 140024322455232 Created agent of type: router
+INFO 2025-08-16 11:01:56,210 agents 172839 140024322455232 Greeting detected, skipping router.
+INFO 2025-08-16 11:01:56,224 agents 172839 140024322455232 Sending payload to Ollama: {'model': 'llama3.1', 'messages': [{'role': 'system', 'content': 'Current date and time: Saturday, 2025-08-16 11:01:56'}, {'role': 'user', 'content': 'cześć'}, {'role': 'user', 'content': 'cześć'}], 'stream': False}
+WARNING 2025-08-16 11:01:56,232 agents 172839 140024322455232 Model ollama failed: Client error '404 Not Found' for url 'http://127.0.0.1:11434/api/chat'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404
+INFO 2025-08-16 11:01:56,242 async_services 172839 140024322455232 Added assistant message to conversation bbc1213a-e3f8-4db8-af60-cfe279c0048f
+INFO 2025-08-16 11:01:56,243 basehttp 172839 140025345865408 "POST /api/chat/message/ HTTP/1.1" 200 241
+INFO 2025-08-16 11:02:24,492 autoreload 172839 140026289417152 /home/marcin/PycharmProjects/agenty/chatbot/services/agents.py changed, reloading.
+INFO 2025-08-16 11:02:25,161 autoreload 172963 140296780291008 Watching for file changes with StatReloader
+INFO 2025-08-16 11:05:04,502 autoreload 172963 140296780291008 /home/marcin/PycharmProjects/agenty/chatbot/services/agents.py changed, reloading.
+INFO 2025-08-16 11:05:05,227 autoreload 173183 140030970649536 Watching for file changes with StatReloader
+INFO 2025-08-16 11:05:07,380 autoreload 173183 140030970649536 /home/marcin/PycharmProjects/agenty/chatbot/services/agents.py changed, reloading.
+INFO 2025-08-16 11:05:08,226 autoreload 173226 139844040596416 Watching for file changes with StatReloader
+INFO 2025-08-16 11:07:00,969 autoreload 173396 139886693063616 Watching for file changes with StatReloader
+INFO 2025-08-16 11:07:06,254 basehttp 173396 139885474215616 "GET /chat/ HTTP/1.1" 200 31459
+INFO 2025-08-16 11:07:06,882 async_services 173396 139885465822912 Created conversation e933f1ab-3990-4aa4-b389-02eb28be6ed7 with agent Asystent Ogólny
+INFO 2025-08-16 11:07:06,882 basehttp 173396 139885474215616 "POST /api/conversations/create/ HTTP/1.1" 200 71
+INFO 2025-08-16 11:07:11,490 async_services 173396 139885465822912 Added user message to conversation e933f1ab-3990-4aa4-b389-02eb28be6ed7
+INFO 2025-08-16 11:07:11,493 agent_factory 173396 139885465822912 Created agent of type: router
+INFO 2025-08-16 11:07:11,494 agents 173396 139885465822912 Greeting detected, skipping router.
+WARNING 2025-08-16 11:07:11,512 agents 173396 139885465822912 Model ollama failed: Client error '404 Not Found' for url 'http://127.0.0.1:11434/api/chat'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404
+INFO 2025-08-16 11:07:11,526 async_services 173396 139885465822912 Added assistant message to conversation e933f1ab-3990-4aa4-b389-02eb28be6ed7
+INFO 2025-08-16 11:07:11,527 basehttp 173396 139885474215616 "POST /api/chat/message/ HTTP/1.1" 200 241
+INFO 2025-08-16 11:41:36,228 autoreload 173396 139886693063616 /home/marcin/PycharmProjects/agenty/chatbot/services/async_services.py changed, reloading.
+INFO 2025-08-16 11:41:37,203 autoreload 174210 139981418838976 Watching for file changes with StatReloader
+INFO 2025-08-16 11:45:46,727 autoreload 174210 139981418838976 /home/marcin/PycharmProjects/agenty/inventory/templatetags/inventory_extras.py changed, reloading.
+INFO 2025-08-16 11:45:47,163 autoreload 174292 140082224503744 Watching for file changes with StatReloader

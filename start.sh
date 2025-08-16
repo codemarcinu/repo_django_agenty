@@ -48,7 +48,7 @@ fi
 source .venv/bin/activate
 
 echo "🗄️  Stosowanie migracji bazy danych..."
-python manage.py migrate
+.venv/bin/python manage.py migrate
 
 echo "🎯 Sprawdzanie dostępności GPU..."
 if command -v nvidia-smi &> /dev/null; then
@@ -63,4 +63,4 @@ echo "📱 Aplikacja dostępna pod adresem: http://127.0.0.1:8000"
 echo "💡 Aby zatrzymać serwer, naciśnij Ctrl+C"
 echo ""
 
-python manage.py runserver
+.venv/bin/python manage.py runserver
