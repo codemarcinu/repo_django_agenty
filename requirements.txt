@@ -12,7 +12,7 @@ redis==5.0.1
 django-redis==5.4.0
 
 # HTTP client
-httpx==0.25.2
+httpx==0.28.1
 
 # Search and web scraping
 ddgs==9.5.2

@@ -10,6 +10,7 @@ from ..models import Agent, Conversation, Message, ReceiptProcessing
 from .exceptions import (
     AgentNotFoundError,
 )
+from inventory.models import InventoryItem
 
 logger = logging.getLogger(__name__)
 
@@ -145,7 +146,43 @@ class AsyncConversationService:
             return []
 
 
+class AsyncPantryService:
+    """Async service for pantry-related operations"""
 
+    @staticmethod
+    async def find_item_by_name(product_name: str) -> dict[str, Any] | None:
+        """Find pantry item by name"""
+        try:
+            item = await InventoryItem.objects.aget(name__icontains=product_name)
+            return {
+                'name': item.name,
+                'quantity': item.quantity,
+                'unit': item.unit,
+                'expiry_date': item.expiry_date.isoformat() if item.expiry_date else None,
+            }
+        except InventoryItem.DoesNotExist:
+            logger.warning(f"Item not found: {product_name}")
+            return None
+
+    @staticmethod
+    async def get_all_items() -> list[dict[str, Any]]:
+        """Get all pantry items"""
+        items = []
+        try:
+            async for item in InventoryItem.objects.all():
+                items.append({
+                    'name': item.name,
+                    'quantity': item.quantity,
+                    'unit': item.unit,
+                    'expiry_date': item.expiry_date.isoformat() if item.expiry_date else None,
+                })
+            return items
+        except Exception as e:
+            logger.error(f"Error fetching pantry items: {e}")
+            return []
+
+
+class AsyncReceiptService:
     """Async service for receipt processing operations"""
 
     @staticmethod
