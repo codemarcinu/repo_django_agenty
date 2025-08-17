@@ -1,22 +1,50 @@
 # Agenty - Twój Inteligentny Asystent AI 🤖
 
-Nowoczesna aplikacja Django z zaawansowanymi agentami AI, zarządzaniem spiżarnią, analizą paragonów i kompletnym systemem RAG (Retrieval-Augmented Generation).
+**Agenty** to Twój osobisty asystent sztucznej inteligencji, który działa całkowicie offline na Twoim komputerze. 
+
+✨ **Prywatność przede wszystkim** - Żadne Twoje dane nie opuszczają Twojego komputera  
+🚀 **Przyspieszenie GPU** - Wykorzystuje kartę graficzną dla błyskawicznej pracy  
+🧠 **Inteligentny i wszechstronny** - Pomaga z dokumentami, paragonami, pogodą i wieloma innymi zadaniami
 
 ---
 
 ## 🎯 Czym jest Agenty?
 
-Agenty to kompleksowy system sztucznej inteligencji działający lokalnie na Twoim komputerze. Zapewnia pełną prywatność danych i oferuje zaawansowane funkcje AI bez konieczności wysyłania informacji do zewnętrznych serwisów.
+Wyobraź sobie asystenta, który:
+- 💬 **Rozmawia z Tobą** w naturalny sposób, jak z przyjacielem
+- 📄 **Czyta dokumenty** i odpowiada na pytania o ich zawartość
+- 🛒 **Analizuje paragony** i automatycznie dodaje produkty do Twojej spiżarni
+- 🌡️ **Sprawdza pogodę** i wyszukuje informacje w internecie
+- 🏠 **Dba o Twoją spiżarnię** - przypomina o datach przydatności produktów
 
-### ✨ Kluczowe Funkcje
+**Wszystko dzieje się na Twoim komputerze** - żadne dane nie są wysyłane do internetu!
 
-- **🧠 Inteligentne Agenty AI** - Specjalizowane agenty z różnymi kompetencjami
-- **📄 System RAG** - Upload dokumentów i rozmowy o ich zawartości  
-- **🧾 Analiza Paragonów** - OCR z przyspieszeniem GPU i ekstrakcja produktów
-- **🏪 Zarządzanie Spiżarnią** - Inteligentne śledzenie produktów i dat przydatności
-- **🌐 Wyszukiwanie Web** - Aktualne informacje z internetu
-- **☀️ Prognoza Pogody** - Bieżące warunki pogodowe dla dowolnego miasta
-- **💬 Nowoczesny Chat UI** - Responsywny interfejs z animacjami
+### ✨ Co potrafi Agenty?
+
+**💬 Inteligentna rozmowa**
+- Rozmawia z Tobą po polsku w naturalny sposób
+- Pamięta kontekst całej rozmowy
+- Odpowiada na pytania z różnych dziedzin
+
+**📄 Praca z dokumentami**
+- Prześlij PDF, Word, lub zwykły tekst
+- Zadawaj pytania o zawartość dokumentów
+- Otrzymuj konkretne odpowiedzi z cytatami
+
+**🛒 Inteligentne paragony**
+- Zrób zdjęcie paragonu lub prześlij PDF
+- System automatycznie rozpozna produkty i ceny
+- Produkty trafiają do Twojej cyfrowej spiżarni
+
+**🏠 Cyfrowa spiżarnia**
+- Automatyczne przypomnienia o datach przydatności
+- Sprawdzanie co masz w domu jednym pytaniem
+- Historia zakupów i analiza wydatków
+
+**🌍 Aktualne informacje**
+- Sprawdzanie pogody dla dowolnego miasta
+- Wyszukiwanie najświeższych informacji w internecie
+- Odpowiedzi na pytania o bieżące wydarzenia
 
 ---
 
@@ -58,137 +86,280 @@ agenty/
 
 ---
 
-## ⚙️ Wymagania Systemowe
+## 💻 Czy mój komputer poradzi sobie z Agenty?
 
-### Minimalne
-- **Python 3.13+**
-- **4 GB RAM**
-- **2 GB miejsca na dysku**
-- **Przeglądarka** (Chrome, Firefox, Edge)
+### ✅ Każdy komputer może uruchomić Agenty
+**Podstawowe wymagania (wystarczy dla wszystkich funkcji):**
+- Komputer z systemem Windows, Mac lub Linux
+- **8 GB pamięci RAM** (4GB minimum, ale 8GB zalecane dla płynności)
+- **10 GB wolnego miejsca na dysku** (dla wszystkich modeli AI)
+- Nowoczesna przeglądarka internetowa
 
-### Zalecane dla GPU
-- **NVIDIA RTX 20xx/30xx/40xx**
-- **8 GB RAM**
-- **CUDA 12.9+** (auto-wykrywane)
-- **10 GB miejsca** (dla modeli AI)
+### 🚀 Mam kartę graficzną NVIDIA? Świetnie!
+**Jeśli masz kartę RTX (2000, 3000, 4000 series):**
+- System automatycznie wykorzysta kartę graficzną
+- Analiza paragonów będzie **3-5 razy szybsza**
+- Modele AI będą działać **znacznie płynniej**
+- **Wymagania te same:** ~10 GB na modele AI
 
-### 🚀 Przyspieszenie GPU
-System automatycznie wykrywa i wykorzystuje karty NVIDIA dla:
-- **EasyOCR** - Szybsze rozpoznawanie tekstu z paragonów
-- **Przetwarzanie AI** - Przyspieszenie modeli językowych
-- **Computer Vision** - Analiza obrazów
+**Nie masz karty NVIDIA?**
+- Nie martw się! System automatycznie przełączy się na procesor
+- Wszystkie funkcje będą działać, tylko trochę wolniej
+- Analiza paragonu zajmie ~30 sekund zamiast ~10 sekund
+
+### 🔧 Instalacja - super prosta!
+System sam zainstaluje wszystko co potrzebne:
+- **Model główny Bielik** (7.9GB) - polski GPT dla rozmowy
+- **Model RAG mxbai-embed-large** (670MB) - dla analizy dokumentów  
+- **Narzędzia OCR** (EasyOCR, Tesseract) - rozpoznawanie tekstu
+- **Interfejs webowy** z nowoczesnym designem
+
+**📥 Pobieranie modeli AI (automatyczne):**
+- **Pierwszy start:** Pobieranie Bielik + mxbai (~8.6GB total)
+- **Pierwszy dokument:** Pobranie modelu RAG (jeśli nie było wcześniej)
+- **Pierwszy paragon:** Pobranie modeli OCR (~50MB)
+- **Na szybkim internecie:** 15-20 minut całość
+- **Modele zostają na zawsze** - następne uruchomienia: instant!
 
 ---
 
-## 🚀 Instalacja i Uruchomienie
+## 🚀 Jak uruchomić Agenty? (Krok po kroku)
 
-### 1. Przygotowanie środowiska
+### Krok 1: Pobierz i zainstaluj 📥
+**Option A: Masz git? (dla programistów)**
 ```bash
-# Klonowanie repozytorium
 git clone <repo-url>
 cd agenty
+```
 
-# Tworzenie środowiska wirtualnego
+**Option B: Pobierz ZIP (dla każdego)**
+- Pobierz plik ZIP z kodem
+- Rozpakuj do folderu na pulpicie
+- Otwórz terminal/wiersz poleceń w tym folderze
+
+### Krok 2: Przygotuj środowisko 🔧
+```bash
+# Zainstaluj Python jeśli nie masz (python.org)
+# Następnie uruchom te polecenia:
+
 python -m venv .venv
-source .venv/bin/activate  # Linux/Mac
-# lub .venv\Scripts\activate  # Windows
+source .venv/bin/activate     # Na Mac/Linux
+# lub
+.venv\Scripts\activate        # Na Windows
 
-# Instalacja zależności
 pip install -r requirements.txt
 ```
 
-### 2. Konfiguracja
+### Krok 3: Podstawowa konfiguracja ⚙️
 ```bash
-# Skopiuj plik środowiskowy
+# Skopiuj plik przykładowej konfiguracji
 cp .env.example .env
 
-# Edytuj .env file z własnymi ustawieniami:
-# - DJANGO_SECRET_KEY
-# - OPENWEATHERMAP_API_KEY
-# - DATABASE_URL (opcjonalnie)
+# Opcjonalnie: Dodaj klucz API pogody (za darmo na openweathermap.org)
+# Edytuj plik .env i dodaj swój klucz w linii OPENWEATHERMAP_API_KEY=
 ```
 
-### 3. Uruchomienie
+### Krok 4: Uruchom! 🎉
 ```bash
-# Metoda 1: Użyj skryptu startowego (zalecane)
+# Najłatwiejszy sposób:
 ./start.sh
 
-# Metoda 2: Manualne uruchomienie
-python manage.py migrate
-python manage.py runserver
-
-# Opcjonalnie: Uruchom Celery dla zadań w tle
-celery -A core worker --loglevel=info
+# System automatycznie:
+# ✅ Przygotuje bazę danych
+# ✅ Uruchomi serwer Ollama
+# ✅ Pobierze model Bielik (7.9GB - pierwsza instalacja zajmie ~15 minut)
+# ✅ Uruchomi serwer Django
 ```
 
-### 4. Dostęp do aplikacji
-- **Dashboard**: http://127.0.0.1:8000/
-- **Chat**: http://127.0.0.1:8000/chat/
-- **Admin Panel**: http://127.0.0.1:8000/admin/
-- **API Docs**: http://127.0.0.1:8000/api/
+**🕐 Pierwsze uruchomienie:**
+- Pobieranie modelu Bielik: ~15 minut (szybki internet)
+- Zobaczysz postęp pobierania w terminalu
+- Modele: `SpeakLeash/bielik-11b-v2.3-instruct:Q5_K_M` + `mxbai-embed-large`
+- **Pierwsze przesłanie dokumentu:** Dodatowe ~2 minuty na model RAG
+- Po pobraniu wszystkie modele zostają na zawsze
+
+**⚡ Kolejne uruchomienia:**
+- Instant start - model już jest pobrany
+- Uruchamianie zajmuje ~30 sekund
+
+### Krok 5: Ciesz się! 🎊
+Otwórz przeglądarkę i wejdź na:
+- **🏠 Strona główna**: http://127.0.0.1:8000/
+- **💬 Chat z AI**: http://127.0.0.1:8000/chat/
+- **📊 Panel zarządzania**: http://127.0.0.1:8000/admin/
+
+**🎯 Pierwsze kroki:**
+1. Wejdź na stronę główną i zobacz dashboard
+2. Kliknij "Chat" i porozmawiaj z AI
+3. Spróbuj przesłać dokument lub zdjęcie paragonu
+4. Sprawdź swoją spiżarnię
 
 ---
 
-## 📋 Główne Funkcjonalności
+## 🧠 Modele sztucznej inteligencji w projekcie
 
-### 🤖 System Agentów AI
+### 🇵🇱 Model główny: Bielik
+**Pełna nazwa:** `SpeakLeash/bielik-11b-v2.3-instruct:Q5_K_M`
 
-**Dostępni Agenci:**
-- **bielik** - Agent główny z dostępem do wszystkich narzędzi
-- **router** - Agent routingu i zarządzania rozmowami
-- **Specialization agents** - Agenty specjalistyczne dla konkretnych zadań
+**Dlaczego Bielik?**
+- **Mówi po polsku!** - Stworzony specjalnie dla języka polskiego
+- **Lokalny i prywatny** - Działa na Twoim komputerze, nie wysyła danych
+- **Zoptymalizowany** - Wersja Q5_K_M zapewnia dobry balans szybkości i jakości
+- **Rozmiar:** 7.9 GB (pobierany raz, zostaje na zawsze)
 
-**Capabilities:**
-- `llm_chat` - Rozmowy w języku naturalnym
-- `web_search` - Wyszukiwanie informacji w internecie
-- `weather_check` - Sprawdzanie prognozy pogody
-- `rag_query` - Odpowiedzi na podstawie przesłanych dokumentów
-- `pantry_management` - Zarządzanie spiżarnią
+**Możliwości modelu:**
+- Naturalne rozmowy po polsku
+- Analiza dokumentów i tekstu
+- Ekstrakcja danych z paragonów
+- Integracja z narzędziami (pogoda, wyszukiwanie, spiżarnia)
+- Rozumienie kontekstu rozmowy
 
-### 📄 System RAG (Retrieval-Augmented Generation)
+### 🚀 Optymalizacja GPU
+**Konfiguracja dla kart NVIDIA:**
+- **num_gpu: 51** - Wykorzystanie wszystkich warstw GPU (RTX 3060/4060)
+- **temperature: 0.1** - Niska temperatura dla spójnych wyników
+- **num_ctx: 4096** - Okno kontekstu dla długich rozmów
+- **num_predict: 1024** - Maksymalna długość odpowiedzi
 
-**Upload Dokumentów:**
-- Obsługiwane formaty: PDF, TXT, DOCX, MD
-- Maksymalny rozmiar: 10MB
-- Automatyczne indeksowanie treści
-- Vector search dla precyzyjnych odpowiedzi
+**Wydajność:**
+- **Z GPU (RTX):** Odpowiedzi w 3-8 sekund
+- **Bez GPU (CPU):** Odpowiedzi w 15-30 sekund
+- **VRAM:** ~1.2GB podczas pracy
 
-**Funkcje:**
-- Drag & drop interface
-- Preview przed wysłaniem
-- Status tracking przetwarzania
-- Bezpośrednie pytania o dokumenty
+### 📚 Inne modele w systemie
 
-### 🧾 Analiza Paragonów (OCR + AI)
+**🔗 RAG Embedding Model:**
+- **Model:** `mxbai-embed-large` (przez Ollama)
+- **Funkcja:** Przekształcanie tekstu na wektory dla wyszukiwania semantycznego
+- **Rozmiar:** ~670MB
+- **Automatyczne pobieranie:** Przy pierwszym przesłaniu dokumentu
+- **Zastosowanie:** Analiza podobieństwa dokumentów, wyszukiwanie kontekstu
 
-**Proces przetwarzania:**
-1. **Upload** - Prześlij zdjęcie paragonu
-2. **OCR** - EasyOCR z przyspieszeniem GPU
-3. **AI Extraction** - Wyodrębnienie produktów, cen, ilości
-4. **Review** - Edycja i weryfikacja danych
-5. **Save** - Dodanie do spiżarni z datami przydatności
+**👁️ EasyOCR Models (automatyczne pobieranie):**
+- Model rozpoznawania tekstu polskiego (~25MB)
+- Model rozpoznawania tekstu angielskiego (~25MB)
+- Pobieranie przy pierwszej analizie paragonu
 
-**GPU Optimization:**
-- Automatyczne wykrywanie kart NVIDIA
-- 3-5x szybsze przetwarzanie na RTX
-- Fallback na CPU gdy GPU niedostępne
+**📝 Tesseract Language Packs:**
+- `pol` - Polski pakiet językowy
+- `eng` - Angielski pakiet językowy
+- Backup gdy EasyOCR nie jest dostępne
 
-### 🏪 Zarządzanie Spiżarnią
+### 💾 Zarządzanie modelami
+**Gdzie są przechowywane:**
+- **Bielik + mxbai-embed-large:** `~/.ollama/models/` (Linux/Mac) lub `%USERPROFILE%\.ollama\models\` (Windows)
+- **EasyOCR:** `~/.EasyOCR/model/`
+- **ChromaDB (RAG):** `chroma_db/` w folderze projektu
 
-**Smart Pantry Management:**
-- Automatyczne dodawanie produktów z paragonów
-- Śledzenie dat przydatności do spożycia
-- Alerty o produktach kończących się
-- Integracja z AI (pytania o zawartość)
-- Bulk operations (dodawanie, edycja, usuwanie)
+**Zarządzanie przez Ollama:**
+```bash
+# Lista zainstalowanych modeli
+ollama list
 
-**Business Logic w modelach:**
-```python
-# Przykłady użycia
-item.is_expired()           # Sprawdź czy produkt się zepsuł
-item.days_until_expiry()    # Ile dni do przydatności
-PantryItem.get_expiring_soon(7)  # Produkty kończące się w 7 dni
+# Pobierz modele ręcznie
+ollama pull SpeakLeash/bielik-11b-v2.3-instruct:Q5_K_M  # Model główny
+ollama pull mxbai-embed-large                            # Model RAG
+
+# Usuń modele (jeśli potrzebujesz miejsca)
+ollama rm SpeakLeash/bielik-11b-v2.3-instruct:Q5_K_M
+ollama rm mxbai-embed-large
 ```
+
+**💡 Całkowity rozmiar wszystkich modeli:**
+- Bielik (główny AI): ~7.9GB
+- mxbai-embed-large (RAG): ~670MB  
+- EasyOCR (OCR): ~50MB
+- **Łącznie: ~8.6GB**
+
+---
+
+## 📋 Przewodnik dla użytkownika
+
+### 💬 Jak rozmawiać z AI?
+
+**Wejdź na chat i po prostu pisz!**
+- "Cześć, jak się masz?" - Zwykła rozmowa
+- "Jaka jest pogoda w Krakowie?" - Sprawdzi aktualną pogodę
+- "Co wiem o sztucznej inteligencji?" - Wyszuka informacje w internecie
+- "Co mam w spiżarni?" - Pokaże zawartość Twojej spiżarni
+
+**AI automatycznie wie, czego potrzebujesz:**
+- Rozpoznaje czy pytasz o pogodę, dokumenty, czy chcesz po prostu porozmawiać
+- Pamięta kontekst rozmowy
+- Odpowiada po polsku w naturalny sposób
+
+### 📄 Jak przesłać dokument i pytać o niego?
+
+**Krok 1: Prześlij dokument**
+- Przeciągnij plik na stronę chat lub kliknij "Wybierz plik"
+- Obsługiwane: PDF, Word (.docx), zwykły tekst (.txt)
+- Maksymalny rozmiar: 10MB
+
+**Krok 2: Poczekaj na przetworzenie**
+- System automatycznie przeczyta dokument
+- Zobaczysz komunikat "Dokument został przetworzony"
+
+**Krok 3: Zadawaj pytania**
+- "Co jest w tym dokumencie?"
+- "Znajdź informacje o cenach"
+- "Podsumuj główne punkty"
+- "Czy jest tam coś o terminach?"
+
+**AI będzie odpowiadać na podstawie treści dokumentu i podawać konkretne fragmenty!**
+
+### 🛒 Jak analizować paragony? (Najfajniejsza funkcja!)
+
+**Super prosty proces:**
+
+**Krok 1: Zrób zdjęcie lub prześlij paragon**
+- Zrób zdjęcie telefonem paragonu ze sklepu
+- Lub zeskanuj paragon jako PDF
+- Prześlij przez stronę z uploadem
+
+**Krok 2: Magia się dzieje automatycznie ✨**
+- System rozpoznaje tekst (wykorzystuje kartę graficzną dla szybkości!)
+- AI wyciąga nazwy produktów, ceny, ilości
+- Automatycznie dodaje produkty do Twojej cyfrowej spiżarni
+
+**Krok 3: Sprawdź wyniki**
+- Dostaniesz listę rozpoznanych produktów
+- Możesz poprawić błędy jeśli jakieś są
+- Kliknij "Zatwierdź" i produkty trafiają do spiżarni
+
+**Co zyskujesz:**
+- Nie musisz ręcznie przepisywać zakupów
+- System pamięta daty przydatności
+- Możesz pytać AI "Co mam w lodówce?"
+- Dostaniesz przypomnienia o produktach kończących się
+
+**🚀 Z kartą NVIDIA:** Analiza zajmuje ~10 sekund  
+**💻 Na zwykłym procesorze:** Analiza zajmuje ~30 sekund
+
+### 🏠 Twoja cyfrowa spiżarnia
+
+**Jak to działa:**
+
+**Automatyczne dodawanie:**
+- Produkty z paragonów trafiają automatycznie do spiżarni
+- System pamięta kiedy kupiłeś i kiedy się zepsuje
+- Możesz też ręcznie dodać produkty
+
+**Inteligentne przypomnienia:**
+- "Mleko się kończy za 2 dni"
+- "Jogurt przeterminowany - wyrzuć"
+- "Za tydzień kończy Ci się ser"
+
+**Rozmowa z AI o spiżarni:**
+- "Co mam w lodówce?" - Dostaniesz pełną listę
+- "Czy mam jeszcze mleko?" - Sprawdzi konkretny produkt
+- "Co mi się kończy?" - Pokaże produkty o kończących się terminach
+- "Co mogę ugotować?" - Zaproponuje przepisy na podstawie produktów
+
+**Panel zarządzania:**
+- Zobacz wszystkie produkty na jednej liście
+- Edytuj daty, ilości, nazwy
+- Oznacz jako zużyte lub wyrzucone
+- Historia zakupów i wydatków
 
 ### 🌐 Integracje Zewnętrzne
 
@@ -314,46 +485,74 @@ LOGGING = {
 
 ---
 
-## 🐛 Troubleshooting
+## 🆘 Rozwiązywanie problemów
 
-### Częste Problemy
+### "Agenty nie odpowiada" lub "Ładowanie..."
 
-**1. CSRF Errors w API**
-```python
-# Fixed with @csrf_exempt decorators
-@method_decorator(csrf_exempt, name='dispatch')
-class ConversationCreateView(View):
-    # ...
-```
+**Problem:** AI nie odpowiada na wiadomości
+**Rozwiązanie:**
+1. Sprawdź czy terminal/wiersz poleceń z `./start.sh` nadal działa
+2. Jeśli widzisz błędy, naciśnij Ctrl+C i uruchom ponownie `./start.sh`
+3. Pierwsze uruchomienie może trwać kilka minut (pobieranie modelu AI)
 
-**2. Redis Connection Issues**
-```python
-# Auto-fallback to database cache
-try:
-    r = redis.Redis(host='127.0.0.1', port=6379, db=1)
-    r.ping()
-    # Use Redis
-except:
-    # Use database cache
-```
+### "Błąd podczas przetwarzania paragonu"
 
-**3. GPU Not Detected**
-```bash
-# Check NVIDIA drivers
-nvidia-smi
+**Problem:** Analiza paragonu się zawiesza
+**Rozwiązanie:**
+1. Sprawdź czy zdjęcie jest wyraźne i czytelne
+2. Spróbuj z mniejszym rozmiarem pliku (max 10MB)
+3. Jeśli masz kartę NVIDIA - sprawdź czy sterowniki są aktualne
 
-# Install CUDA toolkit if needed
-# Application will fallback to CPU automatically
-```
+### "Strona się nie ładuje" (http://127.0.0.1:8000)
 
-**4. OCR Processing Stuck**
-```bash
-# Check Celery worker status
-celery -A core inspect active
+**Problem:** Nie można otworzyć interfejsu
+**Rozwiązanie:**
+1. Sprawdź czy widzisz komunikat "Starting development server at http://127.0.0.1:8000/"
+2. Upewnij się że żaden inny program nie używa portu 8000
+3. Spróbuj z inną przeglądarką
+4. Jeśli nadal nie działa - uruchom ponownie `./start.sh`
 
-# Restart worker if needed
-celery -A core worker --loglevel=info
-```
+### "Model AI odpowiada tylko po angielsku"
+
+**Problem:** AI nie rozumie polskiego lub odpowiada w złym języku
+**Rozwiązanie:**
+1. Sprawdź czy model Bielik jest załadowany: `ollama list`
+2. Powinno być: `SpeakLeash/bielik-11b-v2.3-instruct:Q5_K_M`
+3. Jeśli nie ma modelu, uruchom: `ollama pull SpeakLeash/bielik-11b-v2.3-instruct:Q5_K_M`
+4. Poczekaj na pełne załadowanie (7.9GB)
+5. Uruchom ponownie `./start.sh`
+
+### "Pobieranie modelu przerwane lub błąd"
+
+**Problem:** Model się nie pobiera lub pobieranie zostało przerwane
+**Rozwiązanie:**
+1. Sprawdź połączenie internetowe
+2. Uruchom ręcznie: `ollama pull SpeakLeash/bielik-11b-v2.3-instruct:Q5_K_M`
+3. Model można pobierać częściami - Ollama wznowi pobieranie
+4. Potrzeba ~8GB wolnego miejsca na dysku
+5. Na wolnym internecie może zająć do godziny
+
+### "AI odpowiada bardzo wolno"
+
+**Problem:** Odpowiedzi trwają bardzo długo (>1 minuta)
+**Rozwiązanie:**
+1. **Z kartą NVIDIA:** Sprawdź czy GPU jest wykorzystywane: `nvidia-smi`
+2. **Bez karty NVIDIA:** To normalne - odpowiedzi mogą trwać 15-30 sekund
+3. Sprawdź RAM - model potrzebuje ~8GB pamięci
+4. Zamknij inne programy zużywające pamięć
+5. Jeśli bardzo wolno - rozważ restart komputera
+
+### "Gdzie znaleźć pomoc?"
+
+**Szybkie sprawdzenie:**
+1. Wejdź na http://127.0.0.1:8000/ - powinieneś zobaczyć dashboard
+2. Sprawdź terminal - czy nie ma błędów w kolorze czerwonym
+3. Spróbuj uruchomić ponownie: Ctrl+C, następnie `./start.sh`
+
+**Nadal nie działa?**
+- Sprawdź czy masz zainstalowany Python 3.13+
+- Upewnij się że masz przynajmniej 4GB wolnej pamięci RAM
+- Na Windows: uruchom terminal jako administrator
 
 ---
 
@@ -420,12 +619,32 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ---
 
-## 🎉 Ready to Start!
+## 🎉 Wszystko gotowe - czas na zabawę!
 
-Twój inteligentny asystent AI jest gotowy do pracy! 
+**Twój osobisty asystent AI czeka na Ciebie!** 
 
-1. **Uruchom**: `./start.sh`
-2. **Otwórz**: http://127.0.0.1:8000/
-3. **Eksploruj**: Dashboard → Chat → Upload dokumentów → Analizuj paragony
+### 🚀 Szybki start (3 kroki):
+1. **Uruchom**: Otwórz terminal i wpisz `./start.sh`
+2. **Otwórz**: Wejdź na http://127.0.0.1:8000/ w przeglądarce
+3. **Eksploruj**: 
+   - Kliknij **"Chat"** i porozmawiaj z AI
+   - Prześlij **dokument** i zadawaj o niego pytania  
+   - Zrób **zdjęcie paragonu** i zobacz jak system go analizuje
+   - Sprawdź swoją **cyfrową spiżarnię**
 
-Miłego korzystania z Agenty! 🚀
+### 💡 Pierwsze pytania do AI:
+- "Cześć! Opowiedz mi o sobie"
+- "Jaka jest pogoda w [twoje miasto]?"
+- "Co wiesz o sztucznej inteligencji?"
+
+### 📱 Co dalej?
+- Prześlij swój pierwszy dokument (PDF, Word)
+- Wypróbuj analizę paragonu ze sklepu
+- Zbuduj swoją cyfrową spiżarnię
+- Odkryj wszystkie możliwości w naturalnej rozmowie!
+
+---
+
+**🌟 Pamiętaj:** To jest Twój prywatny AI - wszystko dzieje się na Twoim komputerze!
+
+**Miłego korzystania z Agenty!** 🤖✨
