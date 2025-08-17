@@ -1,4 +1,4 @@
-
+claude
 
 Cel: Utworzyć izolowaną gałąź do wdrożenia pipeline’u OCR→parse→match→inventory.
 

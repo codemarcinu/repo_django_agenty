@@ -44,10 +44,13 @@ class ParsedReceipt:
     tax_amount: Decimal | None = None
     payment_method: str | None = None
     products: list[ParsedProduct] = None
+    meta: dict[str, Any] = None
 
     def __post_init__(self):
         if self.products is None:
             self.products = []
+        if self.meta is None:
+            self.meta = {}
 
     def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for storage."""
@@ -90,6 +93,64 @@ class ReceiptParser:
         raise NotImplementedError
 
 
+class StoreDetector:
+    """Detects store type from receipt text."""
+    
+    def __init__(self):
+        """Initialize store detection patterns."""
+        self.store_signatures = {
+            "lidl": {
+                "patterns": [r"lidl\s+sp\.\s*z\s*o\.\s*o\.", r"lidl"],
+                "confidence_threshold": 0.9,
+                "characteristics": ["* format", "tax codes A/B/C", "PTU sections"]
+            },
+            "biedronka": {
+                "patterns": [r"biedronka", r"ladybird"],
+                "confidence_threshold": 0.8,
+                "characteristics": ["different format"]
+            },
+            "kaufland": {
+                "patterns": [r"kaufland"],
+                "confidence_threshold": 0.8,
+                "characteristics": ["german format"]
+            },
+            "tesco": {
+                "patterns": [r"tesco"],
+                "confidence_threshold": 0.8,
+                "characteristics": ["international format"]
+            }
+        }
+    
+    def detect_store(self, ocr_text: str) -> tuple[str | None, float]:
+        """
+        Detect store type from OCR text.
+        
+        Returns:
+            Tuple of (store_name, confidence)
+        """
+        if not ocr_text:
+            return None, 0.0
+            
+        text_lower = ocr_text.lower()
+        
+        for store_name, config in self.store_signatures.items():
+            for pattern in config["patterns"]:
+                if re.search(pattern, text_lower):
+                    # Additional validation for higher confidence
+                    confidence = config["confidence_threshold"]
+                    
+                    # Boost confidence if we find characteristic elements
+                    if store_name == "lidl":
+                        if "*" in ocr_text and re.search(r"[ABC]\s*$", ocr_text, re.MULTILINE):
+                            confidence = 0.95
+                        if "PTU" in ocr_text.upper():
+                            confidence = min(confidence + 0.05, 1.0)
+                    
+                    return store_name, confidence
+        
+        return None, 0.0
+
+
 class RegexReceiptParser(ReceiptParser):
     """Regex-based receipt parser for Polish retail receipts."""
 
@@ -120,6 +181,8 @@ class RegexReceiptParser(ReceiptParser):
 
         # Product line patterns
         self.product_patterns = [
+            # NEW: Lidl format - NAME QUANTITY * UNIT_PRICE TOTAL_PRICE TAX_CODE
+            r"^(.+?)\s+(\d+(?:[,.]?\d+)?)\s*\*\s*(\d+[,.]?\d{2})\s+(\d+[,.]?\d{2})\s+[ABC]\s*$",
             # Pattern: NAME QUANTITY x UNIT_PRICE = TOTAL_PRICE
             r"^(.+?)\s+(\d+(?:[,.]?\d+)?)\s*x\s*(\d+[,.]?\d{2})\s*=?\s*(\d+[,.]?\d{2})",
             # Pattern: NAME TOTAL_PRICE [A/B/C] (tax code)
@@ -148,7 +211,8 @@ class RegexReceiptParser(ReceiptParser):
 
         # Total amount patterns
         self.total_patterns = [
-            r"(?:SUMA|RAZEM|TOTAL|ŁĄCZNIE|LACZNIE)[\s:]*(\d+[,.]?\d{2})",
+            r"(?:RAZEM|TOTAL)[\s:]*(\d+[,.]?\d{2})",  # Prefer RAZEM for main total
+            r"(?:SUMA|ŁĄCZNIE|LACZNIE)[\s:]*(\d+[,.]?\d{2})",
             r"(?:DO ZAPŁATY|DO ZAPLATY)[\s:]*(\d+[,.]?\d{2})",
         ]
 
@@ -178,6 +242,9 @@ class RegexReceiptParser(ReceiptParser):
 
             # Parse products
             receipt.products = self._extract_products(lines)
+            
+            # VALIDATION: Logical validation of products
+            receipt.products = self._validate_products(receipt.products)
 
             logger.info(
                 f"Parsed receipt: {len(receipt.products)} products, total: {receipt.total_amount}"
@@ -355,12 +422,19 @@ class RegexReceiptParser(ReceiptParser):
         for i, line in enumerate(lines):
             line_lower = line.lower()
 
+            # CRITICAL FIX: Add PTU and Kwota as end indicators
+            if re.match(r"^ptu\s+[abc]", line_lower):
+                return i
+                
+            if re.match(r"^kwota\s+[abc]", line_lower):
+                return i
+
             # Common end-of-products indicators
             if any(
                 keyword in line_lower
                 for keyword in [
                     "suma",
-                    "razem",
+                    "razem", 
                     "total",
                     "łącznie",
                     "lacznie",
@@ -401,6 +475,16 @@ class RegexReceiptParser(ReceiptParser):
         if line_lower.startswith(("tel", "nip", "www", "email", "adres")):
             return False
 
+        # CRITICAL FIX: Exclude tax/summary lines
+        if re.match(r"^ptu\s+[abc]\s+\d+[,.]?\d{2}", line_lower):
+            return False
+        
+        if re.match(r"^kwota\s+[abc]\s+\d+[,.]?\d+%?\s+\d+[,.]?\d{2}", line_lower):
+            return False
+            
+        if line_lower.startswith(("suma", "razem", "total", "łącznie", "lacznie")):
+            return False
+
         return True
 
     def _parse_product_line(self, line: str, line_number: int) -> ParsedProduct | None:
@@ -426,7 +510,19 @@ class RegexReceiptParser(ReceiptParser):
         try:
             groups = match.groups()
 
-            if pattern_index == 0:  # NAME QUANTITY x UNIT_PRICE = TOTAL_PRICE
+            if pattern_index == 0:  # NEW: Lidl format - NAME QUANTITY * UNIT_PRICE TOTAL_PRICE TAX_CODE
+                name, quantity, unit_price, total_price = groups
+                return ParsedProduct(
+                    name=name.strip(),
+                    quantity=float(quantity.replace(",", ".")),
+                    unit_price=Decimal(unit_price.replace(",", ".")),
+                    total_price=Decimal(total_price.replace(",", ".")),
+                    line_number=line_number,
+                    confidence=0.95,  # Highest confidence for Lidl format
+                    raw_line=line,
+                )
+
+            elif pattern_index == 1:  # NAME QUANTITY x UNIT_PRICE = TOTAL_PRICE
                 name, quantity, unit_price, total_price = groups
                 return ParsedProduct(
                     name=name.strip(),
@@ -438,7 +534,7 @@ class RegexReceiptParser(ReceiptParser):
                     raw_line=line,
                 )
 
-            elif pattern_index == 1:  # NAME TOTAL_PRICE [TAX]
+            elif pattern_index == 2:  # NAME TOTAL_PRICE [TAX]
                 name, total_price = groups
                 return ParsedProduct(
                     name=name.strip(),
@@ -448,7 +544,7 @@ class RegexReceiptParser(ReceiptParser):
                     raw_line=line,
                 )
 
-            elif pattern_index == 2:  # NAME QUANTITY UNIT_PRICE TOTAL_PRICE
+            elif pattern_index == 3:  # NAME QUANTITY UNIT_PRICE TOTAL_PRICE
                 name, quantity, unit_price, total_price = groups
                 return ParsedProduct(
                     name=name.strip(),
@@ -460,7 +556,7 @@ class RegexReceiptParser(ReceiptParser):
                     raw_line=line,
                 )
 
-            elif pattern_index == 3:  # NAME TOTAL_PRICE (simple)
+            elif pattern_index == 4:  # NAME TOTAL_PRICE (simple)
                 name, total_price = groups
                 return ParsedProduct(
                     name=name.strip(),
@@ -529,7 +625,172 @@ class RegexReceiptParser(ReceiptParser):
             raw_line=line,
         )
 
+    def _validate_products(self, products: list[ParsedProduct]) -> list[ParsedProduct]:
+        """Validate products using logical checks."""
+        validated_products = []
+        
+        for product in products:
+            # Skip products with validation issues
+            if self._is_valid_product(product):
+                validated_products.append(product)
+            else:
+                logger.debug(f"Skipping invalid product: {product.name} ({product.raw_line})")
+                
+        return validated_products
+        
+    def _is_valid_product(self, product: ParsedProduct) -> bool:
+        """Check if product passes logical validation."""
+        # Must have a name
+        if not product.name or len(product.name.strip()) < 2:
+            return False
+            
+        # Must have price information
+        if not product.total_price or product.total_price <= 0:
+            return False
+            
+        # If we have quantity and unit price, validate calculation
+        if product.quantity and product.unit_price:
+            calculated_total = Decimal(str(product.quantity)) * product.unit_price
+            if abs(calculated_total - product.total_price) > Decimal("0.02"):  # Allow 2 cent tolerance
+                logger.debug(f"Price calculation mismatch for {product.name}: {calculated_total} vs {product.total_price}")
+                # Don't reject, just lower confidence
+                product.confidence *= 0.8
+                
+        # Reject obvious non-products
+        name_lower = product.name.lower()
+        if any(keyword in name_lower for keyword in ["ptu", "kwota", "suma", "razem", "total"]):
+            return False
+            
+        return True
+
+
+class LidlReceiptParser(RegexReceiptParser):
+    """Specialized parser for Lidl receipts."""
+    
+    def __init__(self):
+        """Initialize Lidl-specific parser."""
+        super().__init__()
+        
+        # Override with Lidl-specific patterns
+        self.product_patterns = [
+            # Lidl PRIMARY format - NAME QUANTITY * UNIT_PRICE TOTAL_PRICE TAX_CODE
+            r"^(.+?)\s+(\d+(?:[,.]?\d+)?)\s*\*\s*(\d+[,.]?\d{2})\s+(\d+[,.]?\d{2})\s+[ABC]\s*$",
+            # Lidl SECONDARY format - NAME TOTAL_PRICE TAX_CODE
+            r"^(.+?)\s+(\d+[,.]?\d{2})\s+[ABC]\s*$",
+            # Generic fallbacks
+            r"^(.+?)\s+(\d+(?:[,.]?\d+)?)\s*x\s*(\d+[,.]?\d{2})\s*=?\s*(\d+[,.]?\d{2})",
+            r"^(.+?)\s+(\d+[,.]?\d{2})$",
+        ]
+        
+        # Lidl-specific total patterns
+        self.total_patterns = [
+            r"^RAZEM\s+(\d+[,.]?\d{2})$",  # RAZEM is always the final total for Lidl
+            r"^Razem\s+(\d+[,.]?\d{2})$",
+        ]
+        
+    def _looks_like_product(self, line: str) -> bool:
+        """Lidl-specific product detection."""
+        # Call parent method first
+        if not super()._looks_like_product(line):
+            return False
+            
+        line_lower = line.lower().strip()
+        
+        # Lidl-specific exclusions
+        if re.match(r"^ptu\s+[abc]\s+\d+[,.]?\d{2}", line_lower):
+            return False
+        if re.match(r"^kwota\s+[abc]\s+\d+[,.]?\d+%?\s+\d+[,.]?\d{2}", line_lower):
+            return False
+        if line_lower.startswith("suma"):
+            return False
+            
+        # Must end with tax code for Lidl format
+        if re.search(r"[ABC]\s*$", line):
+            return True
+            
+        # Or contain * multiplication
+        if "*" in line and re.search(r"\d+[,.]?\d{2}", line):
+            return True
+            
+        # Standard checks
+        return len(line.strip()) > 5 and re.search(r"\d+[,.]?\d{2}", line)
+    
+    def _find_products_end(self, lines: list[str]) -> int:
+        """Lidl-specific end detection."""
+        for i, line in enumerate(lines):
+            line_lower = line.lower()
+            
+            # PTU section always ends products in Lidl
+            if re.match(r"^ptu\s+[abc]", line_lower):
+                return i
+                
+            # Other end indicators
+            if line_lower.startswith(("suma", "razem")):
+                return i
+                
+        return len(lines)
+
+
+class GenericReceiptParser(RegexReceiptParser):
+    """Generic fallback parser for unknown receipt formats."""
+    
+    def __init__(self):
+        """Initialize generic parser with broad patterns."""
+        super().__init__()
+        
+        # More permissive patterns for unknown formats
+        self.product_patterns = [
+            # Standard patterns
+            r"^(.+?)\s+(\d+(?:[,.]?\d+)?)\s*[x*]\s*(\d+[,.]?\d{2})\s*=?\s*(\d+[,.]?\d{2})",
+            r"^(.+?)\s+(\d+[,.]?\d{2})\s*[ABC]?\s*$",
+            r"^(.+?)\s+(\d+(?:[,.]?\d+)?)\s+(\d+[,.]?\d{2})\s+(\d+[,.]?\d{2})",
+            r"^(.+?)\s+(\d+[,.]?\d{2})$",
+            # Very permissive fallback
+            r"^(.+?)\s+.*?(\d+[,.]?\d{2}).*$",
+        ]
+
+
+class AdaptiveReceiptParser(ReceiptParser):
+    """Adaptive parser that selects the best parser based on store detection."""
+    
+    def __init__(self):
+        """Initialize adaptive parser."""
+        self.detector = StoreDetector()
+        self.parsers = {
+            "lidl": LidlReceiptParser(),
+            "generic": GenericReceiptParser()
+        }
+        
+    def parse(self, ocr_text: str) -> ParsedReceipt:
+        """Parse using the most appropriate parser."""
+        if not ocr_text or not ocr_text.strip():
+            logger.warning("Empty OCR text provided to adaptive parser")
+            return ParsedReceipt()
+            
+        # Detect store type
+        store_type, confidence = self.detector.detect_store(ocr_text)
+        
+        # Select parser
+        if store_type in self.parsers and confidence >= 0.8:
+            parser = self.parsers[store_type]
+            logger.info(f"Using {store_type} parser (confidence: {confidence:.2f})")
+        else:
+            parser = self.parsers["generic"] 
+            logger.info(f"Using generic parser (store: {store_type}, confidence: {confidence:.2f})")
+            
+        # Parse with selected parser
+        result = parser.parse(ocr_text)
+        
+        # Add metadata about parsing
+        result.meta.update({
+            'detected_store': store_type,
+            'detection_confidence': confidence,
+            'parser_used': type(parser).__name__
+        })
+        
+        return result
+
 
 def get_receipt_parser() -> ReceiptParser:
     """Get default receipt parser instance."""
-    return RegexReceiptParser()
+    return AdaptiveReceiptParser()
