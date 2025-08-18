@@ -181,13 +181,20 @@ class Receipt(models.Model):
         ("USD", "US Dollar"),
     ]
 
+    # UNIFIED STATUS CHOICES - combining both ReceiptProcessing and Receipt statuses
     STATUS_CHOICES = [
+        ("uploaded", "Plik przesłany"),
         ("pending_ocr", "Pending OCR"),
         ("processing_ocr", "OCR in Progress"),
+        ("ocr_in_progress", "Rozpoznawanie tekstu (OCR)"),
         ("ocr_completed", "OCR Completed"),
+        ("ocr_done", "Tekst rozpoznany"),
         ("processing_parsing", "Processing Parsing"),
+        ("llm_in_progress", "Analiza przez AI"),
+        ("llm_done", "Analiza zakończona"),
         ("parsing_completed", "Parsing Completed"),
         ("matching", "Matching Products"),
+        ("ready_for_review", "Gotowe do weryfikacji"),
         ("completed", "Completed"),
         ("error", "Error"),
     ]
@@ -195,30 +202,51 @@ class Receipt(models.Model):
     id = models.AutoField(primary_key=True)
     store_name = models.CharField(max_length=200, blank=True, default="")
     purchased_at = models.DateTimeField(
-        help_text="Date and time when the receipt was issued"
+        null=True, blank=True, help_text="Date and time when the receipt was issued"
     )
     total = models.DecimalField(
         max_digits=10,
         decimal_places=2,
         validators=[MinValueValidator(Decimal("0"))],
+        null=True, blank=True,
         help_text="Total amount from receipt",
     )
     currency = models.CharField(max_length=3, choices=CURRENCY_CHOICES, default="PLN")
+    
+    # UNIFIED FIELDS - combining ReceiptProcessing functionality
+    receipt_file = models.FileField(
+        upload_to="receipt_files/",
+        verbose_name="Plik paragonu (obraz lub PDF)",
+        help_text="Obsługiwane formaty: JPG, PNG, WebP, PDF (maks. 10MB)",
+        null=True,
+        blank=True,
+    )
+    raw_ocr_text = models.TextField(blank=True, verbose_name="Surowy tekst z OCR")
     raw_text = JSONField(
         default=dict,
         blank=True,
         help_text="Raw OCR output with confidence scores and metadata",
     )
+    extracted_data = JSONField(
+        null=True, blank=True, verbose_name="Wyodrębnione dane (JSON)"
+    )
     parsed_data = JSONField(
         default=dict, blank=True, help_text="Parsed structured data from receipt text"
     )
     source_file_path = models.CharField(
-        max_length=500, help_text="Path to original receipt file"
+        max_length=500, blank=True, default="", help_text="Path to original receipt file"
     )
     status = models.CharField(
-        max_length=20, choices=STATUS_CHOICES, default="pending_ocr"
+        max_length=20, choices=STATUS_CHOICES, default="uploaded"
     )
     processing_notes = models.TextField(blank=True, default="")
+    error_message = models.TextField(blank=True, verbose_name="Komunikat błędu")
+    uploaded_at = models.DateTimeField(
+        default=timezone.now, verbose_name="Data przesłania"
+    )
+    processed_at = models.DateTimeField(
+        null=True, blank=True, verbose_name="Data przetworzenia"
+    )
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -233,7 +261,9 @@ class Receipt(models.Model):
         # GIN index for raw_text JSONB field (added in migration)
 
     def __str__(self):
-        return f"Receipt {self.id} - {self.store_name} ({self.purchased_at.date()})"
+        if self.purchased_at:
+            return f"Receipt {self.id} - {self.store_name} ({self.purchased_at.date()})"
+        return f"Receipt {self.id} - {self.store_name} - Status: {self.get_status_display()}"
 
     def get_total_from_items(self):
         """Calculate total from line items for validation."""
@@ -241,8 +271,126 @@ class Receipt(models.Model):
 
     def get_total_discrepancy(self):
         """Get discrepancy between receipt total and calculated total."""
+        if not self.total:
+            return Decimal('0')
         calculated = self.get_total_from_items()
         return abs(self.total - calculated)
+
+    # UNIFIED BUSINESS LOGIC - combining methods from ReceiptProcessing
+    def mark_as_processing(self):
+        """Mark receipt as being processed"""
+        self.status = "ocr_in_progress"
+        self.save()
+
+    def mark_ocr_done(self, raw_text: str):
+        """Mark OCR processing as completed"""
+        self.status = "ocr_done"
+        self.raw_ocr_text = raw_text
+        self.save()
+
+    def mark_llm_processing(self):
+        """Mark LLM processing as started"""
+        self.status = "llm_in_progress"
+        self.save()
+
+    def mark_llm_done(self, extracted_data: dict):
+        """Mark LLM processing as completed"""
+        self.status = "llm_done"
+        self.extracted_data = extracted_data
+        self.save()
+
+    def mark_as_ready_for_review(self):
+        """Mark receipt as ready for user review"""
+        self.status = "ready_for_review"
+        self.save()
+
+    def mark_as_completed(self):
+        """Mark receipt processing as completed"""
+        self.status = "completed"
+        self.processed_at = timezone.now()
+        self.save()
+
+    def mark_as_error(self, error_message: str):
+        """Mark receipt processing as failed with error message"""
+        self.status = "error"
+        self.error_message = error_message
+        self.save()
+
+    def is_ready_for_review(self) -> bool:
+        """Check if receipt is ready for user review"""
+        return self.status == "ready_for_review"
+
+    def is_completed(self) -> bool:
+        """Check if receipt processing is completed"""
+        return self.status == "completed"
+
+    def has_error(self) -> bool:
+        """Check if receipt processing has an error"""
+        return self.status == "error"
+
+    def is_processing(self) -> bool:
+        """Check if receipt is currently being processed"""
+        return self.status in ["ocr_in_progress", "llm_in_progress", "processing_ocr", "processing_parsing"]
+
+    def get_redirect_url(self):
+        """Get appropriate redirect URL based on status"""
+        if self.is_ready_for_review():
+            from django.urls import reverse
+            return reverse("chatbot:receipt_review", kwargs={"receipt_id": self.id})
+        return None
+
+    def get_status_display_with_message(self) -> str:
+        """Get status display with error message if applicable"""
+        if self.has_error() and self.error_message:
+            return f"{self.get_status_display()}: {self.error_message}"
+        return self.get_status_display()
+
+    def get_extracted_products(self) -> list[dict]:
+        """Get extracted products from receipt data"""
+        if not self.extracted_data:
+            return []
+        return self.extracted_data.get("products", [])
+
+    def update_inventory_from_extracted_data(self, products_data: list[dict]) -> bool:
+        """Update inventory with extracted receipt data"""
+        try:
+            from chatbot.services.inventory_service import get_inventory_service
+            
+            inventory_service = get_inventory_service()
+            
+            for product in products_data:
+                name = product.get("name", "").strip()
+                quantity = float(product.get("quantity", 1.0))
+                unit = product.get("unit", "szt.").strip()
+                
+                if name:
+                    inventory_service.add_or_update_item(name, quantity, unit)
+            
+            self.mark_as_completed()
+            return True
+            
+        except Exception as e:
+            self.mark_as_error(f"Błąd podczas aktualizacji inwentarza: {str(e)}")
+            return False
+
+    @classmethod
+    def get_recent_receipts(cls, limit: int = 5):
+        """Get recent receipts for dashboard"""
+        return cls.objects.order_by("-uploaded_at")[:limit]
+
+    @classmethod
+    def get_statistics(cls) -> dict:
+        """Get receipt processing statistics"""
+        return {
+            "total": cls.objects.count(),
+            "uploaded": cls.objects.filter(status="uploaded").count(),
+            "processing": cls.objects.filter(
+                status__in=["ocr_in_progress", "llm_in_progress", "processing_ocr", "processing_parsing"]
+            ).count(),
+            "ready_for_review": cls.objects.filter(status="ready_for_review").count(),
+            "completed": cls.objects.filter(status="completed").count(),
+            "error": cls.objects.filter(status="error").count(),
+        }
 
 
 class ReceiptLineItem(models.Model):

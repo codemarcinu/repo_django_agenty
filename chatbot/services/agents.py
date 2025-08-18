@@ -14,6 +14,7 @@ from ..rag_processor import rag_processor
 from ..weather_service import get_weather
 from ..web_search import ddg_search
 from .async_services import AsyncPantryService
+from .model_router import model_router
 
 logger = logging.getLogger(__name__)
 
@@ -57,9 +58,10 @@ class OllamaAgent(BaseAgent):
     def __init__(self, **kwargs):
         kwargs.setdefault("name", "OllamaAgent")
         super().__init__(**kwargs)
-        self.capabilities = ["llm_chat", "dynamic_response_generation"]
+        self.capabilities = ["llm_chat", "dynamic_response_generation", "auto_model_routing"]
         self.ollama_url = self.config.get("ollama_url", "http://127.0.0.1:11434")
-        self.model = self.config.get("model", "SpeakLeash/bielik-11b-v2.3-instruct:Q5_K_M")
+        self.model = self.config.get("model", "qwen2:7b")  # Default to new optimized model
+        self.use_auto_routing = self.config.get("auto_routing", True)
         self.fallback_models = ["ollama", "simple_rules"]
 
     async def health_check_ollama(self) -> bool:
@@ -69,7 +71,7 @@ class OllamaAgent(BaseAgent):
             "https://": None,
         }
         try:
-            async with httpx.AsyncClient(timeout=5.0) as client:
+            async with httpx.AsyncClient(timeout=10.0) as client:
                 headers = {
                     'User-Agent': 'curl/7.81.0',
                 }
@@ -113,6 +115,18 @@ class OllamaAgent(BaseAgent):
         user_message = input_data.get("message", "")
         history = input_data.get("history", [])
 
+        # Use model router if auto-routing is enabled and not overridden
+        if self.use_auto_routing and not input_data.get("routing_override"):
+            routing_result = model_router.route_request(input_data)
+            selected_model = routing_result["model"]
+            model_config = routing_result["config"]
+            logger.info(f"Auto-routed to model: {selected_model} for task: {routing_result['task_type']}")
+        else:
+            selected_model = self.model
+            model_config = model_router.get_model_config(self.model)  # Get default config
+
+        formatted_messages = []
+
         formatted_messages = []
         current_datetime = input_data.get("current_datetime")
         if current_datetime:
@@ -128,13 +142,24 @@ class OllamaAgent(BaseAgent):
         )
         formatted_messages.append({"role": "user", "content": user_message})
 
-        payload = {"model": self.model, "messages": formatted_messages, "stream": False}
+        # Get timeout from config, with model-specific optimizations
+        timeout = self.config.get("timeout", 180.0)
+        
+        # Merge model-specific config with user config
+        options = {**model_config, **self.config.get("options", {})}
+        
+        payload = {
+            "model": selected_model, 
+            "messages": formatted_messages, 
+            "stream": self.config.get("stream", False),
+            "options": options
+        }
 
         proxies = {
             "http://": None,
             "https://": None,
         }
-        async with httpx.AsyncClient(timeout=60.0) as client:
+        async with httpx.AsyncClient(timeout=timeout) as client:
             headers = {
                 'User-Agent': 'curl/7.81.0',
                 'Content-Type': 'application/json'
@@ -340,6 +365,7 @@ Narzędzie: general_conversation
         context_str = "\n\n---\n\n".join(retrieved_context)
         augmented_prompt = f"Na podstawie kontekstu z dokumentów: '{context_str}', odpowiedz na pytanie: '{user_message}'"
         input_data["message"] = augmented_prompt
+        input_data["routing_override"] = True
         return await super().process(input_data)
 
     async def _execute_web_search(self, input_data):
@@ -347,13 +373,20 @@ Narzędzie: general_conversation
         search_results = ddg_search(user_message)
         augmented_prompt = f"Na podstawie wyników wyszukiwania: '{search_results}', odpowiedz na pytanie: '{user_message}'"
         input_data["message"] = augmented_prompt
+        input_data["routing_override"] = True
         return await super().process(input_data)
 
     async def _execute_weather_service(self, input_data):
         user_message = input_data.get("message", "")
         city_prompt = f"Z pytania: '{user_message}' wyekstrahuj tylko nazwę miasta w mianowniku. Jeśli nie ma miasta, odpowiedz 'brak'."
-        city_input = {"message": city_prompt, "history": []}
+        city_input = {"message": city_prompt, "history": [], "routing_override": True}
         city_response = await super().process(city_input)
+
+        if not city_response.success:
+            logger.warning("LLM call for city extraction failed. Proceeding with original message.")
+            input_data["routing_override"] = True
+            return await super().process(input_data)
+
         city = city_response.data.get("response", "").strip()
         if city and "brak" not in city.lower():
             weather_data = get_weather(city)
@@ -361,7 +394,9 @@ Narzędzie: general_conversation
                 f"Oto dane pogodowe: {weather_data}. Odpowiedz na pytanie użytkownika."
             )
             input_data["message"] = augmented_prompt
+            input_data["routing_override"] = True
             return await super().process(input_data)
+        input_data["routing_override"] = True
         return await super().process(input_data)  # Fallback if no city
 
     async def _execute_pantry_management(self, input_data):
@@ -374,8 +409,14 @@ Narzędzie: general_conversation
         Odpowiedz tylko jednym słowem: 'specific' lub 'general'.
         Pytanie użytkownika: {user_message}
         """
-        classification_input = {"message": classification_prompt, "history": []}
+        classification_input = {"message": classification_prompt, "history": [], "routing_override": True}
         classification_response = await super().process(classification_input)
+
+        if not classification_response.success:
+            logger.warning("LLM call for pantry query classification failed.")
+            input_data["routing_override"] = True
+            return await super().process(input_data)
+
         query_type = (
             classification_response.data.get("response", "general").strip().lower()
         )
@@ -384,8 +425,14 @@ Narzędzie: general_conversation
         if query_type == "specific":
             # Extract product name for specific query
             product_name_prompt = f"Z pytania: '{user_message}' wyekstrahuj tylko nazwę produktu, o który pyta użytkownik. Odpowiedz tylko nazwą produktu."
-            product_name_input = {"message": product_name_prompt, "history": []}
+            product_name_input = {"message": product_name_prompt, "history": [], "routing_override": True}
             product_name_response = await super().process(product_name_input)
+
+            if not product_name_response.success:
+                logger.warning("LLM call for product name extraction failed.")
+                input_data["routing_override"] = True
+                return await super().process(input_data)
+
             product_name = product_name_response.data.get("response", "").strip()
 
             if product_name:
@@ -409,4 +456,5 @@ Narzędzie: general_conversation
 
         augmented_prompt = f"Oto informacje o spiżarni: '{pantry_info}'. Odpowiedz na pytanie użytkownika: '{user_message}'"
         input_data["message"] = augmented_prompt
+        input_data["routing_override"] = True
         return await super().process(input_data)

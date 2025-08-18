@@ -1,23 +1,48 @@
-# Agenty - Twój Inteligentny Asystent AI 🤖
+# Agenty - Inteligentny System Zarządzania Domem 🤖
 
-**Agenty** to Twój osobisty asystent sztucznej inteligencji, który działa całkowicie offline na Twoim komputerze. 
+**Agenty** to zaawansowany system sztucznej inteligencji działający lokalnie na Twoim komputerze. Łączy nowoczesne technologie AI z praktycznym zarządzaniem gospodarstwem domowym.
 
-✨ **Prywatność przede wszystkim** - Żadne Twoje dane nie opuszczają Twojego komputera  
-🚀 **Przyspieszenie GPU** - Wykorzystuje kartę graficzną dla błyskawicznej pracy  
-🧠 **Inteligentny i wszechstronny** - Pomaga z dokumentami, paragonami, pogodą i wieloma innymi zadaniami
+✨ **Prywatność przede wszystkim** - Wszystkie dane pozostają na Twoim komputerze  
+🚀 **GPU Acceleration** - Wykorzystuje karty graficzne NVIDIA dla maksymalnej wydajności  
+🧠 **Multi-Agent Architecture** - Inteligentny system routingu i specjalizowanych agentów AI  
+📊 **Comprehensive Analytics** - Zaawansowane analizy wydatków i konsumpcji
 
 ---
 
-## 🎯 Czym jest Agenty?
+## 🎯 System Capabilities
 
-Wyobraź sobie asystenta, który:
-- 💬 **Rozmawia z Tobą** w naturalny sposób, jak z przyjacielem
-- 📄 **Czyta dokumenty** i odpowiada na pytania o ich zawartość
-- 🛒 **Analizuje paragony** i automatycznie dodaje produkty do Twojej spiżarni
-- 🌡️ **Sprawdza pogodę** i wyszukuje informacje w internecie
-- 🏠 **Dba o Twoją spiżarnię** - przypomina o datach przydatności produktów
+**Agenty** to kompleksowy ekosystem AI składający się z:
 
-**Wszystko dzieje się na Twoim komputerze** - żadne dane nie są wysyłane do internetu!
+### 💬 Intelligent Conversational AI
+- Naturalne rozmowy w języku polskim z wykorzystaniem modelu Bielik
+- Zaawansowany system routingu zapytań do specjalistycznych agentów
+- Pamięć kontekstu i personalizacja interakcji
+- Wsparcie dla zapytań wielomodalnych (tekst + obrazy)
+
+### 📄 Document Processing & RAG
+- Przetwarzanie dokumentów PDF, Word, i tekstowych
+- System RAG (Retrieval-Augmented Generation) z ChromaDB
+- Semantyczne wyszukiwanie w dokumentach z wykorzystaniem embeddings
+- Zaawansowane indeksowanie i kategoryzacja treści
+
+### 🛒 Receipt Processing Pipeline
+- Rozpoznawanie tekstu z paragonów (OCR) z EasyOCR i Tesseract
+- AI-powered parsing strukturalnych danych z paragonów
+- Automatyczne dopasowywanie produktów do katalogu
+- GPU-accelerated processing dla szybkiej analizy
+
+### 🏠 Inventory Management System
+- Automatyczne zarządzanie spiżarnią na podstawie paragonów
+- Tracking dat przydatności i alertów o produktach
+- System kategorii produktów z hierarchiczną strukturą
+- Analytics konsumpcji i trendów zakupowych
+
+### 🌐 External Integrations
+- Weather API (OpenWeatherMap) z intelligent routing
+- Web search (DuckDuckGo) dla aktualnych informacji
+- Modular architecture dla łatwej rozbudowy integracji
+
+**Wszystko dzieje się offline** - maksymalna prywatność i kontrola nad danymi!
 
 ### ✨ Co potrafi Agenty?
 
@@ -48,41 +73,59 @@ Wyobraź sobie asystenta, który:
 
 ---
 
-## 🏗️ Architektura Systemu
+## 🏗️ System Architecture
 
-### Backend (Django 5.2.5)
+### Backend Stack (Django 5.2.5 + Advanced Services)
 ```
 agenty/
-├── core/                    # Konfiguracja Django
-│   ├── settings.py         # Główne ustawienia
-│   ├── settings_dev.py     # Środowisko development
-│   ├── settings_prod.py    # Środowisko produkcyjne
-│   ├── celery.py          # Konfiguracja Celery
-│   └── database_config.py  # Konfiguracja bazy danych
-├── chatbot/                # Główna aplikacja
-│   ├── api/               # REST API endpoints
-│   │   ├── views.py       # Django views z @csrf_exempt
-│   │   ├── drf_views.py   # Django REST Framework views
-│   │   └── urls.py        # Routing API
-│   ├── services/          # Logika biznesowa (Fat Model pattern)
-│   │   ├── agent_factory.py    # Factory pattern dla agentów
-│   │   ├── agents.py           # Implementacje agentów AI
-│   │   ├── pantry_service.py   # Zarządzanie spiżarnią
-│   │   ├── receipt_service.py  # Przetwarzanie paragonów
-│   │   └── async_services.py   # Asynchroniczne operacje
-│   ├── models.py          # Modele Django z business logic
-│   ├── views.py           # Widoki HTML
-│   ├── tasks.py           # Zadania Celery
-│   └── templates/         # Szablony HTML z Tailwind CSS
-└── requirements.txt       # Zależności Python
+├── core/                           # Core Django Configuration
+│   ├── settings.py                # Auto-detecting settings module
+│   ├── settings_dev.py            # Development (SQLite, Debug)
+│   ├── settings_prod.py           # Production (PostgreSQL optimized)
+│   ├── celery.py                  # Celery configuration with Redis
+│   └── database_config.py         # Multi-database configuration
+├── chatbot/                       # Main AI Application
+│   ├── api/                      # REST API Layer
+│   │   ├── views.py              # Django views with @csrf_exempt
+│   │   ├── receipt_views.py      # Receipt processing endpoints
+│   │   ├── drf_views.py          # Django REST Framework backup
+│   │   └── urls.py               # API routing and versioning
+│   ├── services/                 # Business Logic (Fat Service Layer)
+│   │   ├── agent_factory.py      # Multi-agent creation factory
+│   │   ├── agents.py             # Specialized AI agent implementations
+│   │   ├── model_router.py       # AI model routing and selection
+│   │   ├── receipt_service.py    # Receipt processing pipeline
+│   │   ├── receipt_processor_v2.py # Advanced receipt processing
+│   │   ├── ocr_service.py        # OCR backend abstraction
+│   │   ├── vision_service.py     # Vision processing utilities
+│   │   ├── product_matcher.py    # Product matching algorithms
+│   │   ├── inventory_service.py  # Inventory management logic
+│   │   ├── cache_service.py      # Redis/DB cache abstraction
+│   │   └── async_services.py     # Async operation handlers
+│   ├── models.py                 # Fat Models with business logic
+│   ├── tasks.py                  # Celery background tasks
+│   ├── views.py                  # HTML template views
+│   └── templates/                # Modern responsive templates
+├── inventory/                     # Inventory Management App
+│   ├── models.py                 # Product, Receipt, InventoryItem models
+│   ├── views.py                  # Inventory dashboard and analytics
+│   └── templates/                # Inventory-specific UI components
+└── requirements.txt              # Production dependencies
 ```
 
-### Frontend (Vanilla JS + Tailwind CSS)
-- **Responsive Design** - Działa na wszystkich urządzeniach
-- **Modern Chat Interface** - Bubble UI z animacjami
-- **Drag & Drop Upload** - Intuicyjne przesyłanie plików
-- **Real-time Status** - Live updates statusów przetwarzania
-- **Glass Effects** - Nowoczesne efekty wizualne
+### AI & Machine Learning Infrastructure
+- **Ollama Integration**: Local LLM serving with GPU optimization
+- **Model Router**: Intelligent routing to specialized models
+- **ChromaDB**: Vector database for RAG and semantic search
+- **EasyOCR/Tesseract**: Multi-backend OCR with fallback support
+- **Multi-Agent Architecture**: Specialized agents for different tasks
+
+### Frontend Architecture (Modern Responsive Design)
+- **Vanilla JavaScript**: High-performance client-side logic
+- **Tailwind CSS**: Utility-first responsive design system
+- **Glass Morphism UI**: Modern glassmorphism effects and animations
+- **Real-time Updates**: WebSocket-ready status monitoring
+- **Progressive Enhancement**: Works across all device types
 
 ---
 
@@ -159,28 +202,32 @@ cp .env.example .env
 # Edytuj plik .env i dodaj swój klucz w linii OPENWEATHERMAP_API_KEY=
 ```
 
-### Krok 4: Uruchom! 🎉
+### Krok 4: Uruchom System! 🎉
 ```bash
-# Najłatwiejszy sposób:
+# Automated startup with optimization
 ./start.sh
 
-# System automatycznie:
-# ✅ Przygotuje bazę danych
-# ✅ Uruchomi serwer Ollama
-# ✅ Pobierze model Bielik (7.9GB - pierwsza instalacja zajmie ~15 minut)
-# ✅ Uruchomi serwer Django
+# System automatycznie wykonuje:
+# ✅ Sprawdza i konfiguruje środowisko GPU
+# ✅ Uruchamia Ollama z optymalizacją dla NVIDIA
+# ✅ Pobiera wymagane modele AI (qwen2:7b, qwen2.5vl:7b, mistral:7b)
+# ✅ Konfiguruje Redis/Valkey dla cache'owania
+# ✅ Uruchamia Celery worker dla zadań w tle
+# ✅ Startuje Django development server
 ```
 
-**🕐 Pierwsze uruchomienie:**
-- Pobieranie modelu Bielik: ~15 minut (szybki internet)
-- Zobaczysz postęp pobierania w terminalu
-- Modele: `SpeakLeash/bielik-11b-v2.3-instruct:Q5_K_M` + `mxbai-embed-large`
-- **Pierwsze przesłanie dokumentu:** Dodatowe ~2 minuty na model RAG
-- Po pobraniu wszystkie modele zostają na zawsze
+**🕐 First Installation Timeline:**
+- **Models Download**: ~25 minutes for full model suite (21GB on fast internet)
+- **Core Models**: qwen2:7b (~4.5GB), qwen2.5vl:7b (~4.9GB), mistral:7b (~4.1GB)
+- **RAG Model**: mxbai-embed-large (~670MB) - downloaded on first document upload
+- **OCR Models**: EasyOCR language packs (~50MB) - downloaded on first receipt scan
+- **Progress Monitoring**: Real-time download progress in terminal
 
-**⚡ Kolejne uruchomienia:**
-- Instant start - model już jest pobrany
-- Uruchamianie zajmuje ~30 sekund
+**⚡ Subsequent Starts:**
+- **Cold Start**: ~30 seconds (all models cached)
+- **GPU Detection**: Automatic CUDA optimization
+- **Service Health Checks**: Ollama, Redis, Celery status verification
+- **Background Operation**: All services run in background after startup
 
 ### Krok 5: Ciesz się! 🎊
 Otwórz przeglądarkę i wejdź na:
@@ -196,80 +243,91 @@ Otwórz przeglądarkę i wejdź na:
 
 ---
 
-## 🧠 Modele sztucznej inteligencji w projekcie
+## 🧠 AI Models & Technology Stack
 
-### 🇵🇱 Model główny: Bielik
-**Pełna nazwa:** `SpeakLeash/bielik-11b-v2.3-instruct:Q5_K_M`
+### 🎯 Current Model Configuration
 
-**Dlaczego Bielik?**
-- **Mówi po polsku!** - Stworzony specjalnie dla języka polskiego
-- **Lokalny i prywatny** - Działa na Twoim komputerze, nie wysyła danych
-- **Zoptymalizowany** - Wersja Q5_K_M zapewnia dobry balans szybkości i jakości
-- **Rozmiar:** 7.9 GB (pobierany raz, zostaje na zawsze)
+**Primary Models (Auto-downloaded via start.sh):**
+- **qwen2:7b** - Main conversational AI model for Polish language support
+- **qwen2.5vl:7b** - Vision-language model for image and document analysis  
+- **mistral:7b** - Backup/alternative model for specialized tasks
+- **mxbai-embed-large** - RAG embeddings for semantic document search
 
-**Możliwości modelu:**
-- Naturalne rozmowy po polsku
-- Analiza dokumentów i tekstu
-- Ekstrakcja danych z paragonów
-- Integracja z narzędziami (pogoda, wyszukiwanie, spiżarnia)
-- Rozumienie kontekstu rozmowy
+### 🚀 GPU Optimization & Performance
 
-### 🚀 Optymalizacja GPU
-**Konfiguracja dla kart NVIDIA:**
-- **num_gpu: 51** - Wykorzystanie wszystkich warstw GPU (RTX 3060/4060)
-- **temperature: 0.1** - Niska temperatura dla spójnych wyników
-- **num_ctx: 4096** - Okno kontekstu dla długich rozmów
-- **num_predict: 1024** - Maksymalna długość odpowiedzi
-
-**Wydajność:**
-- **Z GPU (RTX):** Odpowiedzi w 3-8 sekund
-- **Bez GPU (CPU):** Odpowiedzi w 15-30 sekund
-- **VRAM:** ~1.2GB podczas pracy
-
-### 📚 Inne modele w systemie
-
-**🔗 RAG Embedding Model:**
-- **Model:** `mxbai-embed-large` (przez Ollama)
-- **Funkcja:** Przekształcanie tekstu na wektory dla wyszukiwania semantycznego
-- **Rozmiar:** ~670MB
-- **Automatyczne pobieranie:** Przy pierwszym przesłaniu dokumentu
-- **Zastosowanie:** Analiza podobieństwa dokumentów, wyszukiwanie kontekstu
-
-**👁️ EasyOCR Models (automatyczne pobieranie):**
-- Model rozpoznawania tekstu polskiego (~25MB)
-- Model rozpoznawania tekstu angielskiego (~25MB)
-- Pobieranie przy pierwszej analizie paragonu
-
-**📝 Tesseract Language Packs:**
-- `pol` - Polski pakiet językowy
-- `eng` - Angielski pakiet językowy
-- Backup gdy EasyOCR nie jest dostępne
-
-### 💾 Zarządzanie modelami
-**Gdzie są przechowywane:**
-- **Bielik + mxbai-embed-large:** `~/.ollama/models/` (Linux/Mac) lub `%USERPROFILE%\.ollama\models\` (Windows)
-- **EasyOCR:** `~/.EasyOCR/model/`
-- **ChromaDB (RAG):** `chroma_db/` w folderze projektu
-
-**Zarządzanie przez Ollama:**
+**Ollama Configuration (Optimized for RTX 3060/4060):**
 ```bash
-# Lista zainstalowanych modeli
-ollama list
-
-# Pobierz modele ręcznie
-ollama pull SpeakLeash/bielik-11b-v2.3-instruct:Q5_K_M  # Model główny
-ollama pull mxbai-embed-large                            # Model RAG
-
-# Usuń modele (jeśli potrzebujesz miejsca)
-ollama rm SpeakLeash/bielik-11b-v2.3-instruct:Q5_K_M
-ollama rm mxbai-embed-large
+export OLLAMA_MAX_LOADED_MODELS=1     # Memory optimization
+export OLLAMA_NUM_PARALLEL=1          # Single-threaded for stability
+export OLLAMA_GPU_OVERHEAD=0          # Minimal GPU overhead
+export CUDA_VISIBLE_DEVICES=0         # Primary GPU only
 ```
 
-**💡 Całkowity rozmiar wszystkich modeli:**
-- Bielik (główny AI): ~7.9GB
-- mxbai-embed-large (RAG): ~670MB  
-- EasyOCR (OCR): ~50MB
-- **Łącznie: ~8.6GB**
+**Performance Benchmarks:**
+- **RTX 3060/4060**: 3-8 seconds response time, ~2GB VRAM usage
+- **RTX 3070+**: 2-5 seconds response time, ~2.5GB VRAM usage  
+- **CPU Fallback**: 15-30 seconds response time, ~8GB RAM usage
+
+### 🔧 Multi-Backend OCR System
+
+**Primary OCR Backend (EasyOCR):**
+- Auto-downloads Polish and English language models (~50MB total)
+- GPU-accelerated when NVIDIA card available
+- High accuracy for printed text recognition
+- Confidence scoring for quality assessment
+
+**Fallback OCR Backend (Tesseract):**
+- System Tesseract with `pol` and `eng` language packs
+- CPU-based processing as backup
+- Reliable for low-quality images
+
+### 🗄️ Vector Database & RAG Architecture
+
+**ChromaDB Integration:**
+- Local vector database stored in `chroma_db/`
+- Automatic document chunking and embedding
+- Semantic similarity search capabilities
+- Persistent storage with incremental updates
+
+**RAG Pipeline:**
+1. Document upload and preprocessing
+2. Text chunking with overlap optimization
+3. Embedding generation via mxbai-embed-large
+4. Vector storage in ChromaDB
+5. Query-time semantic retrieval
+6. Context-aware response generation
+
+### 💾 Model Management & Storage
+
+**Storage Locations:**
+- **Ollama Models**: `~/.ollama/models/` (Linux/Mac), `%USERPROFILE%\.ollama\models\` (Windows)
+- **EasyOCR Cache**: `~/.EasyOCR/model/`
+- **ChromaDB Vectors**: `./chroma_db/` (project directory)
+- **Tesseract Data**: System-managed language packs
+
+**Model Operations:**
+```bash
+# Check model status
+ollama list
+
+# Download specific models
+ollama pull qwen2:7b
+ollama pull qwen2.5vl:7b
+ollama pull mistral:7b
+ollama pull mxbai-embed-large
+
+# Remove models to save space
+ollama rm <model_name>
+
+# Monitor GPU usage during inference
+nvidia-smi -l 1
+```
+
+**💡 Total Storage Requirements:**
+- Core models (qwen2:7b + qwen2.5vl:7b + mistral:7b): ~20GB
+- RAG embeddings (mxbai-embed-large): ~670MB
+- OCR models (EasyOCR): ~50MB
+- **Total: ~21GB for full capabilities**
 
 ---
 
@@ -375,29 +433,57 @@ ollama rm mxbai-embed-large
 
 ---
 
-## 🔧 Konfiguracja Zaawansowana
+## 🔧 Advanced System Configuration
 
-### Cache System (Redis + Database Fallback)
+### ⚡ Intelligent Caching Architecture
 ```python
-# Automatyczne przełączanie Redis ↔ Database
+# Auto-fallback caching with Redis + Database
 CACHES = {
     'default': {
-        'BACKEND': 'django.core.cache.backends.redis.RedisCache',  # Jeśli Redis dostępne
-        # lub
+        'BACKEND': 'django.core.cache.backends.redis.RedisCache',  # Primary
+        'LOCATION': 'redis://127.0.0.1:6379/1',
+        'OPTIONS': {
+            'CONNECTION_POOL_KWARGS': {'max_connections': 20}
+        }
+    },
+    'database_fallback': {
         'BACKEND': 'django.core.cache.backends.db.DatabaseCache',  # Fallback
+        'LOCATION': 'agenty_cache_table',
     }
 }
 ```
 
-### Settings Management
-- **settings.py** - Główny entry point z auto-detection
-- **settings_dev.py** - Development (SQLite, Debug=True)
-- **settings_prod.py** - Production (PostgreSQL, optimizations)
+### 🏗️ Multi-Environment Settings Management
+- **settings.py** - Smart auto-detection entry point
+- **settings_dev.py** - Development (SQLite, Debug, Hot reload)
+- **settings_prod.py** - Production (PostgreSQL, Redis, Optimizations)
+- **Environment Detection** - Automatic based on DJANGO_SETTINGS_MODULE
 
-### API Architecture
-- **Django Views** - Main API z @csrf_exempt
-- **DRF Views** - Backup REST endpoints
-- **Async Support** - Przygotowane do async operations
+### 🌐 Advanced API Architecture
+```python
+# Fat Service Layer with Dependency Injection
+chatbot/services/
+├── agent_factory.py      # Agent creation and management
+├── model_router.py       # AI model selection and routing  
+├── receipt_processor_v2.py # Enhanced receipt processing pipeline
+├── cache_service.py      # Intelligent caching abstraction
+├── async_services.py     # Async operations with proper error handling
+└── inventory_service.py  # Business logic for inventory management
+```
+
+### 🚀 Performance Optimizations
+- **GPU Memory Management**: Dynamic model loading/unloading
+- **Database Indexing**: Optimized indexes for high-frequency queries
+- **Async Processing**: Celery for background tasks, async views for real-time
+- **Caching Strategy**: Multi-layer caching (Redis, database, in-memory)
+- **Query Optimization**: Select_related and prefetch_related throughout
+
+### 🔒 Production-Ready Features
+- **Health Checks**: Comprehensive system monitoring endpoints
+- **Error Handling**: Centralized error processing with severity levels
+- **Logging**: Structured logging with rotation and filtering
+- **Security**: CSRF protection, input validation, SQL injection prevention
+- **Monitoring**: Built-in metrics collection for system performance
 
 ---
 
@@ -556,31 +642,40 @@ LOGGING = {
 
 ---
 
-## 🚀 Development Roadmap
+## 📊 Current Development Status (v2.5)
 
-### ✅ Completed (v2.0)
-- Modern Dashboard UI/UX
-- GPU acceleration for OCR
-- Fat Model, Thin View architecture
-- Complete API refactoring
-- CSRF token handling
-- Redis cache with fallback
-- Responsive design system
+### ✅ Production-Ready Features
+- **🏗️ Multi-Agent Architecture** - Intelligent routing and specialized AI agents
+- **⚡ GPU-Optimized Pipeline** - NVIDIA GPU acceleration for OCR and AI inference
+- **📊 Advanced Analytics** - Comprehensive inventory and consumption analytics
+- **🔄 Async Processing** - Celery-based background task processing
+- **💾 Intelligent Caching** - Redis primary with database fallback
+- **🗄️ RAG Document System** - ChromaDB vector database with semantic search
+- **🛒 Receipt Processing Pipeline** - End-to-end OCR → Parse → Match → Inventory
+- **📱 Responsive UI/UX** - Modern glassmorphism design with Tailwind CSS
+- **🔒 Production Security** - CSRF, input validation, error handling
 
-### 🔄 In Progress
-- [ ] Dark mode support
-- [ ] Real-time notifications
-- [ ] Advanced pantry analytics
-- [ ] Multi-language receipt support
-- [ ] Voice interface integration
+### 🔄 Current Development Focus
+- **🤖 Advanced AI Model Integration** - Fine-tuning model selection and routing
+- **📈 Performance Optimization** - Memory usage and response time improvements  
+- **🧪 Enhanced Testing Suite** - Comprehensive unit and integration tests
+- **📊 Dashboard Analytics** - Real-time consumption and spending insights
+- **🔧 System Monitoring** - Health checks and performance metrics
 
-### 📋 Planned Features
-- [ ] Mobile PWA support
-- [ ] Advanced AI model integration
-- [ ] Barcode scanning
-- [ ] Shopping list generation
-- [ ] Data export/import
-- [ ] Multi-user support
+### 🎯 Next Major Features (v3.0)
+- **🌙 Dark Mode Support** - Complete UI theme system
+- **🔔 Real-time Notifications** - WebSocket-based live updates
+- **📱 Progressive Web App** - Mobile-first PWA implementation
+- **🗣️ Voice Interface** - Speech-to-text conversational AI
+- **📊 Advanced Reports** - Export capabilities and trend analysis
+- **👥 Multi-user Support** - User management and permissions
+
+### 🚀 Long-term Vision
+- **🔗 IoT Integration** - Smart home device connectivity
+- **🛒 Shopping Automation** - AI-powered shopping list generation
+- **📦 Supplier Integration** - Direct ordering and price comparison
+- **🧠 Predictive Analytics** - Consumption prediction and optimization
+- **🌐 Cloud Sync** - Optional cloud backup and synchronization
 
 ---
 
@@ -592,24 +687,38 @@ LOGGING = {
 3. Restart: Ctrl+C → ./start.sh
 4. Check logs in Django admin
 
-### Development Setup
+### 🛠️ Development Environment Setup
 ```bash
-# Install development dependencies
-pip install -r requirements-dev.txt
+# Setup development environment
+python -m venv .venv
+source .venv/bin/activate  # Linux/Mac
+# .venv\Scripts\activate   # Windows
 
-# Run with debug
-DEBUG=True python manage.py runserver
+# Install all dependencies including dev tools
+pip install -r requirements.txt
 
-# Pre-commit hooks
+# Install additional development tools
+pip install black ruff mypy pytest-django coverage
+
+# Setup pre-commit hooks (optional)
 pre-commit install
+
+# Run development server with debug
+DJANGO_SETTINGS_MODULE=core.settings_dev python manage.py runserver
+
+# Run tests
+python manage.py test
+# or with pytest
+pytest
 ```
 
-### Contributing Guidelines
-- Follow PEP 8 style guide
-- Add tests for new features
-- Update documentation
-- Use meaningful commit messages
-- Fat Model, Thin View pattern
+### 📋 Contributing Guidelines
+- **Code Style**: Follow PEP 8, use Black for formatting, Ruff for linting
+- **Architecture**: Maintain Fat Model, Thin View pattern with service layer
+- **Testing**: Add unit and integration tests for new features
+- **Documentation**: Update README and docstrings for public APIs
+- **Commits**: Use conventional commit messages with semantic prefixes
+- **Security**: Never commit sensitive data, validate all inputs
 
 ---
 
@@ -619,32 +728,41 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ---
 
-## 🎉 Wszystko gotowe - czas na zabawę!
+## 🎉 Ready to Explore? Start Your AI Journey!
 
-**Twój osobisty asystent AI czeka na Ciebie!** 
+**Your intelligent home management system is ready!** 
 
-### 🚀 Szybki start (3 kroki):
-1. **Uruchom**: Otwórz terminal i wpisz `./start.sh`
-2. **Otwórz**: Wejdź na http://127.0.0.1:8000/ w przeglądarce
-3. **Eksploruj**: 
-   - Kliknij **"Chat"** i porozmawiaj z AI
-   - Prześlij **dokument** i zadawaj o niego pytania  
-   - Zrób **zdjęcie paragonu** i zobacz jak system go analizuje
-   - Sprawdź swoją **cyfrową spiżarnię**
+### 🚀 Quick Start Guide (3 Simple Steps):
+1. **🔥 Launch**: Open terminal and run `./start.sh`
+2. **🌐 Access**: Open http://127.0.0.1:8000/ in your browser
+3. **✨ Explore**: 
+   - **💬 Chat Interface**: Start conversation with multi-agent AI system
+   - **📄 Document Upload**: Upload PDFs/Word docs for intelligent analysis
+   - **🛒 Receipt Scanner**: Take photo of receipt for automatic inventory management
+   - **📊 Analytics Dashboard**: Monitor your household consumption patterns
 
-### 💡 Pierwsze pytania do AI:
-- "Cześć! Opowiedz mi o sobie"
-- "Jaka jest pogoda w [twoje miasto]?"
-- "Co wiesz o sztucznej inteligencji?"
+### 🗣️ Try These Sample Conversations:
+- "Cześć! Pokaż mi możliwości systemu" *(Show me system capabilities)*
+- "Jaka jest pogoda dzisiaj w Krakowie?" *(Weather check)*
+- "Przeanalizuj ten dokument" *(Document analysis)*
+- "Co mam w spiżarni?" *(Inventory check)*
+- "Które produkty się kończą?" *(Expiry monitoring)*
 
-### 📱 Co dalej?
-- Prześlij swój pierwszy dokument (PDF, Word)
-- Wypróbuj analizę paragonu ze sklepu
-- Zbuduj swoją cyfrową spiżarnię
-- Odkryj wszystkie możliwości w naturalnej rozmowie!
+### 🔍 Advanced Features to Explore:
+- **🤖 Multi-Agent Routing**: Watch AI automatically select specialized agents
+- **📊 Analytics Dashboard**: Explore spending patterns and consumption trends  
+- **🗄️ RAG Document Search**: Upload documents and ask specific questions
+- **⚡ GPU Acceleration**: Experience blazing-fast receipt processing
+- **💾 Intelligent Caching**: Notice improved response times on repeated queries
+
+### 🎯 Power User Tips:
+- **Monitor Performance**: Check `logs/` directory for system insights
+- **GPU Usage**: Run `nvidia-smi` to monitor GPU utilization during processing
+- **Model Management**: Use `ollama list` to see loaded AI models
+- **Background Services**: All processing happens asynchronously via Celery
 
 ---
 
-**🌟 Pamiętaj:** To jest Twój prywatny AI - wszystko dzieje się na Twoim komputerze!
+**🔒 Privacy First:** Everything runs locally on your machine - no data leaves your computer!
 
-**Miłego korzystania z Agenty!** 🤖✨
+**🚀 Welcome to the future of intelligent home management!** 🏠✨

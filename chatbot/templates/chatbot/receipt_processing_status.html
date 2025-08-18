@@ -11,7 +11,7 @@
                 <span class="text-3xl animate-pulse">⚡</span>
             </div>
             <h1 class="text-4xl font-bold gradient-text mb-2">Przetwarzanie Paragonu</h1>
-            <p class="text-secondary-600 text-lg">Paragon ID: <span class="font-semibold text-primary-600">#{{ receipt_id }}</span></p>
+            <p class="text-secondary-600 text-lg">Paragon ID: <span class="font-semibold text-primary-600">#{{ receipt.id }}</span></p>
         </div>
 
         <!-- Status Card -->
@@ -23,8 +23,8 @@
                     <div id="status-indicator" class="w-3 h-3 bg-blue-500 rounded-full animate-pulse"></div>
                 </div>
                 <div id="status-message" class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4 border border-blue-200">
-                    <p class="text-lg font-medium text-blue-800" id="current-status">{{ status }}</p>
-                    <p class="text-sm text-blue-600 mt-1" id="status-description">Inicjalizacja przetwarzania...</p>
+                    <p class="text-lg font-medium text-blue-800" id="current-status">{{ receipt.get_status_display }}</p>
+                    <p class="text-sm text-blue-600 mt-1" id="status-description">{{ receipt.processing_notes|default:"Inicjalizacja przetwarzania..." }}</p>
                 </div>
                 
                 <!-- Error Message -->
@@ -54,7 +54,7 @@
             <div class="space-y-3">
                 <h3 class="text-lg font-semibold text-secondary-800 mb-4">Etapy przetwarzania</h3>
                 
-                <div class="processing-step" data-step="uploaded">
+                <div class="processing-step" data-step="pending_ocr">
                     <div class="flex items-center space-x-3">
                         <div class="step-indicator w-8 h-8 rounded-full border-2 border-secondary-300 flex items-center justify-center">
                             <span class="step-number text-sm font-semibold text-secondary-500">1</span>
@@ -67,7 +67,7 @@
                     </div>
                 </div>
 
-                <div class="processing-step" data-step="ocr_in_progress">
+                <div class="processing-step" data-step="ocr_completed">
                     <div class="flex items-center space-x-3">
                         <div class="step-indicator w-8 h-8 rounded-full border-2 border-secondary-300 flex items-center justify-center">
                             <span class="step-number text-sm font-semibold text-secondary-500">2</span>
@@ -86,7 +86,7 @@
                     </div>
                 </div>
 
-                <div class="processing-step" data-step="llm_in_progress">
+                <div class="processing-step" data-step="parsing_completed">
                     <div class="flex items-center space-x-3">
                         <div class="step-indicator w-8 h-8 rounded-full border-2 border-secondary-300 flex items-center justify-center">
                             <span class="step-number text-sm font-semibold text-secondary-500">3</span>
@@ -105,7 +105,7 @@
                     </div>
                 </div>
 
-                <div class="processing-step" data-step="ready_for_review">
+                <div class="processing-step" data-step="matching_completed">
                     <div class="flex items-center space-x-3">
                         <div class="step-indicator w-8 h-8 rounded-full border-2 border-secondary-300 flex items-center justify-center">
                             <span class="step-number text-sm font-semibold text-secondary-500">4</span>
@@ -134,7 +134,10 @@
 </div>
 
 <script>
-    const receiptId = {{ receipt_id }};
+    const receiptId = {{ receipt.id }};
+    const initialStatus = "{{ receipt.status }}";
+    const initialProcessingNotes = "{{ receipt.processing_notes|escapejs }}";
+
     const currentStatusSpan = document.getElementById('current-status');
     const statusDescription = document.getElementById('status-description');
     const errorMessageDiv = document.getElementById('error-message');
@@ -144,62 +147,233 @@
     const statusIndicator = document.getElementById('status-indicator');
     const processInfo = document.getElementById('process-info');
 
+    // Real-time WebSocket connection for live updates
+    class ReceiptUploadManager {
+        constructor(receiptId) {
+            this.receiptId = receiptId;
+            this.ws = null;
+            this.isPollingFallback = false;
+            this.reconnectAttempts = 0;
+            this.maxReconnectAttempts = 5;
+            this.connectWebSocket();
+        }
+
+        connectWebSocket() {
+            try {
+                const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+                const wsUrl = `${protocol}//${window.location.host}/ws/receipt-status/${this.receiptId}/`;
+                
+                this.ws = new WebSocket(wsUrl);
+                this.setupEventHandlers();
+            } catch (error) {
+                console.error('WebSocket connection failed:', error);
+                this.fallbackToPolling();
+            }
+        }
+
+        setupEventHandlers() {
+            this.ws.onopen = () => {
+                console.log('WebSocket connected successfully');
+                this.reconnectAttempts = 0;
+                this.isPollingFallback = false;
+            };
+
+            this.ws.onmessage = (event) => {
+                try {
+                    const data = JSON.parse(event.data);
+                    console.log('Received WebSocket message:', data);
+                    
+                    if (data.type === 'status_update') {
+                        this.updateProgressBar(data.status, data.progress, data.status_display);
+                        
+                        // Handle completion or redirect
+                        if (data.redirect_url && (data.status === 'ready_for_review' || data.status === 'completed')) {
+                            setTimeout(() => {
+                                window.location.href = data.redirect_url;
+                            }, 2000);
+                        }
+                    } else if (data.type === 'error') {
+                        this.handleError(data.message);
+                    }
+                } catch (error) {
+                    console.error('Error parsing WebSocket message:', error);
+                }
+            };
+
+            this.ws.onclose = (event) => {
+                console.log('WebSocket closed:', event);
+                if (!event.wasClean && this.reconnectAttempts < this.maxReconnectAttempts) {
+                    this.reconnectAttempts++;
+                    console.log(`Attempting to reconnect (${this.reconnectAttempts}/${this.maxReconnectAttempts})...`);
+                    setTimeout(() => this.connectWebSocket(), 2000 * this.reconnectAttempts);
+                } else {
+                    console.log('Falling back to polling');
+                    this.fallbackToPolling();
+                }
+            };
+
+            this.ws.onerror = (error) => {
+                console.error('WebSocket error:', error);
+            };
+        }
+
+        updateProgressBar(status, progress, statusDisplay) {
+            const stages = {
+                'uploaded': 'Przesłano plik',
+                'pending_ocr': 'Przesłano plik',
+                'processing_ocr': 'Rozpoznawanie tekstu...',
+                'ocr_in_progress': 'Rozpoznawanie tekstu...',
+                'ocr_completed': 'Tekst rozpoznany',
+                'ocr_done': 'Tekst rozpoznany',
+                'processing_parsing': 'Analiza AI...',
+                'llm_in_progress': 'Analiza AI...',
+                'llm_done': 'Analiza zakończona',
+                'parsing_completed': 'Analiza zakończona',
+                'matching': 'Dopasowywanie produktów...',
+                'ready_for_review': 'Gotowe do weryfikacji',
+                'completed': 'Gotowe!'
+            };
+
+            const displayText = stages[status] || statusDisplay || status;
+            updateStatus(status, displayText);
+
+            if (progress !== undefined) {
+                progressBar.style.width = `${progress}%`;
+                progressText.textContent = `${progress}%`;
+            }
+        }
+
+        handleError(message) {
+            updateStatus('error', message);
+        }
+
+        fallbackToPolling() {
+            if (!this.isPollingFallback) {
+                this.isPollingFallback = true;
+                console.log('Starting polling fallback');
+                this.startPolling();
+            }
+        }
+
+        startPolling() {
+            const pollStatus = async () => {
+                try {
+                    const response = await fetch(`/api/receipts/${this.receiptId}/status/`);
+                    const data = await response.json();
+                    
+                    updateStatus(data.status, data.processing_notes);
+
+                    if (data.status === 'ready_for_review' && data.redirect_url) {
+                        setTimeout(() => {
+                            window.location.href = data.redirect_url;
+                        }, 2000);
+                    } else if (data.status === 'completed') {
+                        window.location.href = data.redirect_url || "{% url 'inventory:inventory_list' %}";
+                    } else if (data.status !== 'error') {
+                        setTimeout(pollStatus, 3000); // Poll every 3 seconds
+                    }
+                } catch (error) {
+                    console.error('Polling error:', error);
+                    this.handleError('Wystąpił błąd podczas komunikacji z serwerem.');
+                }
+            };
+
+            // Start polling if not completed/error
+            if (initialStatus !== 'ready_for_review' && initialStatus !== 'completed' && initialStatus !== 'error') {
+                setTimeout(pollStatus, 2000);
+            }
+        }
+
+        disconnect() {
+            if (this.ws) {
+                this.ws.close();
+            }
+        }
+    }
+
+    // Initialize real-time updates manager
+    const uploadManager = new ReceiptUploadManager(receiptId);
+
     const statusMap = {
-        'uploaded': { 
+        'pending_ocr': { 
             text: 'Plik przesłany', 
             description: 'Plik został pomyślnie przesłany na serwer',
             progress: 15,
             info: 'Twój paragon został bezpiecznie przesłany na nasz serwer. Rozpoczynamy proces analizy.',
-            color: 'blue'
+            color: 'blue',
+            step: 'pending_ocr'
         },
-        'ocr_in_progress': { 
+        'processing_ocr': { 
             text: 'Rozpoznawanie tekstu', 
             description: 'Trwa wyodrębnianie tekstu z obrazu paragonu...',
             progress: 35,
             info: 'Używamy zaawansowanej technologii OCR do rozpoznania tekstu z Twojego paragonu. Ten proces może potrwać kilka sekund w zależności od jakości obrazu.',
-            color: 'blue'
+            color: 'blue',
+            step: 'pending_ocr'
         },
-        'ocr_done': { 
+        'ocr_completed': { 
             text: 'Tekst rozpoznany', 
             description: 'Tekst został pomyślnie wyodrębniony z paragonu',
-            progress: 55,
+            progress: 45,
             info: 'Tekst z paragonu został pomyślnie rozpoznany. Teraz przekazujemy go do analizy przez sztuczną inteligencję.',
-            color: 'blue'
+            color: 'blue',
+            step: 'ocr_completed'
         },
-        'llm_in_progress': { 
-            text: 'Analiza przez AI', 
+        'processing_parsing': { 
+            text: 'Analiza AI', 
             description: 'Sztuczna inteligencja analizuje tekst i wyodrębnia produkty...',
-            progress: 75,
+            progress: 65,
             info: 'Nasz zaawansowany model AI analizuje rozpoznany tekst, aby wyodrębnić nazwy produktów, ich ilości i jednostki. To najważniejszy etap procesu.',
-            color: 'blue'
+            color: 'blue',
+            step: 'ocr_completed'
         },
-        'llm_done': { 
+        'parsing_completed': { 
             text: 'Analiza zakończona', 
             description: 'AI zakończyła analizę i wyodrębniła produkty',
-            progress: 90,
+            progress: 75,
             info: 'Analiza została zakończona! AI wyodrębniła produkty z Twojego paragonu. Przygotowujemy dane do weryfikacji.',
-            color: 'blue'
+            color: 'blue',
+            step: 'parsing_completed'
         },
-        'ready_for_review': { 
+        'matching': { 
+            text: 'Dopasowywanie produktów', 
+            description: 'Dopasowywanie wyodrębnionych produktów do katalogu...',
+            progress: 85,
+            info: 'System dopasowuje wyodrębnione produkty do istniejących pozycji w Twoim katalogu. Używamy zaawansowanych algorytmów, aby znaleźć najlepsze dopasowania.',
+            color: 'blue',
+            step: 'parsing_completed'
+        },
+        'matching_completed': { 
             text: 'Gotowe do weryfikacji', 
             description: 'Sprawdź i zatwierdź wyodrębnione produkty',
             progress: 100,
             info: 'Proces analizy został zakończony! Teraz możesz sprawdzić wyodrębnione produkty i je zatwierdzić.',
-            color: 'green'
+            color: 'green',
+            step: 'matching_completed'
+        },
+        'pending_inventory': { 
+            text: 'Finalizacja w toku', 
+            description: 'Produkty są dodawane do Twojej spiżarni...',
+            progress: 100,
+            info: 'Twoje produkty są właśnie dodawane do spiżarni. Za chwilę zostaniesz przekierowany.',
+            color: 'green',
+            step: 'matching_completed'
         },
         'completed': { 
             text: 'Zakończone', 
             description: 'Produkty zostały dodane do Twojej spiżarni',
             progress: 100,
             info: 'Gratulacje! Wszystkie produkty zostały pomyślnie dodane do Twojej spiżarni.',
-            color: 'green'
+            color: 'green',
+            step: 'matching_completed'
         },
         'error': { 
             text: 'Wystąpił błąd', 
             description: 'Podczas przetwarzania wystąpił błąd',
             progress: 0,
             info: 'Niestety, podczas przetwarzania paragonu wystąpił błąd. Spróbuj ponownie lub skontaktuj się z pomocą techniczną.',
-            color: 'red'
+            color: 'red',
+            step: 'pending_ocr' // Default step for error, can be more specific if needed
         }
     };
 
@@ -232,25 +406,33 @@
     }
 
     function updateAllSteps(currentStatus) {
-        const steps = ['uploaded', 'ocr_in_progress', 'llm_in_progress', 'ready_for_review'];
-        const statusOrder = {
-            'uploaded': 0,
-            'ocr_in_progress': 1,
-            'ocr_done': 1,
-            'llm_in_progress': 2,
-            'llm_done': 2,
-            'ready_for_review': 3,
-            'completed': 4
+        const steps = [
+            { id: 'pending_ocr', displayOrder: 0 },
+            { id: 'ocr_completed', displayOrder: 1 },
+            { id: 'parsing_completed', displayOrder: 2 },
+            { id: 'matching_completed', displayOrder: 3 }
+        ];
+
+        const statusToDisplayOrder = {
+            'pending_ocr': 0,
+            'processing_ocr': 0,
+            'ocr_completed': 1,
+            'processing_parsing': 1,
+            'parsing_completed': 2,
+            'matching': 2,
+            'matching_completed': 3,
+            'pending_inventory': 3,
+            'completed': 3
         };
 
-        const currentIndex = statusOrder[currentStatus] || 0;
+        const currentDisplayOrder = statusToDisplayOrder[currentStatus] !== undefined ? statusToDisplayOrder[currentStatus] : -1;
 
-        steps.forEach((step, index) => {
-            const stepElement = document.querySelector(`[data-step="${step}"]`);
+        steps.forEach((stepInfo) => {
+            const stepElement = document.querySelector(`[data-step="${stepInfo.id}"]`);
             if (stepElement) {
-                if (index < currentIndex) {
+                if (stepInfo.displayOrder < currentDisplayOrder) {
                     updateStepVisual(stepElement, 'completed');
-                } else if (index === currentIndex && (currentStatus.includes('in_progress') || currentStatus === step)) {
+                } else if (stepInfo.displayOrder === currentDisplayOrder) {
                     updateStepVisual(stepElement, 'active');
                 } else {
                     updateStepVisual(stepElement, 'pending');
@@ -259,18 +441,19 @@
         });
     }
 
-    function updateStatus(status, error_message = null) {
+    function updateStatus(status, processingNotes = null) {
         const mapped = statusMap[status] || { 
             text: status, 
             description: 'Status nieznany',
             progress: 0,
             info: 'Trwa przetwarzanie...',
-            color: 'blue'
+            color: 'blue',
+            step: 'pending_ocr'
         };
 
         // Update status text and description
         currentStatusSpan.textContent = mapped.text;
-        statusDescription.textContent = mapped.description;
+        statusDescription.textContent = processingNotes || mapped.description;
         
         // Update progress bar
         progressBar.style.width = mapped.progress + '%';
@@ -286,13 +469,8 @@
         updateAllSteps(status);
 
         // Handle errors
-        if (error_message) {
-            errorText.textContent = error_message;
-            errorMessageDiv.style.display = 'block';
-            statusIndicator.className = 'w-3 h-3 rounded-full bg-red-500';
-            progressBar.classList.add('bg-red-500');
-        } else if (status === 'error') {
-            errorText.textContent = 'Wystąpił nieznany błąd podczas przetwarzania paragonu.';
+        if (status === 'error') {
+            errorText.textContent = processingNotes || 'Wystąpił nieznany błąd podczas przetwarzania paragonu.';
             errorMessageDiv.style.display = 'block';
             statusIndicator.className = 'w-3 h-3 rounded-full bg-red-500';
             progressBar.classList.add('bg-red-500');
@@ -306,12 +484,15 @@
             const response = await fetch(`/api/receipts/${receiptId}/status/`);
             const data = await response.json();
 
-            updateStatus(data.status, data.error_message);
+            updateStatus(data.status, data.processing_notes);
 
-            if (data.status === 'ready_for_review' && data.redirect_url) {
+            if (data.status === 'matching_completed' && data.redirect_url) {
                 setTimeout(() => {
                     window.location.href = data.redirect_url;
                 }, 2000); // Wait 2 seconds to show completed state
+            } else if (data.status === 'completed') {
+                // If already completed, redirect immediately
+                window.location.href = data.redirect_url || "{% url 'inventory:inventory_list' %}";
             } else if (data.status === 'error') {
                 // Stay on this page and show error
             } else {
@@ -327,8 +508,8 @@
     }
 
     // Initial status update and start polling
-    updateStatus('{{ status }}', '{{ error_message }}');
-    if ('{{ status }}' !== 'ready_for_review' && '{{ status }}' !== 'completed' && '{{ status }}' !== 'error') {
+    updateStatus(initialStatus, initialProcessingNotes);
+    if (initialStatus !== 'matching_completed' && initialStatus !== 'completed' && initialStatus !== 'error') {
         setTimeout(checkStatus, 2000);
     }
 </script>

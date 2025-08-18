@@ -44,35 +44,7 @@ class ConfigurationError(ServiceError):
     pass
 
 
-# Receipt-specific exceptions
-class ReceiptError(ServiceError):
-    """Base exception for receipt processing errors"""
-    pass
 
-
-class ReceiptNotFoundError(ReceiptError, ResourceNotFoundError):
-    """Raised when receipt is not found"""
-    pass
-
-
-class ReceiptProcessingError(ReceiptError, ProcessingError):
-    """Raised when receipt processing fails"""
-    pass
-
-
-class ReceiptValidationError(ReceiptError, ValidationError):
-    """Raised when receipt validation fails"""
-    pass
-
-
-class OCRError(ReceiptError, ExternalServiceError):
-    """Raised when OCR processing fails"""
-    pass
-
-
-class ParsingError(ReceiptError, ProcessingError):
-    """Raised when receipt parsing fails"""
-    pass
 
 
 # Inventory-specific exceptions

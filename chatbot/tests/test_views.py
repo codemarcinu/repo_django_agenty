@@ -130,8 +130,11 @@ class PantryViewTest(TestCase):
         self.assertContains(response, self.pantry_item.name)
 
 
+from inventory.models import Receipt
+
+
 @pytest.mark.integration
-class ReceiptProcessingViewTest(TestCase):
+class ReceiptViewTest(TestCase):
     def setUp(self):
         self.client = Client()
 
@@ -143,11 +146,11 @@ class ReceiptProcessingViewTest(TestCase):
 
     def test_receipt_processing_status_view(self):
         """Test receipt processing status view"""
-        receipt = ReceiptProcessing.objects.create(status="uploaded")
+        receipt = Receipt.objects.create(status="uploaded")
 
         response = self.client.get(
             reverse(
-                "chatbot:receipt_processing_status", kwargs={"receipt_id": receipt.id}
+                "chatbot:receipt_status", kwargs={"receipt_id": receipt.id}
             )
         )
         self.assertEqual(response.status_code, 200)

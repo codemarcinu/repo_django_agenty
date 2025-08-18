@@ -8,13 +8,12 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from ..conversation_manager import conversation_manager
-from ..models import Agent, Document, ReceiptProcessing
+from ..models import Agent, Document
 from ..serializers import (
     AgentSerializer,
     ChatMessageSerializer,
     ConversationCreateSerializer,
     DocumentSerializer,
-    ReceiptProcessingStatusSerializer,
 )
 from ..services.agent_factory import agent_factory
 
@@ -207,16 +206,23 @@ class ConversationInfoAPIView(APIView):
 
 
 class ReceiptProcessingStatusAPIView(APIView):
-    """API view for checking receipt processing status"""
+    """API view for checking receipt processing status - DEPRECATED, use inventory.Receipt"""
 
     permission_classes = [AllowAny]
 
     def get(self, request, receipt_id):
         try:
-            receipt_record = ReceiptProcessing.objects.get(id=receipt_id)
-            serializer = ReceiptProcessingStatusSerializer(receipt_record)
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        except ReceiptProcessing.DoesNotExist:
+            from inventory.models import Receipt
+            receipt_record = Receipt.objects.get(id=receipt_id)
+            # Simple status response for backward compatibility
+            return Response({
+                "id": receipt_record.id,
+                "status": receipt_record.status,
+                "status_display": receipt_record.get_status_display_with_message(),
+                "created_at": receipt_record.created_at,
+                "updated_at": receipt_record.updated_at
+            }, status=status.HTTP_200_OK)
+        except Receipt.DoesNotExist:
             return Response(
                 {"error": "Receipt not found"}, status=status.HTTP_404_NOT_FOUND
             )

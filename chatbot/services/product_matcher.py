@@ -474,6 +474,38 @@ class ProductMatcher:
             logger.error(f"Error getting matching statistics: {e}")
             return {}
 
+    def search_products(self, query: str, limit: int = 10) -> list[Product]:
+        """
+        Search for products by name or alias.
+
+        Args:
+            query: The search query string.
+            limit: Maximum number of results to return.
+
+        Returns:
+            A list of matching Product objects.
+        """
+        normalized_query = self.normalize_product_name(query)
+        logger.debug(f"Searching products for normalized query: '{normalized_query}'")
+
+        # Prioritize exact matches
+        exact_matches = Product.objects.filter(
+            Q(name__iexact=normalized_query) | Q(aliases__icontains=normalized_query),
+            is_active=True,
+        ).distinct()
+
+        # Then partial matches
+        partial_matches = Product.objects.filter(
+            Q(name__icontains=normalized_query) | Q(aliases__icontains=normalized_query),
+            is_active=True,
+        ).exclude(id__in=exact_matches.values_list("id", flat=True)).distinct()
+
+        # Combine and limit results
+        results = list(exact_matches) + list(partial_matches)
+        
+        logger.debug(f"Found {len(results)} products for query '{query}'")
+        return results[:limit]
+
 
 def get_product_matcher() -> ProductMatcher:
     """Get default product matcher instance."""

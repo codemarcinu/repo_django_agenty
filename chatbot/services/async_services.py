@@ -6,7 +6,8 @@ Provides async-first database operations and business logic.
 import logging
 from typing import Any
 
-from ..models import Agent, Conversation, Message, ReceiptProcessing
+from ..models import Agent, Conversation, Message
+from inventory.models import Receipt # Added new import
 from .exceptions import (
     AgentNotFoundError,
 )
@@ -189,7 +190,7 @@ class AsyncReceiptService:
     async def get_receipt_status(receipt_id: int) -> dict[str, Any] | None:
         """Get receipt processing status"""
         try:
-            receipt = await ReceiptProcessing.objects.aget(id=receipt_id)
+            receipt = await Receipt.objects.aget(id=receipt_id)
             return {
                 "id": receipt.id,
                 "status": receipt.status,
@@ -197,7 +198,7 @@ class AsyncReceiptService:
                 "created_at": receipt.created_at.isoformat(),
                 "updated_at": receipt.updated_at.isoformat(),
             }
-        except ReceiptProcessing.DoesNotExist:
+        except Receipt.DoesNotExist:
             logger.error(f"Receipt not found: {receipt_id}")
             return None
 
@@ -207,14 +208,14 @@ class AsyncReceiptService:
     ) -> bool:
         """Update receipt processing status"""
         try:
-            receipt = await ReceiptProcessing.objects.aget(id=receipt_id)
+            receipt = await Receipt.objects.aget(id=receipt_id)
             receipt.status = status
             if error_message:
                 receipt.error_message = error_message
             await receipt.asave()
             logger.info(f"Updated receipt {receipt_id} status to {status}")
             return True
-        except ReceiptProcessing.DoesNotExist:
+        except Receipt.DoesNotExist:
             logger.error(f"Receipt not found: {receipt_id}")
             return False
 

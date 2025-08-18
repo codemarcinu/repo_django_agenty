@@ -2,6 +2,7 @@
 API views for receipt processing.
 """
 
+import logging
 import os
 import uuid
 from datetime import datetime
@@ -13,10 +14,12 @@ from rest_framework.decorators import api_view, parser_classes
 from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.response import Response
 
-from chatbot.models import ReceiptProcessing
-from chatbot.services.receipt_service import ReceiptService
-
+from inventory.models import Receipt
+from ..services.receipt_service import ReceiptService
+from ..services.exceptions_receipt import ReceiptError
 from .serializers import ReceiptUploadResponseSerializer, ReceiptUploadSerializer
+
+logger = logging.getLogger(__name__)
 
 
 def get_upload_path(filename: str) -> str:
@@ -46,12 +49,12 @@ def get_upload_path(filename: str) -> str:
 @extend_schema(
     request=ReceiptUploadSerializer,
     responses={
-        200: OpenApiResponse(
+        201: OpenApiResponse(
             response=ReceiptUploadResponseSerializer,
-            description="Receipt uploaded successfully",
+            description="Receipt uploaded and processing started.",
         ),
         400: OpenApiResponse(description="Invalid file or validation error"),
-        500: OpenApiResponse(description="Server error during upload"),
+        503: OpenApiResponse(description="The processing service is temporarily unavailable."),
     },
     summary="Upload receipt file",
     description="""
@@ -62,7 +65,7 @@ def get_upload_path(filename: str) -> str:
     - File size (max 50MB)
     - Content type matching file extension
     
-    After successful upload, the receipt will be queued for OCR processing.
+    After successful upload, the receipt will be queued for asynchronous processing.
     """,
     tags=["Receipts"],
 )
@@ -78,52 +81,42 @@ def upload_receipt(request):
     serializer = ReceiptUploadSerializer(data=request.data)
 
     if not serializer.is_valid():
-        return Response(
-            {"errors": serializer.errors}, status=status.HTTP_400_BAD_REQUEST
-        )
+        return Response({"errors": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+
+    uploaded_file = serializer.validated_data["file"]
+    receipt_service = ReceiptService()
 
     try:
-        uploaded_file = serializer.validated_data["file"]
+        # Create the database record for the receipt
+        receipt = receipt_service.create_receipt_record(uploaded_file)
 
-        # Use ReceiptService to create and start processing
-        receipt_service = ReceiptService()
-        receipt_processing = receipt_service.create_receipt_record(uploaded_file)
-
-        # Start processing (this will trigger OCR)
-        processing_started = receipt_service.start_processing(receipt_processing.id)
-
-        if processing_started:
-            status_msg = "Receipt uploaded successfully. Processing started."
-            processing_status = "processing"
-        else:
-            status_msg = "Receipt uploaded but processing failed to start."
-            processing_status = "error"
+        # Start the asynchronous processing
+        receipt_service.start_processing(receipt.id)
 
         # Prepare response
         response_data = {
-            "receipt_id": receipt_processing.id,
-            "status": processing_status,
-            "message": status_msg,
-            "file_path": receipt_processing.receipt_file.name,
+            "receipt_id": receipt.id,
+            "status": "processing_queued",
+            "message": "Receipt uploaded and queued for processing.",
+            "file_path": receipt.receipt_file.name,
             "file_size": uploaded_file.size,
-            "uploaded_at": (
-                receipt_processing.created_at
-                if hasattr(receipt_processing, "created_at")
-                else timezone.now()
-            ),
+            "uploaded_at": receipt.uploaded_at,
         }
+        return Response(response_data, status=status.HTTP_201_CREATED)
 
-        response_serializer = ReceiptUploadResponseSerializer(data=response_data)
-        if response_serializer.is_valid():
-            return Response(response_serializer.data, status=status.HTTP_201_CREATED)
-        else:
-            # This shouldn't happen, but handle it gracefully
-            return Response(response_data, status=status.HTTP_201_CREATED)
-
-    except Exception as e:
-        # Log the error in production
+    except ReceiptError as e:
+        logger.error(f"Failed to start receipt processing: {e}", exc_info=True)
         return Response(
-            {"error": "Upload failed", "details": str(e)},
+            {
+                "error": "Processing service unavailable",
+                "details": "Could not queue the receipt for processing. The background worker service may be down.",
+            },
+            status=status.HTTP_503_SERVICE_UNAVAILABLE,
+        )
+    except Exception as e:
+        logger.error(f"An unexpected error occurred during receipt upload: {e}", exc_info=True)
+        return Response(
+            {"error": "An unexpected server error occurred.", "details": str(e)},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
 
@@ -149,32 +142,32 @@ def receipt_status(request, receipt_id):
         Receipt status information
     """
     try:
-        receipt_processing = ReceiptProcessing.objects.get(id=receipt_id)
+        receipt = Receipt.objects.get(id=receipt_id)
 
         data = {
-            "receipt_id": receipt_processing.id,
-            "status": receipt_processing.status,
+            "receipt_id": receipt.id,
+            "status": receipt.status,
             "file_path": (
-                receipt_processing.receipt_file.name
-                if receipt_processing.receipt_file
+                receipt.receipt_file.name
+                if receipt.receipt_file
                 else None
             ),
             "raw_ocr_text": (
-                receipt_processing.raw_ocr_text[:200] + "..."
-                if receipt_processing.raw_ocr_text
-                and len(receipt_processing.raw_ocr_text) > 200
-                else receipt_processing.raw_ocr_text
+                receipt.raw_ocr_text[:200] + "..."
+                if receipt.raw_ocr_text
+                and len(receipt.raw_ocr_text) > 200
+                else receipt.raw_ocr_text
             ),
-            "extracted_data": receipt_processing.extracted_data,
-            "error_message": receipt_processing.error_message,
-            "processed_at": receipt_processing.processed_at,
-            "created_at": getattr(receipt_processing, "created_at", None),
-            "updated_at": getattr(receipt_processing, "updated_at", None),
+            "extracted_data": receipt.extracted_data,
+            "error_message": receipt.error_message,
+            "processed_at": receipt.processed_at,
+            "created_at": getattr(receipt, "created_at", None),
+            "updated_at": getattr(receipt, "updated_at", None),
         }
 
         return Response(data, status=status.HTTP_200_OK)
 
-    except ReceiptProcessing.DoesNotExist:
+    except Receipt.DoesNotExist:
         return Response(
             {"error": "Receipt not found"}, status=status.HTTP_404_NOT_FOUND
         )

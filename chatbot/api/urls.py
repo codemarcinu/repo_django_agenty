@@ -25,6 +25,8 @@ urlpatterns = [
     ),
     # Chat endpoints
     path("chat/message/", views.ChatMessageView.as_view(), name="chat-message"),
+    # Product search API
+    path("products/search/", views.ProductSearchAPIView.as_view(), name="product-search"),
     # Receipt upload endpoints (new)
     path("receipts/upload/", receipt_views.upload_receipt, name="receipt-upload"),
     path(
@@ -35,7 +37,7 @@ urlpatterns = [
     # Receipt processing endpoints (legacy) - using different URL pattern
     path(
         "receipt-processing/<int:receipt_id>/status/",
-        views.ReceiptProcessingStatusAPIView.as_view(),
+        views.ReceiptStatusAPIView.as_view(),
         name="receipt-status-legacy",
     ),
     # Inventory endpoints (Prompt 9)

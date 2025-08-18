@@ -28,13 +28,28 @@ class OCRResult:
 
     def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for storage."""
+        import json
+        
+        def make_json_serializable(obj):
+            """Convert numpy types and other non-serializable objects to JSON serializable types."""
+            if hasattr(obj, 'item'):  # numpy scalars
+                return obj.item()
+            elif hasattr(obj, 'tolist'):  # numpy arrays
+                return obj.tolist()
+            elif isinstance(obj, dict):
+                return {k: make_json_serializable(v) for k, v in obj.items()}
+            elif isinstance(obj, (list, tuple)):
+                return [make_json_serializable(v) for v in obj]
+            else:
+                return obj
+        
         return {
             "text": self.text,
-            "confidence": self.confidence,
+            "confidence": float(self.confidence),
             "backend": self.backend,
-            "processing_time": self.processing_time,
-            "metadata": self.metadata,
-            "success": self.success,
+            "processing_time": float(self.processing_time),
+            "metadata": make_json_serializable(self.metadata),
+            "success": bool(self.success),
             "error_message": self.error_message,
         }
 

@@ -5,33 +5,25 @@ Provides web interface for agent interactions.
 """
 import json
 import logging
+from decimal import Decimal
 
 from django.forms import ModelForm
-from django.http import HttpRequest, HttpResponseRedirect, JsonResponse
-from django.shortcuts import render
+from django.http import HttpRequest, HttpResponseRedirect, JsonResponse, Http404
+from django.shortcuts import render, get_object_or_404
 from django.urls import reverse_lazy
-from django.utils import timezone
 from django.views import View
 from django.views.generic import FormView, ListView
+from django.db import transaction
+from django.core.serializers.json import DjangoJSONEncoder
 
-from .conversation_manager import conversation_manager
-from .models import Agent, Document, ReceiptProcessing
+from inventory.models import Receipt, Product, ReceiptLineItem
+from .models import Agent, Document
 from .services.agent_factory import agent_factory
-from .services.exceptions import (
-    ReceiptError,
-    ReceiptNotFoundError,
-    ReceiptProcessingError,
-    ServiceError,
-)
-from .services.receipt_service import ReceiptService
+from .services.receipt_service import ReceiptService, get_receipt_service
 from .utils.cache_utils import CachedViewMixin
 
 logger = logging.getLogger(__name__)
 
-
-from inventory.models import InventoryItem
-
-# ... (rest of the imports)
 
 class DashboardView(CachedViewMixin, View):
     """Main dashboard view with overview of all features"""
@@ -41,22 +33,22 @@ class DashboardView(CachedViewMixin, View):
     def get(self, request: HttpRequest):
         # Get cached statistics using fat model methods
         agent_stats = Agent.get_statistics()
-        pantry_stats = InventoryItem.get_statistics()
-        receipt_service = ReceiptService()
-        receipt_stats = receipt_service.get_processing_statistics()
-        recent_receipts = receipt_service.get_recent_receipts(5)
+        # pantry_stats = InventoryItem.get_statistics() # TODO: Uncomment when InventoryItem is fully integrated
+        receipt_service = get_receipt_service()
+        # receipt_stats = receipt_service.get_processing_statistics() # TODO: Uncomment when new stats are implemented
+        # recent_receipts = receipt_service.get_recent_receipts(5) # TODO: Uncomment when new recent receipts are implemented
 
         context = {
             "agents_count": agent_stats["active_agents"],
             "documents_count": Document.objects.count(),  # TODO: Add statistics method to Document
-            "pantry_items_count": pantry_stats["total_items"],
-            "receipt_stats": receipt_stats,
-            "recent_receipts": recent_receipts,
-            "pantry_alerts": {
-                "expired_count": pantry_stats["expired_count"],
-                "expiring_soon_count": pantry_stats["expiring_soon_count"],
-                "low_stock_count": pantry_stats["low_stock_count"],
-            },
+            # "pantry_items_count": pantry_stats["total_items"], # TODO: Uncomment
+            # "receipt_stats": receipt_stats, # TODO: Uncomment
+            # "recent_receipts": recent_receipts, # TODO: Uncomment
+            # "pantry_alerts": { # TODO: Uncomment
+            #     "expired_count": pantry_stats["expired_count"],
+            #     "expiring_soon_count": pantry_stats["expiring_soon_count"],
+            #     "low_stock_count": pantry_stats["low_stock_count"],
+            # },
             "title": "Dashboard - Twój Osobisty Asystent AI",
         }
         return render(request, "chatbot/dashboard.html", context)
@@ -95,8 +87,11 @@ class DocumentUploadView(FormView):
 # New classes for Receipt Processing and Pantry Management
 class ReceiptUploadForm(ModelForm):
     class Meta:
-        model = ReceiptProcessing  # Use ReceiptProcessing model for file upload
-        fields = ["receipt_file"]  # Support both images and PDFs for receipts
+        model = Receipt  # Use the new inventory.Receipt model
+        fields = ["receipt_file"]
+        labels = {
+            "receipt_file": "Plik paragonu (obraz lub PDF)"
+        }
 
 
 class ReceiptUploadView(FormView):
@@ -104,162 +99,138 @@ class ReceiptUploadView(FormView):
     form_class = ReceiptUploadForm
 
     def form_valid(self, form):
-        logger.info("=== STARTING RECEIPT UPLOAD PROCESS ===")
-        logger.debug(f"Form data: {form.cleaned_data}")
+        logger.info("=== STARTING NEW RECEIPT UPLOAD PROCESS ===")
+        
+        receipt = form.save(commit=False)
+        receipt.user = self.request.user if self.request.user.is_authenticated else None
+        receipt.status = 'pending_ocr'
+        receipt.save()
+        
+        logger.info(f"✅ New Receipt record created successfully with ID: {receipt.id}")
 
-        uploaded_file = form.cleaned_data["receipt_file"]
-        logger.info(
-            f"Uploaded file: {uploaded_file.name}, size: {uploaded_file.size} bytes, content_type: {uploaded_file.content_type}"
-        )
-
-        receipt_service = ReceiptService()
-
+        # Dispatch the new orchestration task
         try:
-            # Create receipt record using service
-            logger.info("Creating receipt record...")
-            receipt_record = receipt_service.create_receipt_record(uploaded_file)
-            logger.info(
-                f"✅ Receipt record created successfully with ID: {receipt_record.id}"
-            )
-            logger.debug(
-                f"Receipt record details: status={receipt_record.status}, file_path={receipt_record.receipt_file.name if receipt_record.receipt_file else 'None'}"
-            )
-
-            # Start processing using service
-            logger.info(f"Starting processing for receipt ID: {receipt_record.id}")
-            try:
-                receipt_service.start_processing(receipt_record.id)
-                logger.info(f"✅ Processing started successfully for receipt {receipt_record.id}")
-            except ReceiptNotFoundError as e:
-                logger.error(f"❌ Receipt not found: {e}")
-                raise
-            except ReceiptProcessingError as e:
-                logger.error(f"❌ Processing failed for receipt {receipt_record.id}: {e}")
-                # Continue to show status page even if processing failed
-            except ServiceError as e:
-                logger.error(f"❌ Service error processing receipt {receipt_record.id}: {e}")
-                # Continue to show status page
-
-            # Set success_url with the receipt_id
-            success_url = reverse_lazy(
-                "chatbot:receipt_processing_status",
-                kwargs={"receipt_id": receipt_record.id},
-            )
-            self.success_url = success_url
-            logger.info(f"Success URL set to: {success_url}")
-
-            logger.info("=== RECEIPT UPLOAD PROCESS COMPLETED ===")
-            return super().form_valid(form)
-
-        except (ReceiptError, ServiceError) as e:
-            logger.error(f"❌ Service error in receipt upload process: {e}", exc_info=True)
-            raise
+            from .tasks import orchestrate_receipt_processing
+            orchestrate_receipt_processing.delay(receipt.id)
+            logger.info(f"✅ Orchestration task queued for receipt {receipt.id}")
         except Exception as e:
-            logger.error(f"❌ CRITICAL ERROR in receipt upload process: {e}", exc_info=True)
-            raise
+            logger.error(f"❌ Failed to queue orchestration task for receipt {receipt.id}: {e}")
+            receipt.status = 'error'
+            receipt.processing_notes = f"Failed to start processing: {e}"
+            receipt.save()
+
+        # Redirect to the new status page (assuming it will be created)
+        self.success_url = reverse_lazy(
+            "chatbot:receipt_status",  # Updated URL name
+            kwargs={"receipt_id": receipt.id},
+        )
+        
+        logger.info("=== NEW RECEIPT UPLOAD PROCESS COMPLETED ===")
+        return super().form_valid(form)
 
 
-class ReceiptProcessingStatusView(View):
+class ReceiptStatusView(View):
     def get(self, request, receipt_id):
-        receipt_service = ReceiptService()
-        status_info = receipt_service.get_receipt_status(receipt_id)
-
-        if not status_info:
-            from django.http import Http404
-
+        try:
+            receipt = Receipt.objects.get(id=receipt_id)
+        except Receipt.DoesNotExist:
             raise Http404("Paragon nie został znaleziony")
 
+        # Determine status and redirect if ready for review
+        if receipt.status == 'matching_completed': # Or 'pending_review' if we add that status
+            return HttpResponseRedirect(reverse_lazy("chatbot:receipt_review", kwargs={"receipt_id": receipt.id}))
+
         context = {
-            "receipt_id": receipt_id,
-            "status_info": status_info,
+            "receipt": receipt,
+            "status_display": receipt.get_status_display(),
+            "processing_notes": receipt.processing_notes,
+            "title": f"Status Przetwarzania Paragonu #{receipt.id}"
         }
         return render(request, "chatbot/receipt_processing_status.html", context)
 
 
-class ReceiptProcessingStatusAPIView(View):
-    def get(self, request, receipt_id):
-        receipt_service = ReceiptService()
-        status_info = receipt_service.get_receipt_status(receipt_id)
-
-        if not status_info:
-            return JsonResponse({"error": "Paragon nie został znaleziony"}, status=404)
-
-        return JsonResponse(
-            {
-                "status": status_info["status"],
-                "status_display": status_info["status_display"],
-                "is_ready_for_review": status_info["is_ready_for_review"],
-                "is_completed": status_info["is_completed"],
-                "has_error": status_info["has_error"],
-                "error_message": status_info["error_message"],
-                "redirect_url": status_info["redirect_url"],
-            }
-        )
-
-
 class ReceiptReviewView(View):
     def get(self, request, receipt_id):
-        receipt_service = ReceiptService()
-        status_info = receipt_service.get_receipt_status(receipt_id)
-
-        if not status_info:
-            from django.http import Http404
-
+        try:
+            receipt = Receipt.objects.prefetch_related("line_items", "line_items__matched_product").get(id=receipt_id)
+        except Receipt.DoesNotExist:
             raise Http404("Paragon nie został znaleziony")
 
-        if not status_info["is_ready_for_review"]:
-            # If not ready for review, redirect to status page
-            return HttpResponseRedirect(
-                reverse_lazy(
-                    "chatbot:receipt_processing_status",
-                    kwargs={"receipt_id": receipt_id},
-                )
-            )
+        # TODO: Add a check here to redirect to status page if not ready
 
-        extracted_products = receipt_service.get_extracted_products(receipt_id)
+        # Prepare line items for the template
+        line_items_data = []
+        for item in receipt.line_items.all():
+            line_items_data.append({
+                "id": item.id,
+                "product_name": item.product_name,  # Original name from OCR/LLM
+                "quantity": item.quantity,
+                "unit_price": item.unit_price,
+                "line_total": item.line_total,
+                "matched_product_id": item.matched_product.id if item.matched_product else None,
+                "matched_product_name": item.matched_product.name if item.matched_product else "-- Brak dopasowania --",
+                "match_confidence": item.meta.get("match_confidence", 0.0),
+                "match_type": item.meta.get("match_type", "none"),
+            })
 
         context = {
-            "receipt_id": receipt_id,
-            "status_info": status_info,
-            "raw_ocr_text": status_info["raw_ocr_text"],
-            "extracted_data": json.dumps(extracted_products),
+            "receipt": receipt,
+            "line_items_json": json.dumps(line_items_data, cls=DjangoJSONEncoder),
+            "title": f"Weryfikacja Paragonu #{receipt.id}"
         }
         return render(request, "chatbot/receipt_review.html", context)
 
     def post(self, request, receipt_id):
-        receipt_service = ReceiptService()
-
         try:
-            # Parse reviewed products data from frontend
-            products_data = json.loads(request.body.decode("utf-8"))
+            with transaction.atomic():
+                receipt = Receipt.objects.get(id=receipt_id)
+                reviewed_items = json.loads(request.body.decode("utf-8"))
 
-            # Finalize receipt processing using service
-            success, message = receipt_service.finalize_receipt_processing(
-                receipt_id, products_data
-            )
+                for item_data in reviewed_items:
+                    line_item = ReceiptLineItem.objects.get(id=item_data['id'], receipt=receipt)
+                    
+                    # Update line item with reviewed data
+                    line_item.quantity = Decimal(item_data.get('quantity', line_item.quantity))
+                    line_item.unit_price = Decimal(item_data.get('unit_price', line_item.unit_price))
+                    line_item.line_total = line_item.quantity * line_item.unit_price
 
-            if success:
-                return JsonResponse(
-                    {
-                        "success": True,
-                        "message": message,
-                        "redirect_url": reverse_lazy("inventory:inventory_by_location", kwargs={"location": "pantry"}),
-                    }
-                )
-            else:
-                return JsonResponse({"success": False, "error": message}, status=400)
+                    # Update the matched product link
+                    product_id = item_data.get('matched_product_id')
+                    if product_id:
+                        line_item.matched_product = Product.objects.get(id=product_id)
+                    else:
+                        # Handle creation of a new product if necessary (or link to a ghost product)
+                        # For now, we just detach it if no ID is provided
+                        line_item.matched_product = None 
 
+                    # Potentially update the original product name if user corrected it
+                    line_item.product_name = item_data.get('product_name', line_item.product_name)
+                    
+                    line_item.save()
+
+                # Dispatch the finalization task
+                from .tasks import finalize_receipt_inventory
+                finalize_receipt_inventory.delay(receipt.id)
+
+                # Mark as pending finalization
+                receipt.status = 'pending_inventory'
+                receipt.save()
+
+                return JsonResponse({
+                    "success": True, 
+                    "message": "Paragon został zapisany i jest finalizowany w tle.",
+                    "redirect_url": reverse_lazy("inventory:inventory_list") # Or some other appropriate page
+                })
+
+        except Receipt.DoesNotExist:
+            return JsonResponse({"success": False, "error": "Paragon nie został znaleziony"}, status=404)
+        except Product.DoesNotExist:
+            return JsonResponse({"success": False, "error": "Jeden z wybranych produktów nie istnieje"}, status=400)
         except json.JSONDecodeError:
-            return JsonResponse(
-                {"success": False, "error": "Nieprawidłowe dane JSON"}, status=400
-            )
+            return JsonResponse({"success": False, "error": "Nieprawidłowe dane JSON"}, status=400)
         except Exception as e:
-            logger.error(
-                f"Error in receipt review for {receipt_id}: {e}", exc_info=True
-            )
-            return JsonResponse(
-                {"success": False, "error": "Wystąpił nieoczekiwany błąd"}, status=500
-            )
+            logger.error(f"Error in receipt review for {receipt_id}: {e}", exc_info=True)
+            return JsonResponse({"success": False, "error": "Wystąpił nieoczekiwany błąd"}, status=500)
 
 
 # TODO: Replace with InventoryItem-based view

@@ -1,0 +1,449 @@
+{% extends 'chatbot/base.html' %}
+
+{% block title %}Receipt Processing Monitoring{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="mb-8">
+        <h1 class="text-4xl font-bold gradient-text mb-2">Receipt Processing Monitoring</h1>
+        <p class="text-secondary-600 text-lg">System health, performance metrics, and alerts</p>
+    </div>
+
+    {% if error %}
+    <div class="bg-red-50 border border-red-200 rounded-xl p-4 mb-6">
+        <div class="flex items-center">
+            <span class="text-red-500 text-xl mr-3">❌</span>
+            <div>
+                <p class="font-semibold text-red-800">Error</p>
+                <p class="text-red-600">{{ error }}</p>
+            </div>
+        </div>
+    </div>
+    {% else %}
+
+    <!-- System Health Overview -->
+    <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8">
+        <!-- Overall Health Status -->
+        <div class="bg-white rounded-2xl shadow-lg p-6 border border-secondary-100">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold text-secondary-800">System Health</h3>
+                <div id="health-indicator" class="w-4 h-4 rounded-full 
+                    {% if health_summary.status == 'healthy' %}bg-green-500{% elif health_summary.status == 'warning' %}bg-yellow-500{% elif health_summary.status == 'degraded' %}bg-orange-500{% else %}bg-red-500{% endif %}">
+                </div>
+            </div>
+            <p id="health-status" class="text-2xl font-bold mb-2
+                {% if health_summary.status == 'healthy' %}text-green-600{% elif health_summary.status == 'warning' %}text-yellow-600{% elif health_summary.status == 'degraded' %}text-orange-600{% else %}text-red-600{% endif %}">
+                {{ health_summary.status|title }}
+            </p>
+            <p class="text-sm text-secondary-600">Last updated: <span id="last-updated">{{ health_summary.last_updated|date:"H:i:s" }}</span></p>
+        </div>
+
+        <!-- Success Rate -->
+        <div class="bg-white rounded-2xl shadow-lg p-6 border border-secondary-100">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold text-secondary-800">Success Rate</h3>
+                <span class="text-green-500 text-xl">✅</span>
+            </div>
+            <p id="success-rate" class="text-3xl font-bold text-green-600 mb-2">{{ metrics_24h.success_rate|floatformat:1 }}%</p>
+            <p class="text-sm text-secondary-600">Last 24 hours</p>
+        </div>
+
+        <!-- Processing Time -->
+        <div class="bg-white rounded-2xl shadow-lg p-6 border border-secondary-100">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold text-secondary-800">Avg Processing</h3>
+                <span class="text-blue-500 text-xl">⏱️</span>
+            </div>
+            <p id="avg-processing-time" class="text-3xl font-bold text-blue-600 mb-2">
+                {% if metrics_24h.avg_processing_time %}
+                    {{ metrics_24h.avg_processing_time|floatformat:1 }}s
+                {% else %}
+                    N/A
+                {% endif %}
+            </p>
+            <p class="text-sm text-secondary-600">Average time</p>
+        </div>
+
+        <!-- Current Queue -->
+        <div class="bg-white rounded-2xl shadow-lg p-6 border border-secondary-100">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold text-secondary-800">Queue Status</h3>
+                <span class="text-orange-500 text-xl">📋</span>
+            </div>
+            <p id="queue-size" class="text-3xl font-bold text-orange-600 mb-2">{{ metrics_24h.pending_count }}</p>
+            <p class="text-sm text-secondary-600">Pending receipts</p>
+        </div>
+    </div>
+
+    <!-- Detailed Metrics -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <!-- Processing Stats Chart -->
+        <div class="bg-white rounded-2xl shadow-lg p-6 border border-secondary-100">
+            <h3 class="text-xl font-semibold text-secondary-800 mb-4">Processing Statistics</h3>
+            <div class="space-y-4">
+                <!-- 24h Stats -->
+                <div class="border-l-4 border-blue-500 pl-4">
+                    <h4 class="font-semibold text-secondary-700">Last 24 Hours</h4>
+                    <div class="grid grid-cols-2 gap-4 mt-2">
+                        <div>
+                            <p class="text-sm text-secondary-600">Total Receipts</p>
+                            <p class="text-lg font-semibold">{{ metrics_24h.total_receipts }}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-secondary-600">Error Rate</p>
+                            <p class="text-lg font-semibold text-red-600">{{ metrics_24h.error_rate|floatformat:1 }}%</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-secondary-600">OCR Accuracy</p>
+                            <p class="text-lg font-semibold text-green-600">{{ metrics_24h.ocr_accuracy|floatformat:1 }}%</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-secondary-600">Processing Now</p>
+                            <p class="text-lg font-semibold text-blue-600">{{ metrics_24h.current_processing }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 7d Stats -->
+                <div class="border-l-4 border-green-500 pl-4">
+                    <h4 class="font-semibold text-secondary-700">Last 7 Days</h4>
+                    <div class="grid grid-cols-2 gap-4 mt-2">
+                        <div>
+                            <p class="text-sm text-secondary-600">Total Receipts</p>
+                            <p class="text-lg font-semibold">{{ metrics_7d.total_receipts }}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-secondary-600">Success Rate</p>
+                            <p class="text-lg font-semibold text-green-600">{{ metrics_7d.success_rate|floatformat:1 }}%</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Alerts -->
+        <div class="bg-white rounded-2xl shadow-lg p-6 border border-secondary-100">
+            <h3 class="text-xl font-semibold text-secondary-800 mb-4">Recent Alerts</h3>
+            <div id="alerts-container" class="space-y-3 max-h-96 overflow-y-auto">
+                {% if recent_alerts %}
+                    {% for alert in recent_alerts %}
+                    <div class="alert-item border-l-4 pl-4
+                        {% if alert.severity == 'critical' %}border-red-500 bg-red-50{% elif alert.severity == 'high' %}border-orange-500 bg-orange-50{% elif alert.severity == 'medium' %}border-yellow-500 bg-yellow-50{% else %}border-blue-500 bg-blue-50{% endif %}
+                        rounded-r-lg p-3">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <p class="font-semibold text-secondary-800">{{ alert.title }}</p>
+                                <p class="text-sm text-secondary-600 mt-1">{{ alert.message }}</p>
+                                <p class="text-xs text-secondary-500 mt-2">{{ alert.timestamp|date:"Y-m-d H:i:s" }}</p>
+                            </div>
+                            <span class="text-xs px-2 py-1 rounded-full
+                                {% if alert.severity == 'critical' %}bg-red-200 text-red-800{% elif alert.severity == 'high' %}bg-orange-200 text-orange-800{% elif alert.severity == 'medium' %}bg-yellow-200 text-yellow-800{% else %}bg-blue-200 text-blue-800{% endif %}">
+                                {{ alert.severity|upper }}
+                            </span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center py-8">
+                        <span class="text-green-500 text-4xl">✅</span>
+                        <p class="text-secondary-600 mt-2">No alerts in the last 24 hours</p>
+                        <p class="text-sm text-secondary-500">System is operating normally</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Real-time Performance Chart -->
+    <div class="bg-white rounded-2xl shadow-lg p-6 border border-secondary-100 mb-8">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-xl font-semibold text-secondary-800">Processing Timeline</h3>
+            <div class="flex space-x-2">
+                <button id="chart-7d" class="px-3 py-1 text-sm bg-blue-100 text-blue-800 rounded-lg active">7 Days</button>
+                <button id="chart-30d" class="px-3 py-1 text-sm bg-secondary-100 text-secondary-600 rounded-lg">30 Days</button>
+            </div>
+        </div>
+        <div id="timeline-chart" class="h-64">
+            <canvas id="processing-chart" width="800" height="300"></canvas>
+        </div>
+    </div>
+
+    {% endif %}
+</div>
+
+<script>
+// Real-time updates for monitoring dashboard
+class MonitoringDashboard {
+    constructor() {
+        this.updateInterval = 30000; // 30 seconds
+        this.startAutoUpdate();
+        this.initializeChart();
+    }
+
+    async updateHealthStatus() {
+        try {
+            const response = await fetch('/monitoring/api/health/');
+            const data = await response.json();
+            
+            // Update health status
+            const statusElement = document.getElementById('health-status');
+            const indicatorElement = document.getElementById('health-indicator');
+            const lastUpdatedElement = document.getElementById('last-updated');
+            
+            if (statusElement) {
+                statusElement.textContent = data.status.charAt(0).toUpperCase() + data.status.slice(1);
+                statusElement.className = this.getHealthStatusClass(data.status);
+            }
+            
+            if (indicatorElement) {
+                indicatorElement.className = `w-4 h-4 rounded-full ${this.getHealthIndicatorClass(data.status)}`;
+            }
+            
+            if (lastUpdatedElement) {
+                lastUpdatedElement.textContent = new Date().toLocaleTimeString();
+            }
+            
+            // Update metrics
+            if (data.metrics) {
+                this.updateMetrics(data.metrics);
+            }
+            
+        } catch (error) {
+            console.error('Error updating health status:', error);
+        }
+    }
+
+    async updateAlerts() {
+        try {
+            const response = await fetch('/monitoring/api/alerts/');
+            const data = await response.json();
+            
+            const alertsContainer = document.getElementById('alerts-container');
+            if (alertsContainer && data.alerts) {
+                if (data.alerts.length === 0) {
+                    alertsContainer.innerHTML = `
+                        <div class="text-center py-8">
+                            <span class="text-green-500 text-4xl">✅</span>
+                            <p class="text-secondary-600 mt-2">No alerts in the last 24 hours</p>
+                            <p class="text-sm text-secondary-500">System is operating normally</p>
+                        </div>
+                    `;
+                } else {
+                    alertsContainer.innerHTML = data.alerts.map(alert => `
+                        <div class="alert-item border-l-4 pl-4 ${this.getAlertClass(alert.severity)} rounded-r-lg p-3">
+                            <div class="flex items-start justify-between">
+                                <div>
+                                    <p class="font-semibold text-secondary-800">${alert.title}</p>
+                                    <p class="text-sm text-secondary-600 mt-1">${alert.message}</p>
+                                    <p class="text-xs text-secondary-500 mt-2">${new Date(alert.timestamp).toLocaleString()}</p>
+                                </div>
+                                <span class="text-xs px-2 py-1 rounded-full ${this.getSeverityBadgeClass(alert.severity)}">
+                                    ${alert.severity.toUpperCase()}
+                                </span>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+            }
+        } catch (error) {
+            console.error('Error updating alerts:', error);
+        }
+    }
+
+    updateMetrics(metrics) {
+        const elements = {
+            'success-rate': `${metrics.success_rate?.toFixed(1) || 0}%`,
+            'avg-processing-time': metrics.avg_processing_time ? `${metrics.avg_processing_time.toFixed(1)}s` : 'N/A',
+            'queue-size': metrics.pending_count || 0
+        };
+
+        Object.entries(elements).forEach(([id, value]) => {
+            const element = document.getElementById(id);
+            if (element) {
+                element.textContent = value;
+            }
+        });
+    }
+
+    getHealthStatusClass(status) {
+        const classes = {
+            'healthy': 'text-3xl font-bold text-green-600',
+            'warning': 'text-3xl font-bold text-yellow-600',
+            'degraded': 'text-3xl font-bold text-orange-600',
+            'critical': 'text-3xl font-bold text-red-600'
+        };
+        return classes[status] || 'text-3xl font-bold text-secondary-600';
+    }
+
+    getHealthIndicatorClass(status) {
+        const classes = {
+            'healthy': 'bg-green-500',
+            'warning': 'bg-yellow-500',
+            'degraded': 'bg-orange-500',
+            'critical': 'bg-red-500'
+        };
+        return classes[status] || 'bg-secondary-500';
+    }
+
+    getAlertClass(severity) {
+        const classes = {
+            'critical': 'border-red-500 bg-red-50',
+            'high': 'border-orange-500 bg-orange-50',
+            'medium': 'border-yellow-500 bg-yellow-50',
+            'low': 'border-blue-500 bg-blue-50'
+        };
+        return classes[severity] || 'border-secondary-500 bg-secondary-50';
+    }
+
+    getSeverityBadgeClass(severity) {
+        const classes = {
+            'critical': 'bg-red-200 text-red-800',
+            'high': 'bg-orange-200 text-orange-800',
+            'medium': 'bg-yellow-200 text-yellow-800',
+            'low': 'bg-blue-200 text-blue-800'
+        };
+        return classes[severity] || 'bg-secondary-200 text-secondary-800';
+    }
+
+    async initializeChart() {
+        // Simple chart implementation using Canvas
+        // In production, you might want to use Chart.js or similar
+        try {
+            await this.updateChart(7);
+        } catch (error) {
+            console.error('Error initializing chart:', error);
+        }
+    }
+
+    async updateChart(days) {
+        try {
+            const response = await fetch(`/monitoring/api/timeline/?days=${days}`);
+            const data = await response.json();
+            
+            // Simple chart rendering (you could replace this with Chart.js)
+            const canvas = document.getElementById('processing-chart');
+            if (canvas && data.timeline) {
+                const ctx = canvas.getContext('2d');
+                this.drawSimpleChart(ctx, data.timeline, canvas.width, canvas.height);
+            }
+        } catch (error) {
+            console.error('Error updating chart:', error);
+        }
+    }
+
+    drawSimpleChart(ctx, data, width, height) {
+        // Clear canvas
+        ctx.clearRect(0, 0, width, height);
+        
+        if (data.length === 0) return;
+        
+        const padding = 40;
+        const chartWidth = width - 2 * padding;
+        const chartHeight = height - 2 * padding;
+        
+        // Find max value for scaling
+        const maxValue = Math.max(...data.map(d => d.total));
+        
+        // Draw axes
+        ctx.strokeStyle = '#e5e7eb';
+        ctx.lineWidth = 1;
+        
+        // Y-axis
+        ctx.beginPath();
+        ctx.moveTo(padding, padding);
+        ctx.lineTo(padding, height - padding);
+        ctx.stroke();
+        
+        // X-axis
+        ctx.beginPath();
+        ctx.moveTo(padding, height - padding);
+        ctx.lineTo(width - padding, height - padding);
+        ctx.stroke();
+        
+        // Draw data points and lines
+        if (data.length > 1) {
+            const stepX = chartWidth / (data.length - 1);
+            
+            // Total receipts line (blue)
+            ctx.strokeStyle = '#3b82f6';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            
+            data.forEach((point, index) => {
+                const x = padding + index * stepX;
+                const y = height - padding - (point.total / maxValue) * chartHeight;
+                
+                if (index === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            });
+            ctx.stroke();
+            
+            // Completed receipts line (green)
+            ctx.strokeStyle = '#10b981';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            
+            data.forEach((point, index) => {
+                const x = padding + index * stepX;
+                const y = height - padding - (point.completed / maxValue) * chartHeight;
+                
+                if (index === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            });
+            ctx.stroke();
+        }
+        
+        // Add labels
+        ctx.fillStyle = '#6b7280';
+        ctx.font = '12px sans-serif';
+        ctx.textAlign = 'center';
+        
+        // Date labels (show every few points to avoid crowding)
+        const labelStep = Math.max(1, Math.floor(data.length / 5));
+        data.forEach((point, index) => {
+            if (index % labelStep === 0) {
+                const x = padding + (index / (data.length - 1)) * chartWidth;
+                const date = new Date(point.date).toLocaleDateString();
+                ctx.fillText(date, x, height - 10);
+            }
+        });
+    }
+
+    startAutoUpdate() {
+        // Initial update
+        this.updateHealthStatus();
+        this.updateAlerts();
+        
+        // Set up periodic updates
+        setInterval(() => {
+            this.updateHealthStatus();
+            this.updateAlerts();
+        }, this.updateInterval);
+    }
+}
+
+// Initialize dashboard when page loads
+document.addEventListener('DOMContentLoaded', () => {
+    const dashboard = new MonitoringDashboard();
+    
+    // Chart time period buttons
+    document.getElementById('chart-7d')?.addEventListener('click', async () => {
+        document.getElementById('chart-7d').className = 'px-3 py-1 text-sm bg-blue-100 text-blue-800 rounded-lg';
+        document.getElementById('chart-30d').className = 'px-3 py-1 text-sm bg-secondary-100 text-secondary-600 rounded-lg';
+        await dashboard.updateChart(7);
+    });
+    
+    document.getElementById('chart-30d')?.addEventListener('click', async () => {
+        document.getElementById('chart-30d').className = 'px-3 py-1 text-sm bg-blue-100 text-blue-800 rounded-lg';
+        document.getElementById('chart-7d').className = 'px-3 py-1 text-sm bg-secondary-100 text-secondary-600 rounded-lg';
+        await dashboard.updateChart(30);
+    });
+});
+</script>
+{% endblock %}

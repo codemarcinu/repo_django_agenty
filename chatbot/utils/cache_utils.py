@@ -5,7 +5,8 @@ from django.core.cache import cache
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 
-from ..models import Agent, Document, ReceiptProcessing
+from ..models import Agent, Document
+from inventory.models import Receipt
 
 
 def cache_model_method(timeout=300):
@@ -109,7 +110,7 @@ def get_agent_statistics():
             "pantry_items_count": InventoryItem.objects.filter(
                 storage_location='pantry', quantity_remaining__gt=0
             ).count(),
-            "recent_receipts_count": ReceiptProcessing.objects.filter(
+            "recent_receipts_count": Receipt.objects.filter(
                 status__in=["uploaded", "processing", "ready_for_review"]
             ).count(),
         }

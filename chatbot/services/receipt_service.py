@@ -10,12 +10,12 @@ from django.utils import timezone
 
 from inventory.models import Receipt
 
-from ..models import ReceiptProcessing
-from .exceptions import (
+from .exceptions_receipt import (
     DatabaseError,
     ReceiptNotFoundError,
-    ReceiptProcessingError,
+    ReceiptError,
 )
+
 from .ocr_service import get_ocr_service
 from .pantry_service_v2 import PantryServiceV2
 from .receipt_parser import get_receipt_parser
@@ -41,7 +41,7 @@ class ReceiptService:
     def __init__(self):
         self.pantry_service = PantryServiceV2()
 
-    def create_receipt_record(self, receipt_file) -> ReceiptProcessing:
+    def create_receipt_record(self, receipt_file) -> Receipt:
         """
         Create new receipt processing record.
 
@@ -49,10 +49,10 @@ class ReceiptService:
             receipt_file: Uploaded file
 
         Returns:
-            ReceiptProcessing instance
+            Receipt instance
         """
         try:
-            receipt = ReceiptProcessing.objects.create(
+            receipt = Receipt.objects.create(
                 receipt_file=receipt_file, status="uploaded"
             )
             logger.info(f"Created receipt processing record: {receipt.id}")
@@ -70,80 +70,51 @@ class ReceiptService:
             receipt_id: ID of receipt to process
 
         Returns:
-            True if processing started successfully, False otherwise
+            True if processing was successfully queued.
+        
+        Raises:
+            ReceiptNotFoundError: If the receipt does not exist.
+            ReceiptProcessingError: If the task could not be queued (e.g., broker down).
         """
-        logger.info(f"🔄 Starting processing for receipt ID: {receipt_id}")
+        logger.info(f"🔄 Attempting to queue processing for receipt ID: {receipt_id}")
 
         try:
-            receipt = ReceiptProcessing.objects.get(id=receipt_id)
+            receipt = Receipt.objects.get(id=receipt_id)
             logger.debug(f"Found receipt: {receipt}, current status: {receipt.status}")
 
-            logger.info(f"Marking receipt {receipt_id} as processing...")
-            receipt.mark_as_processing()
-            logger.debug(f"Receipt {receipt_id} status updated to: {receipt.status}")
+            # It's better to let the task itself manage the status,
+            # but setting it here gives immediate feedback.
+            receipt.status = "ocr_in_progress"
+            receipt.error_message = ""
+            receipt.save()
 
-            # Try to trigger Celery task
-            logger.info(f"Attempting to start Celery task for receipt {receipt_id}")
-            try:
-                from ..tasks import process_receipt_task
+            # Trigger Celery task
+            from ..tasks import process_receipt_task
 
-                logger.debug("Celery task imported successfully")
-
-                task_result = process_receipt_task.delay(receipt_id)
-                logger.info(
-                    f"✅ Celery task started successfully for receipt {receipt_id}, task ID: {task_result.id}"
-                )
-
-            except Exception as celery_error:
-                logger.warning(
-                    f"⚠️ Celery task failed for receipt {receipt_id}: {celery_error}"
-                )
-                logger.info(
-                    f"Falling back to synchronous processing for receipt {receipt_id}"
-                )
-
-                # Fallback to synchronous processing
-                try:
-                    import asyncio
-
-                    from ..receipt_processor import receipt_processor
-
-                    logger.debug("Receipt processor imported successfully")
-
-                    logger.info(
-                        f"Starting synchronous OCR processing for receipt {receipt_id}"
-                    )
-                    asyncio.run(receipt_processor.process_receipt(receipt_id))
-                    logger.info(
-                        f"✅ Completed synchronous processing for receipt {receipt_id}"
-                    )
-
-                except Exception as sync_error:
-                    logger.error(
-                        f"❌ Both Celery and synchronous processing failed for receipt {receipt_id}: {sync_error}",
-                        exc_info=True,
-                    )
-                    receipt.mark_as_error(
-                        f"Przetwarzanie nie powiodło się: {sync_error}"
-                    )
-                    return False
-
-            logger.info(f"✅ Processing workflow completed for receipt {receipt_id}")
+            task_result = process_receipt_task.delay(receipt_id)
+            logger.info(
+                f"✅ Celery task queued successfully for receipt {receipt_id}, task ID: {task_result.id}"
+            )
             return True
 
-        except ReceiptProcessing.DoesNotExist:
+        except Receipt.DoesNotExist as e:
             error_msg = f"Receipt {receipt_id} not found in database"
             logger.error(f"❌ {error_msg}")
-            raise ReceiptNotFoundError(error_msg)
+            raise ReceiptNotFoundError(error_msg) from e
         except Exception as e:
-            error_msg = f"Unexpected error starting receipt processing {receipt_id}: {e}"
+            # This will catch errors during .delay() if the broker is down
+            error_msg = f"Failed to queue Celery task for receipt {receipt_id}: {e}"
             logger.error(f"❌ {error_msg}", exc_info=True)
+            
+            # Revert status and save error
             try:
-                receipt = ReceiptProcessing.objects.get(id=receipt_id)
-                receipt.mark_as_error(f"Nie udało się rozpocząć przetwarzania: {e}")
-                logger.info(f"Marked receipt {receipt_id} as error due to processing failure")
-            except Exception as mark_error_ex:
-                logger.error(f"Failed to mark receipt {receipt_id} as error: {mark_error_ex}")
+                receipt = Receipt.objects.get(id=receipt_id)
+                receipt.status = "error"
+                receipt.error_message = "Nie można było zakolejkować zadania. Sprawdź połączenie z Redis/Valkey."
+                receipt.save()
+            except Receipt.DoesNotExist:
+                pass # Nothing to revert if it wasn't found in the first place
+
             raise ReceiptProcessingError(error_msg) from e
 
     def update_processing_status(
@@ -168,7 +139,7 @@ class ReceiptService:
             True if updated successfully, False otherwise
         """
         try:
-            receipt = ReceiptProcessing.objects.get(id=receipt_id)
+            receipt = Receipt.objects.get(id=receipt_id)
 
             if status == "ocr_done" and raw_text:
                 receipt.mark_ocr_done(raw_text)
@@ -190,7 +161,7 @@ class ReceiptService:
             logger.info(f"Updated receipt {receipt_id} status to {status}")
             return True
 
-        except ReceiptProcessing.DoesNotExist:
+        except Receipt.DoesNotExist:
             error_msg = f"Receipt {receipt_id} not found for status update"
             logger.error(error_msg)
             raise ReceiptNotFoundError(error_msg)
@@ -210,7 +181,7 @@ class ReceiptService:
             Dictionary with receipt status information
         """
         try:
-            receipt = ReceiptProcessing.objects.get(id=receipt_id)
+            receipt = Receipt.objects.get(id=receipt_id)
 
             return {
                 "id": receipt.id,
@@ -231,7 +202,7 @@ class ReceiptService:
                 ),
             }
 
-        except ReceiptProcessing.DoesNotExist:
+        except Receipt.DoesNotExist:
             logger.warning(f"Receipt {receipt_id} not found")
             return None
         except Exception as e:
@@ -249,10 +220,10 @@ class ReceiptService:
             List of extracted product dictionaries
         """
         try:
-            receipt = ReceiptProcessing.objects.get(id=receipt_id)
+            receipt = Receipt.objects.get(id=receipt_id)
             return receipt.get_extracted_products()
 
-        except ReceiptProcessing.DoesNotExist:
+        except Receipt.DoesNotExist:
             logger.warning(f"Receipt {receipt_id} not found")
             return []
         except Exception as e:
@@ -335,8 +306,18 @@ class ReceiptService:
             receipt.status = "processing_ocr"
             receipt.save()
 
+            # Check if receipt has a file
+            if not receipt.receipt_file:
+                error_msg = "No file uploaded for receipt"
+                logger.error(error_msg)
+                receipt.status = "error"
+                receipt.processing_notes = error_msg
+                receipt.save()
+                return False
+
+            file_path = receipt.receipt_file.path
             logger.info(
-                f"Starting OCR processing for receipt {receipt_id}: {receipt.source_file_path}"
+                f"Starting OCR processing for receipt {receipt_id}: {file_path}"
             )
 
             # Get OCR service
@@ -352,7 +333,7 @@ class ReceiptService:
 
             # Process file with OCR
             ocr_result = ocr_service.process_file(
-                receipt.source_file_path, use_fallback=use_fallback
+                file_path, use_fallback=use_fallback
             )
 
             if ocr_result.success and ocr_result.text.strip():
@@ -690,7 +671,7 @@ class ReceiptService:
                 logger.error(f"Failed to update receipt {receipt_id} status after matching error: {update_error}")
             return False
 
-    def get_recent_receipts(self, limit: int = 10) -> list[ReceiptProcessing]:
+    def get_recent_receipts(self, limit: int = 10) -> list[Receipt]:
         """
         Get recent receipt processing records.
 
@@ -698,9 +679,9 @@ class ReceiptService:
             limit: Maximum number of receipts to return
 
         Returns:
-            List of ReceiptProcessing instances
+            List of Receipt instances
         """
-        return ReceiptProcessing.get_recent_receipts(limit)
+        return Receipt.get_recent_receipts(limit)
 
     def get_processing_statistics(self) -> dict:
         """
@@ -709,7 +690,7 @@ class ReceiptService:
         Returns:
             Dictionary with processing statistics
         """
-        return ReceiptProcessing.get_statistics()
+        return Receipt.get_statistics()
 
     def retry_failed_receipt(self, receipt_id: int) -> bool:
         """
@@ -722,7 +703,7 @@ class ReceiptService:
             True if retry started successfully, False otherwise
         """
         try:
-            receipt = ReceiptProcessing.objects.get(id=receipt_id)
+            receipt = Receipt.objects.get(id=receipt_id)
 
             if not receipt.has_error():
                 logger.warning(
@@ -738,7 +719,7 @@ class ReceiptService:
             # Start processing again
             return self.start_processing(receipt_id)
 
-        except ReceiptProcessing.DoesNotExist:
+        except Receipt.DoesNotExist:
             logger.error(f"Receipt {receipt_id} not found for retry")
             return False
         except Exception as e:
@@ -756,7 +737,7 @@ class ReceiptService:
             True if deleted successfully, False otherwise
         """
         try:
-            receipt = ReceiptProcessing.objects.get(id=receipt_id)
+            receipt = Receipt.objects.get(id=receipt_id)
 
             # Delete file if exists
             if receipt.receipt_file:
@@ -771,7 +752,7 @@ class ReceiptService:
             logger.info(f"Deleted receipt {receipt_id}")
             return True
 
-        except ReceiptProcessing.DoesNotExist:
+        except Receipt.DoesNotExist:
             logger.warning(f"Receipt {receipt_id} not found for deletion")
             return False
         except Exception as e:
@@ -790,7 +771,7 @@ class ReceiptService:
         """
         cutoff_date = timezone.now() - timezone.timedelta(days=days)
 
-        old_receipts = ReceiptProcessing.objects.filter(
+        old_receipts = Receipt.objects.filter(
             status="completed", processed_at__lt=cutoff_date
         )
 

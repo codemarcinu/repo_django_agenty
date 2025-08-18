@@ -1,0 +1,28 @@
+# Byte-code files
+*.pyc
+__pycache__/
+
+# Logs
+*.log
+logs/
+
+# Databases
+*.sqlite3
+*.rdb
+*.db
+
+# Virtual environment
+.venv/
+
+# IDE files
+.idea/
+
+# Media files (user uploads)
+media/
+
+# Benchmark results
+benchmark_results_*.json
+
+# Other generated files
+.coverage
+.ruff_cache/

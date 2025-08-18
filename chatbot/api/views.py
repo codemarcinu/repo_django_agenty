@@ -2,6 +2,7 @@ import json
 import logging
 from decimal import Decimal, InvalidOperation
 
+from asgiref.sync import sync_to_async
 from django.http import HttpRequest, JsonResponse
 from django.shortcuts import get_object_or_404
 from django.urls import reverse_lazy
@@ -10,36 +11,55 @@ from django.utils.decorators import method_decorator
 from django.views import View
 from django.views.decorators.csrf import csrf_exempt
 
-from inventory.models import InventoryItem
+from inventory.models import InventoryItem, Product, Receipt
 
 from ..conversation_manager import conversation_manager
-from ..models import Agent, ReceiptProcessing
+from ..models import Agent
 from ..services.agent_factory import agent_factory
+from ..services.product_matcher import get_product_matcher
 
 logger = logging.getLogger(__name__)
 
 
-class ReceiptProcessingStatusAPIView(View):
+class ReceiptStatusAPIView(View):
     def get(self, request, receipt_id):
-        receipt_record = get_object_or_404(ReceiptProcessing, id=receipt_id)
-        if receipt_record.status == "ready_for_review":
-            return JsonResponse(
-                {
-                    "status": receipt_record.status,
-                    "redirect_url": reverse_lazy(
-                        "chatbot:receipt_review",
-                        kwargs={"receipt_id": receipt_record.id},
-                    ),
-                }
-            )
-        elif receipt_record.status == "error":
-            return JsonResponse(
-                {
-                    "status": receipt_record.status,
-                    "error_message": receipt_record.error_message,
-                }
-            )
-        return JsonResponse({"status": receipt_record.status})
+        try:
+            receipt = Receipt.objects.get(id=receipt_id)
+        except Receipt.DoesNotExist:
+            return JsonResponse({"error": "Paragon nie został znaleziony"}, status=404)
+
+        response_data = {
+            "status": receipt.status,
+            "processing_notes": receipt.processing_notes,
+        }
+
+        if receipt.status == 'matching_completed':
+            response_data["redirect_url"] = reverse_lazy("chatbot:receipt_review", kwargs={"receipt_id": receipt.id})
+        elif receipt.status == 'completed':
+            response_data["redirect_url"] = reverse_lazy("inventory:inventory_list") # Or wherever the final destination is
+        
+        return JsonResponse(response_data)
+
+
+class ProductSearchAPIView(View):
+    def get(self, request: HttpRequest):
+        query = request.GET.get("q", "").strip()
+        if not query:
+            return JsonResponse({"products": []})
+
+        matcher = get_product_matcher()
+        products = matcher.search_products(query)
+
+        results = []
+        for product in products:
+            results.append({
+                "id": product.id,
+                "name": product.name,
+                "category_name": product.category.name if product.category else None,
+            })
+        
+        logger.info(f"API search for '{query}' returned {len(results)} results.")
+        return JsonResponse({"products": results})
 
 
 class AgentListView(View):
@@ -119,8 +139,23 @@ class ChatMessageView(View):
                 return JsonResponse(
                     {"success": False, "error": "Conversation not found"}, status=404
                 )
-            agent_name = context["conversation"]["agent_name"]
-            agent = await agent_factory.create_agent_from_db(agent_name)
+            # Get the main router agent instead of the agent from the conversation
+            try:
+                router_agent_model = await sync_to_async(Agent.objects.get)(
+                    agent_type="router", is_active=True
+                )
+                agent = await agent_factory.create_agent_from_db(router_agent_model.name)
+            except Agent.DoesNotExist:
+                return JsonResponse(
+                    {"success": False, "error": "No active router agent found."},
+                    status=500,
+                )
+            except Agent.MultipleObjectsReturned:
+                return JsonResponse(
+                    {"success": False, "error": "Multiple active router agents found."},
+                    status=500,
+                )
+
             now = timezone.now()
             current_datetime_str = now.strftime("%A, %Y-%m-%d %H:%M:%S")
             agent_input = {
@@ -143,13 +178,13 @@ class ChatMessageView(View):
                     {
                         "success": True,
                         "response": agent_message,
-                        "agent": agent_name,
+                        "agent": agent.name, # Use the processing agent's name
                         "metadata": response.metadata,
                     }
                 )
             else:
                 return JsonResponse(
-                    {"success": False, "error": response.error, "agent": agent_name}
+                    {"success": False, "error": response.error, "agent": agent.name}
                 )
         except Exception as e:
             logger.error(f"Error processing chat message: {str(e)}")

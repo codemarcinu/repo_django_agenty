@@ -4,11 +4,11 @@ from unittest.mock import patch
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 
-from .models import ReceiptProcessing
+from inventory.models import Receipt # Added new import
 from .tasks import process_receipt_task
 
 
-class ReceiptProcessingTasksTest(TestCase):
+class ReceiptTasksTest(TestCase):
 
     def setUp(self):
         # Create a dummy receipt file
@@ -16,7 +16,7 @@ class ReceiptProcessingTasksTest(TestCase):
         self.dummy_file = SimpleUploadedFile(
             "test_receipt.jpg", self.dummy_file_content, content_type="image/jpeg"
         )
-        self.receipt_record = ReceiptProcessing.objects.create(
+        self.receipt_record = Receipt.objects.create(
             receipt_file=self.dummy_file, status="uploaded"
         )
 

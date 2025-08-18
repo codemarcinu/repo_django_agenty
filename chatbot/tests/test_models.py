@@ -2,6 +2,8 @@ import pytest
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 
+from inventory.models import Receipt # Added new import
+
 
 @pytest.mark.unit
 class AgentModelTest(TestCase):
@@ -55,15 +57,15 @@ class DocumentModelTest(TestCase):
 
 
 @pytest.mark.unit
-class ReceiptProcessingModelTest(TestCase):
-    def test_receipt_processing_creation(self):
-        """Test ReceiptProcessing model creation"""
+class ReceiptModelTest(TestCase):
+    def test_receipt_creation(self):
+        """Test Receipt model creation"""
         file_content = b"Test receipt content"
         uploaded_file = SimpleUploadedFile(
             "receipt.pdf", file_content, content_type="application/pdf"
         )
 
-        receipt = ReceiptProcessing.objects.create(
+        receipt = Receipt.objects.create(
             receipt_file=uploaded_file, status="uploaded"
         )
 
@@ -73,7 +75,7 @@ class ReceiptProcessingModelTest(TestCase):
 
     def test_receipt_status_transitions(self):
         """Test receipt status can be changed"""
-        receipt = ReceiptProcessing.objects.create(status="uploaded")
+        receipt = Receipt.objects.create(status="uploaded")
 
         receipt.status = "processing"
         receipt.save()

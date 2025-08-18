@@ -17,3 +17,11 @@ def subtract(value, arg):
         return float(value) - float(arg)
     except (ValueError, TypeError):
         return ''
+
+@register.filter
+def getitem(dictionary, key):
+    """Gets an item from a dictionary."""
+    try:
+        return dictionary.get(key)
+    except (AttributeError, TypeError):
+        return None

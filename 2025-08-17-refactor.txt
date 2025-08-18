@@ -1,0 +1,18 @@
+╭───────────────────────────────────────────────────╮
+│ ✻ Welcome to Claude Code!                         │
+│                                                   │
+│   /help for help, /status for your current setup  │
+│                                                   │
+│   cwd: /home/marcin/PycharmProjects/agenty        │
+╰───────────────────────────────────────────────────╯
+● Compact summary (ctrl+r to expand)
+  ⎿  Read chatbot/services/secure_file_validator.py (448 lines)
+  ⎿  Read chatbot/services/ocr_validator.py (549 lines)
+  ⎿  Read chatbot/services/hybrid_ocr_service.py (461 lines)
+  ⎿  Read chatbot/services/image_processor.py (446 lines)
+  ⎿  Read chatbot/services/unified_receipt_processor.py (376 lines)
+  ⎿  Todo list read (13 items)
+
+> /compact 
+  ⎿  Compacted. ctrl+r to see full summary
+

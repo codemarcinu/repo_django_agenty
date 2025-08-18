@@ -5,7 +5,8 @@ from django.test import TestCase
 from rest_framework import status
 from rest_framework.test import APIClient, APITestCase
 
-from chatbot.models import Agent, ReceiptProcessing
+from chatbot.models import Agent
+from inventory.models import Receipt # Added new import
 
 
 @pytest.mark.integration
@@ -67,7 +68,7 @@ class APIEndpointsTest(APITestCase):
 
     def test_receipt_status_endpoint(self):
         """Test receipt processing status endpoint"""
-        receipt = ReceiptProcessing.objects.create(status="uploaded")
+        receipt = Receipt.objects.create(status="uploaded")
 
         url = f"/api/receipts/{receipt.id}/status/"
         response = self.client.get(url)

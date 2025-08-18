@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "rest_framework",
     "drf_spectacular",  # API documentation
+    "channels",  # WebSocket support for real-time updates
     "chatbot",
     "inventory",  # New inventory app for receipt processing pipeline
     "pytest_django",  # Added
@@ -300,6 +301,24 @@ EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"  # For developm
 DEFAULT_FROM_EMAIL = "agenty@example.com"
 INVENTORY_ALERTS_EMAIL = "admin@example.com"  # Where to send inventory alerts
 
+# Ollama Configuration for Receipt Processing (Updated for RTX 3060 optimization)
+RECEIPT_OLLAMA_CONFIG = {
+    "ollama_url": "http://127.0.0.1:11434",
+    "model": "qwen2.5-vl:7b",  # Vision model for receipt processing
+    "timeout": 300,  # Reduced timeout for faster 7B models
+    "max_retries": 2,
+    "stream": False,
+    "auto_routing": True,  # Enable intelligent model routing
+    "options": {
+        "temperature": 0.1,  # Low temperature for consistent results
+        "top_p": 0.9,
+        "num_ctx": 4096,  # Context window
+        "num_predict": 1024,  # Max response tokens
+        "num_gpu": 51,  # Use all GPU layers for RTX 3060
+        "num_thread": 6,  # CPU threads
+    }
+}
+
 # Security settings for development (some disabled for local dev)
 # Note: These should be enabled in production
 if not DEBUG:
@@ -364,3 +383,18 @@ DATA_UPLOAD_MAX_NUMBER_FIELDS = 1000
 # Restrict file upload types for receipts
 ALLOWED_RECEIPT_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.pdf', '.webp']
 MAX_RECEIPT_FILE_SIZE = 10 * 1024 * 1024  # 10MB
+
+# Django Channels Configuration
+ASGI_APPLICATION = "core.asgi.application"
+
+# Channel layer configuration for WebSocket support
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels.layers.InMemoryChannelLayer",  # Development only
+        # For production, use Redis:
+        # "BACKEND": "channels_redis.core.RedisChannelLayer",
+        # "CONFIG": {
+        #     "hosts": [("127.0.0.1", 6379)],
+        # },
+    },
+}

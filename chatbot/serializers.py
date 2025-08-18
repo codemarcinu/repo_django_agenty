@@ -1,5 +1,7 @@
 from rest_framework import serializers
 
+from inventory.models import Receipt
+
 
 class AgentSerializer(serializers.ModelSerializer):
     description = serializers.SerializerMethodField()
@@ -25,11 +27,11 @@ class ChatMessageSerializer(serializers.Serializer):
     message = serializers.CharField()
 
 
-class ReceiptProcessingStatusSerializer(serializers.ModelSerializer):
+class ReceiptStatusSerializer(serializers.ModelSerializer):
     redirect_url = serializers.SerializerMethodField()
 
     class Meta:
-        model = ReceiptProcessing
+        model = Receipt
         fields = ["status", "error_message", "redirect_url"]
 
     def get_redirect_url(self, obj):
