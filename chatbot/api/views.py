@@ -87,7 +87,7 @@ class AgentListView(View):
             return JsonResponse({"success": False, "error": str(e)}, status=500)
 
 
-@method_decorator(csrf_exempt, name="dispatch")
+@method_decorator(csrf_exempt, name="dispatch") # Exempted because this API is expected to be used with token-based authentication and not session cookies.
 class ConversationCreateView(View):
     """API view for creating new conversations"""
 
@@ -114,7 +114,7 @@ class ConversationCreateView(View):
             )
 
 
-@method_decorator(csrf_exempt, name="dispatch")
+@method_decorator(csrf_exempt, name="dispatch") # Exempted because this API is expected to be used with token-based authentication and not session cookies.
 class ChatMessageView(View):
     """API view for sending messages to agents"""
 
@@ -231,7 +231,7 @@ class ConversationInfoView(View):
 class ConsumeInventoryView(View):
     """API endpoint for consuming inventory items - POST /api/inventory/{id}/consume"""
 
-    @method_decorator(csrf_exempt)
+    @method_decorator(csrf_exempt) # Exempted because this API is expected to be used with token-based authentication and not session cookies.
     def dispatch(self, *args, **kwargs):
         return super().dispatch(*args, **kwargs)
 

@@ -181,22 +181,26 @@ class Receipt(models.Model):
         ("USD", "US Dollar"),
     ]
 
-    # UNIFIED STATUS CHOICES - combining both ReceiptProcessing and Receipt statuses
     STATUS_CHOICES = [
-        ("uploaded", "Plik przesłany"),
-        ("pending_ocr", "Pending OCR"),
-        ("processing_ocr", "OCR in Progress"),
-        ("ocr_in_progress", "Rozpoznawanie tekstu (OCR)"),
-        ("ocr_completed", "OCR Completed"),
-        ("ocr_done", "Tekst rozpoznany"),
-        ("processing_parsing", "Processing Parsing"),
-        ("llm_in_progress", "Analiza przez AI"),
-        ("llm_done", "Analiza zakończona"),
-        ("parsing_completed", "Parsing Completed"),
-        ("matching", "Matching Products"),
-        ("ready_for_review", "Gotowe do weryfikacji"),
+        ("pending", "Pending Processing"),
+        ("processing", "Processing in Progress"),
+        ("ready_for_review", "Ready for Review"),
         ("completed", "Completed"),
         ("error", "Error"),
+    ]
+
+    PROCESSING_STEP_CHOICES = [
+        ("uploaded", "File Uploaded"),
+        ("ocr_in_progress", "OCR in Progress"),
+        ("ocr_completed", "OCR Completed"),
+        ("parsing_in_progress", "Parsing in Progress"),
+        ("parsing_completed", "Parsing Completed"),
+        ("matching_in_progress", "Matching Products"),
+        ("matching_completed", "Matching Completed"),
+        ("finalizing_inventory", "Finalizing Inventory"),
+        ("review_pending", "Review Pending"),
+        ("done", "Done"),
+        ("failed", "Failed"),
     ]
 
     id = models.AutoField(primary_key=True)
@@ -237,7 +241,11 @@ class Receipt(models.Model):
         max_length=500, blank=True, default="", help_text="Path to original receipt file"
     )
     status = models.CharField(
-        max_length=20, choices=STATUS_CHOICES, default="uploaded"
+        max_length=20, choices=STATUS_CHOICES, default="pending"
+    )
+    processing_step = models.CharField(
+        max_length=30, choices=PROCESSING_STEP_CHOICES, default="uploaded",
+        help_text="Current granular step in the receipt processing pipeline"
     )
     processing_notes = models.TextField(blank=True, default="")
     error_message = models.TextField(blank=True, verbose_name="Komunikat błędu")
@@ -279,40 +287,47 @@ class Receipt(models.Model):
     # UNIFIED BUSINESS LOGIC - combining methods from ReceiptProcessing
     def mark_as_processing(self):
         """Mark receipt as being processed"""
-        self.status = "ocr_in_progress"
+        self.status = "processing"
+        self.processing_step = "ocr_in_progress"
         self.save()
 
     def mark_ocr_done(self, raw_text: str):
         """Mark OCR processing as completed"""
-        self.status = "ocr_done"
+        self.status = "processing"
+        self.processing_step = "ocr_completed"
         self.raw_ocr_text = raw_text
         self.save()
 
     def mark_llm_processing(self):
         """Mark LLM processing as started"""
-        self.status = "llm_in_progress"
+        self.status = "processing"
+        self.processing_step = "parsing_in_progress"
         self.save()
 
     def mark_llm_done(self, extracted_data: dict):
         """Mark LLM processing as completed"""
-        self.status = "llm_done"
+        self.status = "processing"
+        self.processing_step = "parsing_completed"
         self.extracted_data = extracted_data
         self.save()
 
     def mark_as_ready_for_review(self):
         """Mark receipt as ready for user review"""
         self.status = "ready_for_review"
+        self.processing_step = "review_pending"
         self.save()
 
     def mark_as_completed(self):
         """Mark receipt processing as completed"""
         self.status = "completed"
+        self.processing_step = "done"
         self.processed_at = timezone.now()
         self.save()
 
     def mark_as_error(self, error_message: str):
         """Mark receipt processing as failed with error message"""
         self.status = "error"
+        self.processing_step = "failed"
         self.error_message = error_message
         self.save()
 
@@ -330,7 +345,7 @@ class Receipt(models.Model):
 
     def is_processing(self) -> bool:
         """Check if receipt is currently being processed"""
-        return self.status in ["ocr_in_progress", "llm_in_progress", "processing_ocr", "processing_parsing"]
+        return self.status == "processing"
 
     def get_redirect_url(self):
         """Get appropriate redirect URL based on status"""
@@ -341,9 +356,14 @@ class Receipt(models.Model):
 
     def get_status_display_with_message(self) -> str:
         """Get status display with error message if applicable"""
+        base_display = self.get_status_display()
+        step_display = self.get_processing_step_display()
+        
         if self.has_error() and self.error_message:
-            return f"{self.get_status_display()}: {self.error_message}"
-        return self.get_status_display()
+            return f"{base_display} ({step_display}): {self.error_message}"
+        elif self.status == "processing":
+            return f"{base_display} ({step_display})"
+        return base_display
 
     def get_extracted_products(self) -> list[dict]:
         """Get extracted products from receipt data"""
@@ -385,7 +405,7 @@ class Receipt(models.Model):
             "total": cls.objects.count(),
             "uploaded": cls.objects.filter(status="uploaded").count(),
             "processing": cls.objects.filter(
-                status__in=["ocr_in_progress", "llm_in_progress", "processing_ocr", "processing_parsing"]
+                status="processing"
             ).count(),
             "ready_for_review": cls.objects.filter(status="ready_for_review").count(),
             "completed": cls.objects.filter(status="completed").count(),

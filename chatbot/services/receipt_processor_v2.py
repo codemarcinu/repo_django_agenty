@@ -9,6 +9,8 @@ import time
 from typing import Optional, Protocol, List, Dict, Any
 
 from django.utils import timezone
+from django.db import transaction
+from asgiref.sync import sync_to_async
 
 from .async_ocr_service import AsyncOCRService
 from .receipt_llm_service import ReceiptLLMService
@@ -23,6 +25,7 @@ from .exceptions_receipt import (
 )
 from ..config.receipt_config import ReceiptProcessingConfig, get_config
 from ..validators import get_file_type
+import magic # For MIME type validation
 
 logger = logging.getLogger(__name__)
 
@@ -180,6 +183,22 @@ class ReceiptProcessorV2:
                 file_path=file_path,
                 details={"allowed_extensions": self.config.file.allowed_extensions}
             )
+        
+        # Validate MIME type using python-magic
+        try:
+            detected_mime_type = magic.from_file(file_path, mime=True)
+            allowed_mime_types = [
+                "image/jpeg", "image/png", "application/pdf", "image/webp"
+            ] # This should ideally come from config.file.allowed_mime_types
+            
+            if detected_mime_type not in allowed_mime_types:
+                raise FileValidationError(
+                    f"Detected MIME type {detected_mime_type} is not allowed",
+                    file_path=file_path,
+                    details={"detected_mime_type": detected_mime_type, "allowed_mime_types": allowed_mime_types}
+                )
+        except Exception as e:
+            raise FileValidationError(f"Could not determine file MIME type: {e}", file_path=file_path)
     
     async def _extract_text_with_monitoring(self, file_path: str) -> str:
         """Extract text from file with performance monitoring."""
@@ -239,49 +258,50 @@ class ReceiptProcessorV2:
         receipt_record = None
         
         try:
-            # Get receipt record
-            receipt_record = await self.repository.get_by_id(receipt_processing_id)
-            if not receipt_record:
-                logger.error(f"❌ Receipt {receipt_processing_id} not found in database")
-                return False
-            
-            logger.info(f"✅ Found receipt record: {receipt_record.id}, status: {receipt_record.status}")
-            
-            # Get file path and validate
-            file_path = receipt_record.receipt_file.path
-            logger.info(f"Processing file: {file_path}")
-            
-            await self._validate_file(file_path)
-            
-            # Detect file type
-            file_type = get_file_type(file_path)
-            logger.info(f"Detected file type: {file_type}")
-            
-            # Phase 1: OCR Processing
-            logger.info("🔍 Starting OCR phase...")
-            await self.repository.update_status(receipt_processing_id, "ocr_in_progress")
-            
-            receipt_text = await self._extract_text_with_monitoring(file_path)
-            
-            # Update database with OCR results
-            await self.repository.update_ocr_result(receipt_processing_id, receipt_text)
-            logger.info(f"Receipt {receipt_processing_id} OCR phase completed")
-            
-            # Phase 2: LLM Processing
-            logger.info("🤖 Starting LLM phase...")
-            await self.repository.update_status(receipt_processing_id, "llm_in_progress")
-            
-            products_data = await self._extract_products_with_monitoring(receipt_text)
-            
-            # Update database with extraction results
-            await self.repository.update_extraction_result(receipt_processing_id, products_data)
-            
-            # Performance summary
-            perf_summary = self.performance_monitor.get_summary()
-            logger.info(f"🎉 Receipt {receipt_processing_id} processing COMPLETED!")
-            logger.info(f"📊 Performance summary: {perf_summary}")
-            
-            return True
+            async with sync_to_async(transaction.atomic)():
+                # Get receipt record
+                receipt_record = await self.repository.get_by_id(receipt_processing_id)
+                if not receipt_record:
+                    logger.error(f"❌ Receipt {receipt_processing_id} not found in database")
+                    return False
+                
+                logger.info(f"✅ Found receipt record: {receipt_record.id}, status: {receipt_record.status}")
+                
+                # Get file path and validate
+                file_path = receipt_record.receipt_file.path
+                logger.info(f"Processing file: {file_path}")
+                
+                await self._validate_file(file_path)
+                
+                # Detect file type
+                file_type = get_file_type(file_path)
+                logger.info(f"Detected file type: {file_type}")
+                
+                # Phase 1: OCR Processing
+                logger.info("🔍 Starting OCR phase...")
+                await self.repository.update_status(receipt_processing_id, "ocr_in_progress")
+                
+                receipt_text = await self._extract_text_with_monitoring(file_path)
+                
+                # Update database with OCR results
+                await self.repository.update_ocr_result(receipt_processing_id, receipt_text)
+                logger.info(f"Receipt {receipt_processing_id} OCR phase completed")
+                
+                # Phase 2: LLM Processing
+                logger.info("🤖 Starting LLM phase...")
+                await self.repository.update_status(receipt_processing_id, "llm_in_progress")
+                
+                products_data = await self._extract_products_with_monitoring(receipt_text)
+                
+                # Update database with extraction results
+                await self.repository.update_extraction_result(receipt_processing_id, products_data)
+                
+                # Performance summary
+                perf_summary = self.performance_monitor.get_summary()
+                logger.info(f"🎉 Receipt {receipt_processing_id} processing COMPLETED!")
+                logger.info(f"📊 Performance summary: {perf_summary}")
+                
+                return True
             
         except FileValidationError as e:
             error_msg = f"File validation error: {e.message}"

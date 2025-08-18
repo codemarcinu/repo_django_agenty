@@ -84,6 +84,7 @@ agenty/
 │   ├── settings_prod.py           # Production (PostgreSQL optimized)
 │   ├── celery.py                  # Celery configuration with Redis
 │   └── database_config.py         # Multi-database configuration
+- **Database**: PostgreSQL (recommended for production due to JSONB support), SQLite (for development)
 ├── chatbot/                       # Main AI Application
 │   ├── api/                      # REST API Layer
 │   │   ├── views.py              # Django views with @csrf_exempt
