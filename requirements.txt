@@ -44,3 +44,5 @@ types-PyYAML==6.0.12.12
 # Utilities
 pillow==10.1.0
 python-dotenv==1.0.0
+numpy==1.26.2
+opencv-python-headless==4.9.0.80

@@ -19,6 +19,7 @@ from .exceptions_receipt import (
     ReceiptError,
     ReceiptNotFoundError,
 )
+from .image_processor import get_image_processor
 from .ocr_service import get_ocr_service
 from .pantry_service_v2 import PantryServiceV2
 from .receipt_cache import get_cache_manager
@@ -101,15 +102,28 @@ class ReceiptService:
         cache_manager = get_cache_manager()
         receipt = Receipt.objects.get(id=receipt_id)
         
-        self.notifier.send_status_update(receipt_id, "processing", "Przetwarzanie OCR...", 25)
+        self.notifier.send_status_update(receipt_id, "processing", "Przygotowanie obrazu...", 20)
 
         try:
             if not receipt.receipt_file:
                 raise OCRError("No file uploaded for receipt", receipt_id=receipt_id)
 
+            image_path = receipt.receipt_file.path
+            
+            # --- Image Preprocessing ---
+            image_processor = get_image_processor()
+            processing_result = image_processor.preprocess_image(image_path)
+            if processing_result.success:
+                image_path = processing_result.processed_path
+                logger.info(f"Image for receipt {receipt_id} preprocessed successfully.")
+                self.notifier.send_status_update(receipt_id, "processing", "Obraz przetworzony.", 25)
+            else:
+                logger.warning(f"Image preprocessing failed for receipt {receipt_id}: {processing_result.message}")
+            # --- End Image Preprocessing ---
+
             # --- Caching Logic ---
             try:
-                with receipt.receipt_file.open('rb') as f:
+                with open(image_path, 'rb') as f:
                     file_hash = hashlib.sha256(f.read()).hexdigest()
                 cached_ocr = cache_manager.get_cached_ocr_result(file_hash)
                 if cached_ocr:
@@ -123,6 +137,7 @@ class ReceiptService:
                 logger.warning(f"OCR cache check failed for receipt {receipt_id}: {e}")
             # --- End Caching ---
 
+            self.notifier.send_status_update(receipt_id, "processing", "Przetwarzanie OCR...", 30)
             receipt.processing_step = "ocr_in_progress"
             receipt.save()
 
@@ -130,7 +145,7 @@ class ReceiptService:
             if not ocr_service.is_available():
                 raise OCRError("No OCR backends available", receipt_id=receipt_id)
 
-            ocr_result = ocr_service.process_file(receipt.receipt_file.path, use_fallback)
+            ocr_result = ocr_service.process_file(image_path, use_fallback)
 
             if ocr_result.success and ocr_result.text.strip():
                 receipt.raw_text = ocr_result.to_dict()
@@ -138,7 +153,7 @@ class ReceiptService:
                 receipt.save()
                 self.notifier.send_status_update(receipt_id, "processing", "OCR zakończone", 50)
                 # --- Cache successful result ---
-                with receipt.receipt_file.open('rb') as f:
+                with open(image_path, 'rb') as f:
                     file_hash_for_cache = hashlib.sha256(f.read()).hexdigest()
                 cache_manager.cache_ocr_result(file_hash_for_cache, ocr_result.to_dict())
             else:
