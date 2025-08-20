@@ -140,8 +140,16 @@ CELERY_BEAT_SCHEDULE = {
         "schedule": 86400.0,  # Run daily (24 hours in seconds)
         # 'schedule': 60.0,  # For testing: run every minute
     },
+    "manage-alias-reputation": {
+        "task": "inventory.tasks.manage_alias_reputation",
+        "schedule": 86400.0,  # Run daily
+    },
 }
 CELERY_TIMEZONE = "UTC"
+
+# Alias Management Settings
+ALIAS_CONFIRMATION_THRESHOLD = 10  # Number of times an alias must be seen to be promoted to 'confirmed'
+ALIAS_EXPIRATION_DAYS = 90       # Number of days after which an unverified alias with count 1 is pruned
 
 # Django REST Framework Configuration
 REST_FRAMEWORK = {
@@ -244,6 +252,12 @@ LOGGING = {
             "filename": BASE_DIR / "logs" / "receipt_processing.log",
             "formatter": "detailed",
         },
+        "pipeline_diagnostic_file": {
+            "level": "DEBUG",
+            "class": "logging.FileHandler",
+            "filename": BASE_DIR / "logs" / "pipeline_diagnostic.log",
+            "formatter": "detailed",
+        },
     },
     "loggers": {
         "django": {
@@ -273,6 +287,11 @@ LOGGING = {
         },
         "chatbot.tasks": {
             "handlers": ["console", "receipt_file"],
+            "level": "DEBUG",
+            "propagate": False,
+        },
+        "receipt_pipeline_diag": {
+            "handlers": ["console", "pipeline_diagnostic_file"],
             "level": "DEBUG",
             "propagate": False,
         },
