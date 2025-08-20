@@ -220,3 +220,57 @@ class Message(models.Model):
         self,
     ):
         return f"[{self.created_at.strftime('%Y-%m-%d %H:%M')}] {self.get_role_display()}: {self.content[:50]}..."
+
+
+class ProductCorrection(models.Model):
+    """
+    Records a user's correction to a product name extracted from a receipt.
+    This data can be used to improve future OCR and product matching.
+    """
+    original_product_name = models.CharField(
+        max_length=255,
+        help_text="The product name as initially extracted by OCR/LLM."
+    )
+    corrected_product_name = models.CharField(
+        max_length=255,
+        help_text="The product name as corrected by the user."
+    )
+    # Link to the specific line item that was corrected
+    receipt_line_item = models.ForeignKey(
+        'inventory.ReceiptLineItem', # Assuming ReceiptLineItem is in the inventory app
+        on_delete=models.CASCADE,
+        related_name='corrections',
+        null=True, # Allow null if the line item is deleted
+        blank=True
+    )
+    # Link to the Product model if the user selected an existing product
+    matched_product = models.ForeignKey(
+        'inventory.Product', # Assuming Product is in the inventory app
+        on_delete=models.SET_NULL,
+        related_name='corrections_as_matched',
+        null=True,
+        blank=True,
+        help_text="The product that the user matched the item to (if existing)."
+    )
+    # Optional: User who made the correction
+    user = models.ForeignKey(
+        'auth.User', # Assuming Django's default User model
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        help_text="The user who made the correction."
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Product Correction"
+        verbose_name_plural = "Product Corrections"
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['original_product_name']),
+            models.Index(fields=['corrected_product_name']),
+            models.Index(fields=['created_at']),
+        ]
+
+    def __str__(self):
+        return f"'{self.original_product_name}' corrected to '{self.corrected_product_name}'"

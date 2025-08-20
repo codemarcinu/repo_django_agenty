@@ -17,6 +17,7 @@ from django.db import transaction
 from django.core.serializers.json import DjangoJSONEncoder
 
 from inventory.models import Receipt, Product, ReceiptLineItem
+from .models import ProductCorrection
 from .models import Agent, Document
 from .services.agent_factory import agent_factory
 from .services.receipt_service import ReceiptService, get_receipt_service
@@ -204,8 +205,21 @@ class ReceiptReviewView(View):
                         # For now, we just detach it if no ID is provided
                         line_item.matched_product = None 
 
-                    # Potentially update the original product name if user corrected it
+                    # Get the original product name before updating
+                    original_product_name = line_item.product_name
+
+                    # Update the original product name if user corrected it
                     line_item.product_name = item_data.get('product_name', line_item.product_name)
+                    
+                    # If the product name was corrected by the user, record it
+                    if original_product_name != line_item.product_name:
+                        ProductCorrection.objects.create(
+                            original_product_name=original_product_name,
+                            corrected_product_name=line_item.product_name,
+                            receipt_line_item=line_item,
+                            matched_product=line_item.matched_product, # This will be None if no product was matched
+                            user=request.user if request.user.is_authenticated else None,
+                        )
                     
                     line_item.save()
 
