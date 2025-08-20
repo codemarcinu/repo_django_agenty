@@ -23,6 +23,7 @@ from .ocr_service import get_ocr_service
 from .pantry_service_v2 import PantryServiceV2
 from .receipt_cache import get_cache_manager
 from .receipt_parser import get_receipt_parser
+from .websocket_notifier import get_websocket_notifier
 
 logger = logging.getLogger(__name__)
 
@@ -44,6 +45,7 @@ class ReceiptService:
 
     def __init__(self):
         self.pantry_service = PantryServiceV2()
+        self.notifier = get_websocket_notifier()
 
     def create_receipt_record(self, receipt_file) -> Receipt:
         """
@@ -51,9 +53,10 @@ class ReceiptService:
         """
         try:
             receipt = Receipt.objects.create(
-                receipt_file=receipt_file, status="pending"
+                receipt_file=receipt_file, status="pending", processing_step="uploaded"
             )
             logger.info(f"Created receipt processing record: {receipt.id}")
+            self.notifier.notify_receipt_created(receipt.id, receipt.status)
             return receipt
         except Exception as e:
             logger.error(f"Error creating receipt record: {e}")
@@ -71,6 +74,10 @@ class ReceiptService:
             receipt.error_message = ""
             receipt.save()
 
+            self.notifier.send_status_update(
+                receipt_id, "processing", "Rozpoczynam przetwarzanie...", 15
+            )
+
             from ..tasks import orchestrate_receipt_processing
             task_result = orchestrate_receipt_processing.delay(receipt_id)
             logger.info(f"✅ Celery task queued for receipt {receipt_id}, task ID: {task_result.id}")
@@ -80,7 +87,9 @@ class ReceiptService:
             error_msg = f"Failed to queue Celery task for receipt {receipt_id}: {e}"
             logger.error(f"❌ {error_msg}", exc_info=True)
             try:
-                Receipt.objects.get(id=receipt_id).mark_as_error("Task queueing failed")
+                receipt = Receipt.objects.get(id=receipt_id)
+                receipt.mark_as_error("Task queueing failed")
+                self.notifier.send_error(receipt_id, "Błąd kolejki zadań. Sprawdź połączenie z Redis.")
             except Receipt.DoesNotExist:
                 pass
             raise ReceiptError(error_msg) from e
@@ -90,8 +99,11 @@ class ReceiptService:
         Process receipt with OCR, raising exceptions on failure.
         """
         cache_manager = get_cache_manager()
+        receipt = Receipt.objects.get(id=receipt_id)
+        
+        self.notifier.send_status_update(receipt_id, "processing", "Przetwarzanie OCR...", 25)
+
         try:
-            receipt = Receipt.objects.get(id=receipt_id)
             if not receipt.receipt_file:
                 raise OCRError("No file uploaded for receipt", receipt_id=receipt_id)
 
@@ -105,6 +117,7 @@ class ReceiptService:
                     receipt.raw_text = cached_ocr
                     receipt.processing_step = "ocr_completed"
                     receipt.save()
+                    self.notifier.send_status_update(receipt_id, "processing", "OCR zakończone (cache)", 50)
                     return
             except Exception as e:
                 logger.warning(f"OCR cache check failed for receipt {receipt_id}: {e}")
@@ -123,6 +136,7 @@ class ReceiptService:
                 receipt.raw_text = ocr_result.to_dict()
                 receipt.processing_step = "ocr_completed"
                 receipt.save()
+                self.notifier.send_status_update(receipt_id, "processing", "OCR zakończone", 50)
                 # --- Cache successful result ---
                 with receipt.receipt_file.open('rb') as f:
                     file_hash_for_cache = hashlib.sha256(f.read()).hexdigest()
@@ -131,24 +145,26 @@ class ReceiptService:
                 error_msg = ocr_result.error_message or "OCR failed to extract text"
                 raise OCRError(error_msg, receipt_id=receipt_id)
 
-        except Receipt.DoesNotExist as e:
-            raise ReceiptNotFoundError(f"Receipt {receipt_id} not found for OCR") from e
-        except OCRError as e: # Re-raise OCRError to be handled by the task
-            receipt.mark_as_error(f"OCR Error: {e.message}")
-            raise
-        except Exception as e:
-            logger.error(f"Critical error in OCR process for receipt {receipt_id}: {e}", exc_info=True)
-            receipt.mark_as_error(f"OCR critical error: {e}")
-            raise OCRError(f"OCR critical error: {e}") from e
+        except (Receipt.DoesNotExist, OCRError, Exception) as e:
+            error_message = getattr(e, 'message', str(e))
+            receipt.mark_as_error(f"OCR Error: {error_message}")
+            self.notifier.send_error(receipt_id, f"Błąd OCR: {error_message}")
+            if isinstance(e, Receipt.DoesNotExist):
+                 raise ReceiptNotFoundError(f"Receipt {receipt_id} not found for OCR") from e
+            elif isinstance(e, OCRError):
+                raise
+            else:
+                raise OCRError(f"OCR critical error: {e}") from e
 
     def process_receipt_parsing(self, receipt_id: int):
         """
         Process receipt parsing, raising exceptions on failure.
         """
         cache_manager = get_cache_manager()
-        try:
-            receipt = Receipt.objects.get(id=receipt_id)
+        receipt = Receipt.objects.get(id=receipt_id)
+        self.notifier.send_status_update(receipt_id, "processing", "Parsowanie danych...", 65)
 
+        try:
             # --- Caching Logic ---
             cached_parsing = cache_manager.get_cached_parsed_receipt(receipt_id)
             if cached_parsing:
@@ -156,6 +172,7 @@ class ReceiptService:
                 receipt.parsed_data = cached_parsing
                 receipt.processing_step = "parsing_completed"
                 receipt.save()
+                self.notifier.send_status_update(receipt_id, "processing", "Parsowanie zakończone (cache)", 80)
                 return
             # --- End Caching ---
 
@@ -179,34 +196,38 @@ class ReceiptService:
             receipt.parsed_data = parsed_data_dict
             receipt.processing_step = "parsing_completed"
             receipt.save()
+            self.notifier.send_status_update(receipt_id, "processing", "Parsowanie zakończone", 80)
 
             # --- Cache successful result ---
             cache_manager.cache_parsed_receipt(receipt_id, parsed_data_dict)
 
-        except Receipt.DoesNotExist as e:
-            raise ReceiptNotFoundError(f"Receipt {receipt_id} not found for parsing") from e
-        except ParsingError as e:
-            receipt.mark_as_error(f"Parsing Error: {e.message}")
-            raise
-        except Exception as e:
-            logger.error(f"Critical error in parsing for receipt {receipt_id}: {e}", exc_info=True)
-            receipt.mark_as_error(f"Parsing critical error: {e}")
-            raise ParsingError(f"Parsing critical error: {e}") from e
+        except (Receipt.DoesNotExist, ParsingError, Exception) as e:
+            error_message = getattr(e, 'message', str(e))
+            receipt.mark_as_error(f"Parsing Error: {error_message}")
+            self.notifier.send_error(receipt_id, f"Błąd parsowania: {error_message}")
+            if isinstance(e, Receipt.DoesNotExist):
+                 raise ReceiptNotFoundError(f"Receipt {receipt_id} not found for parsing") from e
+            elif isinstance(e, ParsingError):
+                raise
+            else:
+                raise ParsingError(f"Parsing critical error: {e}") from e
 
     def process_receipt_matching(self, receipt_id: int):
         """
         Process product matching, raising exceptions on failure.
         """
-        try:
-            receipt = Receipt.objects.get(id=receipt_id)
+        receipt = Receipt.objects.get(id=receipt_id)
+        self.notifier.send_status_update(receipt_id, "processing", "Dopasowywanie produktów...", 90)
 
+        try:
             if receipt.processing_step != "parsing_completed":
                 raise MatchingError(f"Receipt {receipt_id} not ready for matching", details={'current_step': receipt.processing_step})
 
             products_data = receipt.parsed_data.get("products", [])
             if not products_data:
                 logger.info(f"Matching skipped for receipt {receipt_id}: no products.")
-                receipt.mark_as_ready_for_review() # Or completed?
+                receipt.mark_as_ready_for_review()
+                self.notifier.send_status_update(receipt_id, "review_pending", "Gotowy do weryfikacji (brak produktów)", 98)
                 return
 
             receipt.processing_step = "matching_in_progress"
@@ -240,13 +261,15 @@ class ReceiptService:
                         matcher.update_product_aliases(match_result.product, parsed_product.name)
 
             receipt.mark_as_ready_for_review()
+            self.notifier.send_status_update(receipt_id, "review_pending", "Gotowy do weryfikacji", 98)
 
-        except Receipt.DoesNotExist as e:
-            raise ReceiptNotFoundError(f"Receipt {receipt_id} not found for matching") from e
-        except MatchingError as e:
-            receipt.mark_as_error(f"Matching Error: {e.message}")
-            raise
-        except Exception as e:
-            logger.error(f"Critical error in matching for receipt {receipt_id}: {e}", exc_info=True)
-            receipt.mark_as_error(f"Matching critical error: {e}")
-            raise MatchingError(f"Matching critical error: {e}") from e
+        except (Receipt.DoesNotExist, MatchingError, Exception) as e:
+            error_message = getattr(e, 'message', str(e))
+            receipt.mark_as_error(f"Matching Error: {error_message}")
+            self.notifier.send_error(receipt_id, f"Błąd dopasowania: {error_message}")
+            if isinstance(e, Receipt.DoesNotExist):
+                 raise ReceiptNotFoundError(f"Receipt {receipt_id} not found for matching") from e
+            elif isinstance(e, MatchingError):
+                raise
+            else:
+                raise MatchingError(f"Matching critical error: {e}") from e
