@@ -7,9 +7,12 @@ from datetime import date, timedelta
 
 from django.core.paginator import Paginator
 from django.db.models import Count, F, Q, Sum
+import json
+from django.db import transaction
 from django.shortcuts import render
 from django.views.generic import DetailView, ListView
 from django.http import JsonResponse 
+from django.views.decorators.csrf import csrf_exempt # For API endpoint
 from celery.result import AsyncResult 
 
 from chatbot.services.inventory_service import get_inventory_service
@@ -61,6 +64,54 @@ def dashboard(request):
     }
 
     return render(request, "inventory/dashboard.html", context)
+
+def monitoring_dashboard(request):
+    """Monitoring dashboard view with receipt processing statistics."""
+    # Aggregate data
+    receipt_status_counts = Receipt.objects.values('status').annotate(count=Count('id'))
+    receipt_step_counts = Receipt.objects.values('processing_step').annotate(count=Count('id'))
+    
+    # Convert querysets to dicts for easier JSON serialization
+    status_data = {item['status']: item['count'] for item in receipt_status_counts}
+    step_data = {item['processing_step']: item['count'] for item in receipt_step_counts}
+
+    # Get 10 most recent error receipts
+    error_receipts = Receipt.objects.filter(status='error').order_by('-updated_at')[:10]
+    error_receipts_data = []
+    for r in error_receipts:
+        error_receipts_data.append({
+            'id': r.id,
+            'store_name': r.store_name,
+            'purchased_at': r.purchased_at.isoformat() if r.purchased_at else None,
+            'error_message': r.error_message,
+            'updated_at': r.updated_at.isoformat(),
+        })
+
+    # Calculate average processing time
+    # This requires a bit more complex query, let's simplify for now
+    # For a more accurate average, we'd need to calculate timedelta for each completed receipt
+    # and then average them. For simplicity, we'll just get counts for now.
+    total_completed = status_data.get('completed', 0)
+    total_processing_time = 0 # Placeholder for actual calculation
+    if total_completed > 0:
+        # This is a simplified average. A more accurate one would iterate through completed receipts
+        # and sum (processed_at - uploaded_at) or (updated_at - created_at)
+        # For now, we'll just indicate it's not directly calculated here.
+        average_processing_time = "N/A" 
+    else:
+        average_processing_time = "N/A"
+
+    context = {
+        'status_counts_json': json.dumps(status_data),
+        'step_counts_json': json.dumps(step_data),
+        'error_receipts_json': json.dumps(error_receipts_data),
+        'average_processing_time': average_processing_time,
+        'total_pending': status_data.get('pending', 0) + status_data.get('review_pending', 0),
+        'total_processing': status_data.get('processing', 0),
+        'total_errors': status_data.get('error', 0),
+    }
+
+    return render(request, "inventory/monitoring_dashboard.html", context)
 
 
 class InventoryListView(ListView):
@@ -355,3 +406,171 @@ def receipt_processing_status(request, receipt_id):
         })
     except Receipt.DoesNotExist:
         return JsonResponse({"error": "Receipt not found"}, status=404)
+
+
+def receipt_review(request, receipt_id):
+    """
+    View for reviewing and correcting receipt data.
+    """
+    try:
+        receipt = Receipt.objects.get(pk=receipt_id)
+        line_items = receipt.line_items.select_related('matched_product').order_by('id')
+        all_products = Product.objects.all().values('id', 'name', 'brand', 'category__name')
+
+        # Prepare data for JSON serialization
+        receipt_data = {
+            'id': receipt.id,
+            'store_name': receipt.store_name,
+            'purchased_at': receipt.purchased_at.isoformat() if receipt.purchased_at else None,
+            'total': str(receipt.total) if receipt.total else None,
+            'status': receipt.status,
+        }
+
+        line_items_data = []
+        for item in line_items:
+            line_items_data.append({
+                'id': item.id,
+                'product_name': item.product_name,
+                'quantity': str(item.quantity),
+                'unit_price': str(item.unit_price),
+                'line_total': str(item.line_total),
+                'matched_product_id': item.matched_product.id if item.matched_product else None,
+                'matched_product_name': item.matched_product.name if item.matched_product else None,
+                'original_name': item.product_name, # Store original name for feedback loop
+            })
+
+        products_data = []
+        for product in all_products:
+            products_data.append({
+                'id': product['id'],
+                'name': product['name'],
+                'brand': product['brand'],
+                'category_name': product['category__name'],
+            })
+
+        context = {
+            'receipt': receipt, # For Django template rendering (e.g., receipt ID in title)
+            'receipt_json': JsonResponse(receipt_data).content.decode('utf-8'),
+            'line_items_json': JsonResponse(line_items_data).content.decode('utf-8'),
+            'all_products_json': JsonResponse(products_data).content.decode('utf-8'),
+        }
+
+        return render(request, "inventory/receipt_review.html", context)
+    except Receipt.DoesNotExist:
+        return JsonResponse({"error": "Receipt not found"}, status=404)
+
+@csrf_exempt # For API endpoint, consider proper CSRF handling in production
+def correct_receipt_data(request, receipt_id):
+    if request.method == 'POST':
+        try:
+            receipt = Receipt.objects.get(pk=receipt_id)
+            data = json.loads(request.body)
+            line_items_data = data.get('line_items', [])
+
+            with transaction.atomic():
+                for item_data in line_items_data:
+                    item_id = item_data.get('id')
+                    is_deleted = item_data.get('is_deleted', False)
+                    is_new_product = item_data.get('is_new_product', False)
+                    original_name = item_data.get('original_name', '')
+
+                    if is_deleted:
+                        if item_id:
+                            ReceiptLineItem.objects.filter(id=item_id, receipt=receipt).delete()
+                        continue
+
+                    line_item = None
+                    if item_id:
+                        try:
+                            line_item = ReceiptLineItem.objects.get(id=item_id, receipt=receipt)
+                        except ReceiptLineItem.DoesNotExist:
+                            # This should ideally not happen if frontend sends correct IDs
+                            continue
+                    else:
+                        # This case is for newly added line items (not yet implemented in frontend)
+                        # For now, we assume all items come from existing receipt
+                        continue
+
+                    # Update line item fields
+                    line_item.product_name = item_data.get('product_name', line_item.product_name)
+                    line_item.quantity = item_data.get('quantity', line_item.quantity)
+                    line_item.unit_price = item_data.get('unit_price', line_item.unit_price)
+                    line_item.line_total = item_data.get('line_total', line_item.line_total)
+
+                    matched_product_id = item_data.get('matched_product_id')
+                    if is_new_product:
+                        # Create new product
+                        new_product_name = item_data.get('product_name')
+                        if new_product_name:
+                            product, created = Product.objects.get_or_create(name=new_product_name, defaults={'is_active': True})
+                            line_item.matched_product = product
+                            # Add original name as alias for new product
+                            if original_name and original_name != new_product_name:
+                                product.add_alias(original_name)
+                        else:
+                            line_item.matched_product = None # No product name provided for new product
+                    elif matched_product_id:
+                        # Link to existing product
+                        try:
+                            product = Product.objects.get(id=matched_product_id)
+                            line_item.matched_product = product
+                            # Add original name as alias for existing product
+                            if original_name and original_name != product.name:
+                                product.add_alias(original_name)
+                        except Product.DoesNotExist:
+                            line_item.matched_product = None # Product not found
+                    else:
+                        line_item.matched_product = None # No product matched
+
+                    line_item.save()
+
+                # Mark receipt as completed after review
+                receipt.status = "completed"
+                receipt.processing_step = "done"
+                receipt.save()
+
+            return JsonResponse({"status": "success", "message": "Receipt data corrected successfully."})
+
+        except Receipt.DoesNotExist:
+            return JsonResponse({"error": "Receipt not found"}, status=404)
+        except json.JSONDecodeError:
+            return JsonResponse({"error": "Invalid JSON"}, status=400)
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+    return JsonResponse({"error": "Invalid request method"}, status=405)
+
+@csrf_exempt # For API endpoint, consider proper CSRF handling in production
+def get_monitoring_data(request):
+    """API endpoint to provide monitoring data for auto-refresh."""
+    if request.method == 'GET':
+        receipt_status_counts = Receipt.objects.values('status').annotate(count=Count('id'))
+        receipt_step_counts = Receipt.objects.values('processing_step').annotate(count=Count('id'))
+        
+        status_data = {item['status']: item['count'] for item in receipt_status_counts}
+        step_data = {item['processing_step']: item['count'] for item in receipt_step_counts}
+
+        error_receipts = Receipt.objects.filter(status='error').order_by('-updated_at')[:10]
+        error_receipts_data = []
+        for r in error_receipts:
+            error_receipts_data.append({
+                'id': r.id,
+                'store_name': r.store_name,
+                'purchased_at': r.purchased_at.isoformat() if r.purchased_at else None,
+                'error_message': r.error_message,
+                'updated_at': r.updated_at.isoformat(),
+            })
+
+        total_completed = status_data.get('completed', 0)
+        average_processing_time = "N/A" 
+
+        response_data = {
+            'status_counts': status_data,
+            'step_counts': step_data,
+            'error_receipts': error_receipts_data,
+            'average_processing_time': average_processing_time,
+            'total_pending': status_data.get('pending', 0) + status_data.get('review_pending', 0),
+            'total_processing': status_data.get('processing', 0),
+            'total_errors': status_data.get('error', 0),
+        }
+        return JsonResponse(response_data)
+    return JsonResponse({"error": "Invalid request method"}, status=405)

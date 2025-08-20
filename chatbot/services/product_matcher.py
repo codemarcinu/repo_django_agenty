@@ -268,8 +268,15 @@ class ProductMatcher:
             return None
 
     def _find_alias_match(self, normalized_name: str) -> tuple[Product | None, str]:
-        """Find match through product aliases."""
+        """Find match through product aliases, prioritizing exact alias match."""
         try:
+            # First, try to find an exact match within aliases
+            for product in Product.objects.filter(is_active=True):
+                for alias in product.aliases:
+                    if normalized_name == alias.lower():
+                        return product, alias
+
+            # If no exact alias match, fall back to similarity-based alias matching
             products = Product.objects.filter(
                 aliases__icontains=normalized_name, is_active=True
             )

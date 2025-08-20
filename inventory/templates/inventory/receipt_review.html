@@ -1,0 +1,270 @@
+{% extends "base.html" %}
+
+{% block title %}Review Receipt #{{ receipt.id }}{% endblock %}
+
+{% block content %}
+<div class="container mx-auto p-4" x-data="receiptReview()" x-init="init()">
+    <h1 class="text-3xl font-bold mb-6 text-gray-800">Review Receipt #{{ receipt.id }}</h1>
+
+    <div class="bg-white shadow-md rounded-lg p-6 mb-8">
+        <h2 class="text-2xl font-semibold mb-4 text-gray-700">Receipt Details</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-gray-600">
+            <div><strong>Store:</strong> <span x-text="receipt.store_name"></span></div>
+            <div><strong>Date:</strong> <span x-text="receipt.purchased_at ? new Date(receipt.purchased_at).toLocaleDateString() : 'N/A'"></span></div>
+            <div><strong>Total:</strong> <span x-text="receipt.total ? parseFloat(receipt.total).toFixed(2) + ' PLN' : 'N/A'"></span></div>
+            <div><strong>Status:</strong> <span x-text="receipt.status"></span></div>
+        </div>
+    </div>
+
+    <div class="bg-white shadow-md rounded-lg p-6">
+        <h2 class="text-2xl font-semibold mb-4 text-gray-700">Line Items</h2>
+        <div x-show="lineItems.length === 0" class="text-gray-500 text-center py-8">No line items found for this receipt.</div>
+
+        <template x-for="(item, index) in lineItems" :key="item.id || 'new-' + index">
+            <div class="border-b border-gray-200 py-4 flex flex-col md:flex-row md:items-center justify-between"
+                 :class="{'bg-blue-50': item.isNew, 'bg-yellow-50': item.isEdited, 'bg-red-50': item.isDeleted}">
+                <!-- Display Mode -->
+                <div x-show="!item.editing" class="flex-grow grid grid-cols-1 md:grid-cols-4 gap-2 md:gap-4 items-center">
+                    <div class="font-medium text-gray-800 md:col-span-2" x-text="item.matched_product_name || item.product_name"></div>
+                    <div class="text-gray-600"><span x-text="parseFloat(item.quantity).toFixed(2)"></span> x <span x-text="parseFloat(item.unit_price).toFixed(2)"></span> PLN</div>
+                    <div class="font-semibold text-gray-800" x-text="parseFloat(item.line_total).toFixed(2) + ' PLN'"></div>
+                </div>
+
+                <!-- Edit Mode -->
+                <div x-show="item.editing" class="flex-grow grid grid-cols-1 md:grid-cols-4 gap-2 md:gap-4 items-center">
+                    <div class="md:col-span-2 relative">
+                        <input type="text" x-model="item.product_name"
+                               @input="searchProducts(item)"
+                               @focus="item.showSuggestions = true"
+                               @blur.away="item.showSuggestions = false"
+                               class="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                               placeholder="Product Name">
+                        <div x-show="item.showSuggestions && item.suggestions.length > 0"
+                             class="absolute z-10 bg-white border border-gray-300 rounded-md mt-1 w-full shadow-lg max-h-60 overflow-y-auto">
+                            <template x-for="product in item.suggestions" :key="product.id">
+                                <div @click="selectProduct(item, product)"
+                                     class="p-2 cursor-pointer hover:bg-blue-100 text-gray-800">
+                                    <span x-text="product.name"></span>
+                                    <span x-show="product.brand" class="text-sm text-gray-500"> (<span x-text="product.brand"></span>)</span>
+                                    <span x-show="product.category_name" class="text-sm text-gray-500"> - <span x-text="product.category_name"></span></span>
+                                </div>
+                            </template>
+                        </div>
+                        <button x-show="!item.matched_product_id && item.product_name.length > 0"
+                                @click="addNewProduct(item)"
+                                class="absolute right-2 top-2 text-blue-600 hover:text-blue-800 text-sm">
+                            + Add as new
+                        </button>
+                    </div>
+                    <input type="number" step="0.01" x-model="item.quantity" @input="calculateLineTotal(item)" class="w-full p-2 border border-gray-300 rounded-md" placeholder="Quantity">
+                    <input type="number" step="0.01" x-model="item.unit_price" @input="calculateLineTotal(item)" class="w-full p-2 border border-gray-300 rounded-md" placeholder="Unit Price">
+                    <input type="number" step="0.01" x-model="item.line_total" class="w-full p-2 border border-gray-300 rounded-md" placeholder="Line Total">
+                </div>
+
+                <!-- Actions -->
+                <div class="mt-4 md:mt-0 flex space-x-2">
+                    <button x-show="!item.editing" @click="editItem(item)"
+                            class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600">Edit</button>
+                    <button x-show="item.editing" @click="saveItem(item)"
+                            class="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600">Save</button>
+                    <button x-show="item.editing" @click="cancelEdit(item)"
+                            class="px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400">Cancel</button>
+                    <button @click="deleteItem(item, index)"
+                            class="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600">Delete</button>
+                </div>
+            </div>
+        </template>
+
+        <div class="mt-8 text-right">
+            <button @click="saveAllChanges()"
+                    :disabled="isSaving"
+                    class="px-6 py-3 bg-purple-600 text-white rounded-md text-lg font-semibold hover:bg-purple-700 disabled:opacity-50">
+                <span x-show="!isSaving">Zatwierdź wszystko</span>
+                <span x-show="isSaving">Saving...</span>
+            </button>
+            <div x-show="saveSuccess" class="text-green-600 mt-2">Zapisano!</div>
+            <div x-show="saveError" class="text-red-600 mt-2" x-text="saveError"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function receiptReview() {
+        return {
+            receipt: {},
+            lineItems: [],
+            allProducts: [],
+            isSaving: false,
+            saveSuccess: false,
+            saveError: '',
+
+            init() {
+                this.receipt = JSON.parse('{{ receipt_json|escapejs }}');
+                this.lineItems = JSON.parse('{{ line_items_json|escapejs }}').map(item => ({
+                    ...item,
+                    editing: false,
+                    originalState: { ...item }, // Store original state for cancel
+                    isNew: false, // For newly added items (not from OCR)
+                    isEdited: false, // For items that have been modified
+                    isDeleted: false, // For items marked for deletion
+                    suggestions: [],
+                    showSuggestions: false,
+                }));
+                this.allProducts = JSON.parse('{{ all_products_json|escapejs }}');
+            },
+
+            editItem(item) {
+                item.editing = true;
+                item.originalState = { ...item }; // Save current state before editing
+            },
+
+            saveItem(item) {
+                item.editing = false;
+                item.isEdited = true; // Mark as edited
+            },
+
+            cancelEdit(item) {
+                Object.assign(item, item.originalState); // Revert to original state
+                item.editing = false;
+                item.suggestions = [];
+                item.showSuggestions = false;
+            },
+
+            deleteItem(item, index) {
+                if (confirm('Are you sure you want to delete this item?')) {
+                    item.isDeleted = true;
+                    // Optionally remove from list immediately or filter out during save
+                    // For now, we'll keep it in the list but mark it for deletion
+                    // this.lineItems.splice(index, 1); // If you want to remove it visually immediately
+                }
+            },
+
+            calculateLineTotal(item) {
+                const quantity = parseFloat(item.quantity);
+                const unitPrice = parseFloat(item.unit_price);
+                if (!isNaN(quantity) && !isNaN(unitPrice)) {
+                    item.line_total = (quantity * unitPrice).toFixed(2);
+                }
+            },
+
+            searchProducts(item) {
+                if (item.product_name.length < 2) {
+                    item.suggestions = [];
+                    item.showSuggestions = false;
+                    item.matched_product_id = null; // Clear matched product if search is too short
+                    item.matched_product_name = null;
+                    return;
+                }
+                const searchTerm = item.product_name.toLowerCase();
+                item.suggestions = this.allProducts.filter(product =>
+                    product.name.toLowerCase().includes(searchTerm) ||
+                    (product.brand && product.brand.toLowerCase().includes(searchTerm))
+                ).slice(0, 10); // Limit suggestions
+                item.showSuggestions = item.suggestions.length > 0;
+
+                // If exact match, pre-select
+                const exactMatch = this.allProducts.find(product => product.name.toLowerCase() === searchTerm);
+                if (exactMatch) {
+                    this.selectProduct(item, exactMatch);
+                } else {
+                    item.matched_product_id = null;
+                    item.matched_product_name = null;
+                }
+            },
+
+            selectProduct(item, product) {
+                item.product_name = product.name; // Set input value to selected product name
+                item.matched_product_id = product.id;
+                item.matched_product_name = product.name;
+                item.suggestions = [];
+                item.showSuggestions = false;
+                item.isEdited = true; // Mark as edited if product is selected
+            },
+
+            addNewProduct(item) {
+                if (confirm(`Add "${item.product_name}" as a new product?`)) {
+                    // This will be handled on the backend during saveAllChanges
+                    // For now, just mark it as a new product to be created
+                    item.matched_product_id = 'NEW_PRODUCT'; // Special flag for backend
+                    item.matched_product_name = item.product_name;
+                    item.isEdited = true;
+                    item.suggestions = [];
+                    item.showSuggestions = false;
+                }
+            },
+
+            async saveAllChanges() {
+                this.isSaving = true;
+                this.saveSuccess = false;
+                this.saveError = '';
+
+                const changes = this.lineItems.filter(item => item.isEdited || item.isDeleted);
+
+                if (changes.length === 0) {
+                    this.isSaving = false;
+                    this.saveSuccess = true;
+                    return;
+                }
+
+                const payload = {
+                    receipt_id: this.receipt.id,
+                    line_items: changes.map(item => ({
+                        id: item.id,
+                        product_name: item.product_name,
+                        quantity: parseFloat(item.quantity),
+                        unit_price: parseFloat(item.unit_price),
+                        line_total: parseFloat(item.line_total),
+                        matched_product_id: item.matched_product_id === 'NEW_PRODUCT' ? null : item.matched_product_id,
+                        original_name: item.originalState.product_name, // Pass original name for feedback loop
+                        is_deleted: item.isDeleted,
+                        is_new_product: item.matched_product_id === 'NEW_PRODUCT',
+                    }))
+                };
+
+                try {
+                    const response = await fetch(`/inventory/api/receipts/${this.receipt.id}/correct/`, { // This endpoint needs to be created
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': this.getCookie('csrftoken') // Django CSRF token
+                        },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.error || 'Failed to save changes.');
+                    }
+
+                    const result = await response.json();
+                    this.saveSuccess = true;
+                    // Optionally update lineItems with new IDs for newly created products/items
+                    // For now, just reload or redirect
+                    window.location.href = `/inventory/receipts/${this.receipt.id}/`; // Redirect to receipt detail
+                } catch (error) {
+                    this.saveError = error.message;
+                    console.error('Error saving changes:', error);
+                } finally {
+                    this.isSaving = false;
+                }
+            },
+
+            getCookie(name) {
+                let cookieValue = null;
+                if (document.cookie && document.cookie !== '') {
+                    const cookies = document.cookie.split(';');
+                    for (let i = 0; i < cookies.length; i++) {
+                        const cookie = cookies[i].trim();
+                        // Does this cookie string begin with the name we want?
+                        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                            break;
+                        }
+                    }
+                }
+                return cookieValue;
+            }
+        }
+    }
+</script>
+{% endblock %}

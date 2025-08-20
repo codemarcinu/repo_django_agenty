@@ -12,6 +12,7 @@ app_name = "inventory"
 urlpatterns = [
     # Dashboard
     path("", views.dashboard, name="dashboard"),
+    path("monitoring/", views.monitoring_dashboard, name="monitoring_dashboard"),
     # Inventory items
     path("inventory/", views.InventoryListView.as_view(), name="inventory_list"),
     path("inventory/expiring/", views.expiring_items, name="expiring_items"),
@@ -37,6 +38,21 @@ urlpatterns = [
         "receipts/<int:receipt_id>/status/",
         views.receipt_processing_status,
         name="receipt_processing_status",
+    ),
+    path(
+        "receipts/<int:receipt_id>/review/",
+        views.receipt_review,
+        name="receipt_review",
+    ),
+    path(
+        "api/receipts/<int:receipt_id>/correct/",
+        views.correct_receipt_data,
+        name="correct_receipt_data",
+    ),
+    path(
+        "api/monitoring_data/",
+        views.get_monitoring_data,
+        name="get_monitoring_data",
     ),
     # Categories
     path("categories/", views.CategoryListView.as_view(), name="category_list"),
