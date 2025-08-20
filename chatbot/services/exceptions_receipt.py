@@ -87,3 +87,8 @@ class ReceiptValidationError(ReceiptError, ValidationError):
 class ParsingError(ReceiptError, ProcessingError):
     """Raised when receipt parsing fails"""
     pass
+
+
+class MatchingError(ReceiptError, ProcessingError):
+    """Raised when product matching fails"""
+    pass

@@ -5,6 +5,12 @@ from django.db import transaction
 
 from .models import Document
 from .rag_processor import rag_processor
+from .services.exceptions_receipt import (
+    DatabaseError,
+    MatchingError,
+    OCRError,
+    ParsingError,
+)
 from .services.receipt_service import get_receipt_service
 
 logger = logging.getLogger(__name__)
@@ -26,7 +32,7 @@ def process_document_task(document_id):
 
 @shared_task(
     bind=True,
-    autoretry_for=(Exception,),
+    autoretry_for=(OCRError, ParsingError, MatchingError, DatabaseError),
     retry_kwargs={"max_retries": 3, "countdown": 60},
     retry_backoff=True,
     retry_backoff_max=600,
@@ -37,47 +43,37 @@ def orchestrate_receipt_processing(self, receipt_id: int):
     Orchestrates the full, multi-step receipt processing pipeline.
     1. OCR -> 2. Parsing -> 3. Matching
     """
-    logger.info(f"▶️ STARTING NEW PROCESSING ORCHESTRATION for Receipt ID: {receipt_id}")
+    logger.info(f"▶️ STARTING ORCHESTRATION for Receipt ID: {receipt_id} (Attempt: {self.request.retries + 1})")
     receipt_service = get_receipt_service()
 
     try:
-        with transaction.atomic():
-            # Step 1: OCR Processing
-            logger.info(f"  [1/3] OCR | Receipt ID: {receipt_id}")
-            ocr_success = receipt_service.process_receipt_ocr(receipt_id)
-            if not ocr_success:
-                logger.error(f"  [1/3] OCR FAILED | Receipt ID: {receipt_id}")
-                # The service method handles setting the error state
-                return
+        # The service methods now raise exceptions on failure, which Celery will catch
+        # and use for retrying based on the `autoretry_for` configuration.
+        
+        # Step 1: OCR Processing
+        logger.info(f"  [1/3] OCR | Receipt ID: {receipt_id}")
+        receipt_service.process_receipt_ocr(receipt_id)
 
-            # Step 2: Parsing (LLM Extraction)
-            logger.info(f"  [2/3] PARSING | Receipt ID: {receipt_id}")
-            parsing_success = receipt_service.process_receipt_parsing(receipt_id)
-            if not parsing_success:
-                logger.error(f"  [2/3] PARSING FAILED | Receipt ID: {receipt_id}")
-                return
+        # Step 2: Parsing
+        logger.info(f"  [2/3] PARSING | Receipt ID: {receipt_id}")
+        receipt_service.process_receipt_parsing(receipt_id)
 
-            # Step 3: Product Matching
-            logger.info(f"  [3/3] MATCHING | Receipt ID: {receipt_id}")
-            matching_success = receipt_service.process_receipt_matching(receipt_id)
-            if not matching_success:
-                logger.error(f"  [3/3] MATCHING FAILED | Receipt ID: {receipt_id}")
-                return
+        # Step 3: Product Matching
+        logger.info(f"  [3/3] MATCHING | Receipt ID: {receipt_id}")
+        receipt_service.process_receipt_matching(receipt_id)
 
-        logger.info(f"✅ PROCESSING ORCHESTRATION COMPLETED for Receipt ID: {receipt_id}. Ready for review.")
+        logger.info(f"✅ ORCHESTRATION COMPLETED for Receipt ID: {receipt_id}.")
 
+    except (OCRError, ParsingError, MatchingError, DatabaseError) as e:
+        logger.warning(f"Retrying task for Receipt ID {receipt_id} due to {type(e).__name__}: {e.message}")
+        raise self.retry(exc=e)
     except Exception as e:
         logger.error(
             f"❌ CRITICAL ORCHESTRATION ERROR for Receipt ID: {receipt_id}: {e}",
             exc_info=True,
         )
-        # The service methods should handle their own error states,
-        # but we can add a final catch-all here.
-        from inventory.models import Receipt
-        Receipt.objects.filter(id=receipt_id).update(
-            status="error",
-            processing_notes=f"Orchestration failed: {e}"
-        )
+        # The service methods already mark the receipt as failed.
+        # This is a final catch-all.
         raise
 
 
