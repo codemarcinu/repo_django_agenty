@@ -605,6 +605,28 @@ class ReceiptService:
                     )
                     continue
 
+            # Update receipt with matching results
+            receipt.status = "completed"
+
+            # Calculate matching statistics
+            exact_matches = sum(1 for r in match_results if r.match_type == "exact")
+            fuzzy_matches = sum(1 for r in match_results if r.match_type == "fuzzy")
+            alias_matches = sum(1 for r in match_results if r.match_type == "alias")
+            ghost_created = sum(1 for r in match_results if r.match_type == "created")
+
+            # Update processing notes
+            receipt.processing_notes += (
+                f"\nMatching completed: {line_items_created} line items created. "
+            )
+            receipt.processing_notes += f"Exact: {exact_matches}, Fuzzy: {fuzzy_matches}, Alias: {alias_matches}, New: {ghost_created}. "
+            receipt.processing_notes += f"Calculated total: {total_calculated}"
+
+            # Update total if we calculated one and original is missing
+            if receipt.total == Decimal("0.00") and total_calculated > Decimal("0.00"):
+                receipt.total = total_calculated
+
+            receipt.save()
+
             # Process inventory updates
             from .inventory_service import get_inventory_service
 
@@ -627,28 +649,6 @@ class ReceiptService:
                     f"Inventory updated successfully for receipt {receipt_id}: {inventory_message}"
                 )
                 receipt.processing_notes += f"\nInventory update: {inventory_message}"
-
-            # Update receipt with matching results
-            receipt.status = "completed"
-
-            # Calculate matching statistics
-            exact_matches = sum(1 for r in match_results if r.match_type == "exact")
-            fuzzy_matches = sum(1 for r in match_results if r.match_type == "fuzzy")
-            alias_matches = sum(1 for r in match_results if r.match_type == "alias")
-            ghost_created = sum(1 for r in match_results if r.match_type == "created")
-
-            # Update processing notes
-            receipt.processing_notes += (
-                f"\nMatching completed: {line_items_created} line items created. "
-            )
-            receipt.processing_notes += f"Exact: {exact_matches}, Fuzzy: {fuzzy_matches}, Alias: {alias_matches}, New: {ghost_created}. "
-            receipt.processing_notes += f"Calculated total: {total_calculated}"
-
-            # Update total if we calculated one and original is missing
-            if receipt.total == Decimal("0.00") and total_calculated > Decimal("0.00"):
-                receipt.total = total_calculated
-
-            receipt.save()
 
             logger.info(
                 f"Matching completed for receipt {receipt_id}: {line_items_created} line items created"

@@ -220,7 +220,7 @@ REST_FRAMEWORK = {
     "DEFAULT_THROTTLE_RATES": {"anon": "50/hour", "user": "500/hour"},
 }
 
-# Cache Configuration
+# Cache Configuration with Redis primary and database fallback
 CACHES = {
     "default": {
         "BACKEND": "django.core.cache.backends.redis.RedisCache",
@@ -230,6 +230,16 @@ CACHES = {
         },
         "KEY_PREFIX": "agenty_prod",
         "TIMEOUT": 600,  # 10 minutes default timeout in production
+    },
+    "database_fallback": {
+        "BACKEND": "django.core.cache.backends.db.DatabaseCache",
+        "LOCATION": "django_cache_table",
+        "TIMEOUT": 600,
+        "KEY_PREFIX": "agenty_db_fallback",
+        "OPTIONS": {
+            "MAX_ENTRIES": 1000,
+            "CULL_PERCENTAGE": 20,
+        }
     }
 }
 
@@ -242,3 +252,10 @@ STATICFILES_STORAGE = "django.contrib.staticfiles.storage.ManifestStaticFilesSto
 
 # Database query caching
 DATABASE_ROUTERS = []
+
+# Cache configuration for intelligent caching system
+USE_REDIS_CACHE = True
+CACHE_DEFAULT_TIMEOUT = 600  # 10 minutes
+REDIS_HOST = env("REDIS_HOST", default="localhost")
+REDIS_PORT = env.int("REDIS_PORT", default=6379)
+REDIS_DB = env.int("REDIS_DB", default=1)

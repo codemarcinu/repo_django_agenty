@@ -48,13 +48,37 @@
 
                 <!-- Submit Button -->
                 <div class="pt-4">
-                    <button type="submit" 
+                    <button type="submit" id="submit-btn"
                             class="w-full bg-gradient-to-r from-primary-500 to-purple-600 hover:from-primary-600 hover:to-purple-700 text-white font-semibold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all duration-300 flex items-center justify-center space-x-2 text-lg">
                         <span class="text-xl">🚀</span>
                         <span>Prześlij i Przetwórz</span>
                     </button>
                 </div>
             </form>
+        </div>
+
+        <!-- Progress Tracking Section (initially hidden) -->
+        <div id="progress-container" class="bg-white rounded-2xl shadow-xl p-8 mb-6 border border-secondary-100 hidden animate-slide-up">
+            <h3 class="text-lg font-semibold text-secondary-800 mb-4 flex items-center">
+                <span class="text-xl mr-2">⏳</span>
+                Przetwarzanie paragonu
+            </h3>
+            
+            <!-- Progress Bar -->
+            <div class="mb-4">
+                <div class="flex justify-between text-sm text-secondary-600 mb-2">
+                    <span id="upload-status">Przygotowywanie...</span>
+                    <span id="upload-percentage">0%</span>
+                </div>
+                <div class="w-full bg-secondary-200 rounded-full h-3 overflow-hidden">
+                    <div id="upload-progress" class="bg-gradient-to-r from-primary-500 to-purple-600 h-3 rounded-full transition-all duration-500 ease-out" style="width: 0%"></div>
+                </div>
+            </div>
+            
+            <!-- Status Details -->
+            <div id="status-details" class="text-sm text-secondary-600">
+                <p>Rozpoczynamy przetwarzanie Twojego paragonu...</p>
+            </div>
         </div>
 
         <!-- How it Works -->
@@ -110,72 +134,263 @@
 </style>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const fileInput = document.getElementById('id_receipt_file');
-    const uploadArea = document.querySelector('.file-drop-area');
-    
-    console.log('File input found:', fileInput);
-    console.log('Upload area found:', uploadArea);
-    
-    if (!fileInput) {
-        console.error('File input not found!');
-        return;
-    }
-    
-    if (!uploadArea) {
-        console.error('Upload area not found!');
-        return;
-    }
-    
-    // Handle click to open file dialog
-    uploadArea.addEventListener('click', function(e) {
-        console.log('Upload area clicked', e.target);
-        // Only trigger if clicking on the area itself, not the hidden input
-        if (e.target === this || !e.target.matches('input[type="file"]')) {
-            console.log('Triggering file input click');
-            fileInput.click();
-        }
-    });
-    
-    // Handle drag and drop
-    uploadArea.addEventListener('dragover', function(e) {
-        e.preventDefault();
-        this.classList.add('border-primary-500', 'bg-primary-50');
-    });
-    
-    uploadArea.addEventListener('dragleave', function(e) {
-        e.preventDefault();
-        this.classList.remove('border-primary-500', 'bg-primary-50');
-    });
-    
-    uploadArea.addEventListener('drop', function(e) {
-        e.preventDefault();
-        this.classList.remove('border-primary-500', 'bg-primary-50');
+class ReceiptUploadManager {
+    constructor() {
+        this.fileInput = document.getElementById('id_receipt_file');
+        this.uploadArea = document.querySelector('.file-drop-area');
+        this.form = document.querySelector('form');
+        this.submitBtn = document.getElementById('submit-btn');
+        this.progressContainer = document.getElementById('progress-container');
+        this.progressBar = document.getElementById('upload-progress');
+        this.statusText = document.getElementById('upload-status');
+        this.percentageText = document.getElementById('upload-percentage');
+        this.statusDetails = document.getElementById('status-details');
         
-        const files = e.dataTransfer.files;
-        if (files.length > 0) {
-            fileInput.files = files;
-            updateFileName(files[0].name);
-        }
-    });
+        this.websocket = null;
+        this.currentReceiptId = null;
+        
+        this.init();
+    }
     
-    // Handle file selection
-    fileInput.addEventListener('change', function(e) {
-        if (this.files.length > 0) {
-            updateFileName(this.files[0].name);
+    init() {
+        if (!this.fileInput || !this.uploadArea) {
+            console.error('Required elements not found!');
+            return;
         }
-    });
+        
+        this.setupFileHandling();
+        this.setupFormSubmission();
+    }
     
-    function updateFileName(name) {
-        const uploadText = uploadArea.querySelector('p.text-secondary-600');
+    setupFileHandling() {
+        // Handle click to open file dialog
+        this.uploadArea.addEventListener('click', (e) => {
+            if (e.target === this.uploadArea || !e.target.matches('input[type="file"]')) {
+                this.fileInput.click();
+            }
+        });
+        
+        // Handle drag and drop
+        this.uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            this.uploadArea.classList.add('border-primary-500', 'bg-primary-50');
+        });
+        
+        this.uploadArea.addEventListener('dragleave', (e) => {
+            e.preventDefault();
+            this.uploadArea.classList.remove('border-primary-500', 'bg-primary-50');
+        });
+        
+        this.uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            this.uploadArea.classList.remove('border-primary-500', 'bg-primary-50');
+            
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                this.fileInput.files = files;
+                this.updateFileName(files[0].name);
+            }
+        });
+        
+        // Handle file selection
+        this.fileInput.addEventListener('change', (e) => {
+            if (this.fileInput.files.length > 0) {
+                this.updateFileName(this.fileInput.files[0].name);
+            }
+        });
+    }
+    
+    setupFormSubmission() {
+        this.form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            if (!this.fileInput.files.length) {
+                alert('Proszę wybrać plik paragonu');
+                return;
+            }
+            
+            await this.uploadReceipt();
+        });
+    }
+    
+    async uploadReceipt() {
+        const formData = new FormData(this.form);
+        
+        try {
+            // Show progress container
+            this.showProgress();
+            this.updateProgress(10, 'Przesyłanie pliku...', 'Plik jest przesyłany na serwer');
+            
+            const response = await fetch(this.form.action || window.location.pathname, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+                }
+            });
+            
+            const result = await response.json();
+            
+            if (response.ok && result.receipt_id) {
+                this.currentReceiptId = result.receipt_id;
+                this.updateProgress(20, 'Plik przesłany', 'Rozpoczynamy przetwarzanie...');
+                
+                // Setup WebSocket connection for real-time updates
+                this.setupWebSocket(result.receipt_id);
+                
+            } else {
+                this.showError(result.error || 'Wystąpił błąd podczas przesyłania pliku');
+            }
+            
+        } catch (error) {
+            console.error('Upload error:', error);
+            this.showError('Wystąpił błąd podczas przesyłania pliku');
+        }
+    }
+    
+    setupWebSocket(receiptId) {
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const wsUrl = `${protocol}//${window.location.host}/ws/receipt_status/${receiptId}/`;
+        
+        this.websocket = new WebSocket(wsUrl);
+        
+        this.websocket.onopen = () => {
+            console.log('WebSocket connection established');
+            this.updateProgress(25, 'Połączono', 'Nasłuchujemy na aktualizacje status');
+        };
+        
+        this.websocket.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            console.log('WebSocket message received:', data);
+            
+            if (data.type === 'receipt_status_update') {
+                this.handleStatusUpdate(data);
+            } else if (data.type === 'receipt_error') {
+                this.handleError(data);
+            }
+        };
+        
+        this.websocket.onclose = () => {
+            console.log('WebSocket connection closed');
+        };
+        
+        this.websocket.onerror = (error) => {
+            console.error('WebSocket error:', error);
+            this.updateProgress(null, 'Błąd połączenia', 'Utracono połączenie z serwerem');
+        };
+    }
+    
+    handleStatusUpdate(data) {
+        let progress = data.progress || this.calculateProgress(data.status);
+        let statusText = this.getStatusText(data.status);
+        let detailText = data.message || this.getDetailText(data.status);
+        
+        this.updateProgress(progress, statusText, detailText);
+        
+        // If processing is complete, redirect after a delay
+        if (data.status === 'completed' || data.status === 'ready_for_review') {
+            setTimeout(() => {
+                window.location.href = `/chatbot/receipts/${data.receipt_id}/review/`;
+            }, 2000);
+        }
+    }
+    
+    handleError(data) {
+        this.showError(data.message || 'Wystąpił błąd podczas przetwarzania');
+        if (this.websocket) {
+            this.websocket.close();
+        }
+    }
+    
+    calculateProgress(status) {
+        const progressMap = {
+            'uploaded': 30,
+            'processing': 40,
+            'ocr_in_progress': 50,
+            'ocr_completed': 65,
+            'parsing_in_progress': 75,
+            'parsing_completed': 85,
+            'matching_in_progress': 90,
+            'matching_completed': 95,
+            'ready_for_review': 100,
+            'completed': 100
+        };
+        return progressMap[status] || 40;
+    }
+    
+    getStatusText(status) {
+        const statusMap = {
+            'uploaded': 'Przetwarzanie rozpoczęte',
+            'processing': 'Przetwarzanie...',
+            'ocr_in_progress': 'Rozpoznawanie tekstu...',
+            'ocr_completed': 'Tekst rozpoznany',
+            'parsing_in_progress': 'Analiza paragonu...',
+            'parsing_completed': 'Paragon przeanalizowany',
+            'matching_in_progress': 'Dopasowywanie produktów...',
+            'matching_completed': 'Produkty dopasowane',
+            'ready_for_review': 'Gotowe do przeglądu',
+            'completed': 'Zakończone'
+        };
+        return statusMap[status] || 'Przetwarzanie...';
+    }
+    
+    getDetailText(status) {
+        const detailMap = {
+            'uploaded': 'Plik został przesłany i oczekuje na przetworzenie',
+            'ocr_in_progress': 'AI rozpoznaje tekst z paragonu',
+            'ocr_completed': 'Tekst został pomyślnie rozpoznany',
+            'parsing_in_progress': 'Analizujemy strukturę paragonu i produkty',
+            'parsing_completed': 'Produkty zostały wyodrębnione z paragonu',
+            'matching_in_progress': 'Dopasowujemy produkty do bazy danych',
+            'matching_completed': 'Produkty zostały dopasowane',
+            'ready_for_review': 'Możesz teraz przejrzeć i zweryfikować wyniki',
+            'completed': 'Paragon został w pełni przetworzony'
+        };
+        return detailMap[status] || 'Trwa przetwarzanie paragonu...';
+    }
+    
+    showProgress() {
+        this.progressContainer.classList.remove('hidden');
+        this.submitBtn.disabled = true;
+        this.submitBtn.innerHTML = '<span class="text-xl">⏳</span><span>Przetwarzanie...</span>';
+    }
+    
+    updateProgress(percentage, status, details) {
+        if (percentage !== null) {
+            this.progressBar.style.width = `${percentage}%`;
+            this.percentageText.textContent = `${percentage}%`;
+        }
+        
+        if (status) {
+            this.statusText.textContent = status;
+        }
+        
+        if (details) {
+            this.statusDetails.innerHTML = `<p>${details}</p>`;
+        }
+    }
+    
+    showError(message) {
+        this.progressBar.style.background = 'linear-gradient(to right, #ef4444, #dc2626)';
+        this.statusText.textContent = 'Błąd';
+        this.statusText.classList.add('text-red-600');
+        this.statusDetails.innerHTML = `<p class="text-red-600">${message}</p>`;
+        
+        // Re-enable form
+        this.submitBtn.disabled = false;
+        this.submitBtn.innerHTML = '<span class="text-xl">🚀</span><span>Spróbuj ponownie</span>';
+    }
+    
+    updateFileName(name) {
+        const uploadText = this.uploadArea.querySelector('p.text-secondary-600');
         if (uploadText) {
             uploadText.textContent = `Wybrany plik: ${name}`;
             uploadText.classList.remove('text-secondary-600');
             uploadText.classList.add('text-success-600', 'font-semibold');
         }
         
-        // Add success icon and update based on file type
-        const icon = uploadArea.querySelector('.mx-auto span');
+        // Update icon based on file type
+        const icon = this.uploadArea.querySelector('.mx-auto span');
         const fileExtension = name.split('.').pop().toLowerCase();
         
         if (fileExtension === 'pdf') {
@@ -185,9 +400,14 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         // Change border color to show selection
-        uploadArea.classList.remove('border-secondary-300');
-        uploadArea.classList.add('border-success-500', 'bg-success-50/30');
+        this.uploadArea.classList.remove('border-secondary-300');
+        this.uploadArea.classList.add('border-success-500', 'bg-success-50/30');
     }
+}
+
+// Initialize when DOM is ready
+document.addEventListener('DOMContentLoaded', function() {
+    new ReceiptUploadManager();
 });
 </script>
 {% endblock %}

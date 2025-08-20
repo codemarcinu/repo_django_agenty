@@ -73,8 +73,9 @@ class InventoryService:
             with transaction.atomic():
                 for line_item in line_items:
                     try:
+                        purchase_date = receipt.purchased_at.date() if receipt.purchased_at else receipt.uploaded_at.date()
                         result = self._process_line_item_for_inventory(
-                            line_item, receipt.purchased_at.date()
+                            line_item, purchase_date
                         )
 
                         if result["created"]:

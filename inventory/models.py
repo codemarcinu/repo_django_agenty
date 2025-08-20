@@ -183,7 +183,13 @@ class Receipt(models.Model):
 
     STATUS_CHOICES = [
         ("pending", "Pending Processing"),
+        ("pending_ocr", "Pending OCR"),  # Legacy compatibility
         ("processing", "Processing in Progress"),
+        ("processing_ocr", "OCR in Progress"),  # Legacy compatibility
+        ("ocr_completed", "OCR Completed"),  # Legacy compatibility
+        ("processing_parsing", "Processing Parsing"),  # Legacy compatibility
+        ("parsing_completed", "Parsing Completed"),  # Legacy compatibility
+        ("matching", "Matching Products"),  # Legacy compatibility
         ("ready_for_review", "Ready for Review"),
         ("completed", "Completed"),
         ("error", "Error"),

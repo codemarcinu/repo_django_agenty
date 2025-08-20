@@ -14,6 +14,8 @@ from inventory.models import Receipt, ReceiptLineItem
 from .receipt_parser import get_receipt_parser
 from .product_matcher import ProductMatcher
 from .inventory_service import get_inventory_service
+from ..tasks_alerts import send_critical_error_alert
+from .websocket_notifier import get_websocket_notifier
 
 logger = logging.getLogger(__name__)
 
@@ -68,6 +70,7 @@ class UnifiedReceiptProcessor:
         self.parser = get_receipt_parser()
         self.matcher = ProductMatcher()
         self.inventory_service = get_inventory_service()
+        self.websocket_notifier = get_websocket_notifier()
     
     def create_receipt_from_file(self, receipt_file, user_id: Optional[str] = None) -> ProcessingResult:
         """Create a new receipt record from uploaded file."""
@@ -167,6 +170,21 @@ class UnifiedReceiptProcessor:
             except:
                 pass
             
+            # Send critical error alert asynchronously
+            error_details = {
+                'receipt_id': receipt_id,
+                'error_message': str(e),
+                'error_type': type(e).__name__,
+                'timestamp': timezone.now().isoformat(),
+                'stage': 'processing',
+                'method': 'process_receipt'
+            }
+            
+            try:
+                send_critical_error_alert.delay(error_details)
+            except Exception as alert_error:
+                logger.error(f"Failed to send critical error alert: {alert_error}")
+            
             return ProcessingResult.error_result(
                 error_stage="processing",
                 message=f"Unexpected error: {str(e)}",
@@ -176,6 +194,11 @@ class UnifiedReceiptProcessor:
     async def _process_ocr(self, receipt: Receipt) -> ProcessingResult:
         """Process OCR for receipt."""
         try:
+            # Notify start of OCR processing
+            self.websocket_notifier.send_receipt_status_update(
+                receipt.id, 'ocr_in_progress', 'Rozpoznawanie tekstu...', progress=50
+            )
+            
             # Import OCR service
             from .async_ocr_service import AsyncOCRService
             
@@ -196,6 +219,11 @@ class UnifiedReceiptProcessor:
             }
             receipt.save()
             
+            # Notify OCR completion
+            self.websocket_notifier.send_receipt_status_update(
+                receipt.id, 'ocr_completed', 'Tekst rozpoznany', progress=65
+            )
+            
             return ProcessingResult.success_result(
                 receipt_id=receipt.id,
                 message="OCR completed successfully"
@@ -203,6 +231,22 @@ class UnifiedReceiptProcessor:
             
         except Exception as e:
             receipt.mark_as_error(f"OCR failed: {str(e)}")
+            
+            # Send critical error alert for OCR failures
+            error_details = {
+                'receipt_id': receipt.id,
+                'error_message': str(e),
+                'error_type': type(e).__name__,
+                'timestamp': timezone.now().isoformat(),
+                'stage': 'ocr',
+                'method': '_process_ocr'
+            }
+            
+            try:
+                send_critical_error_alert.delay(error_details)
+            except Exception as alert_error:
+                logger.error(f"Failed to send OCR error alert: {alert_error}")
+            
             return ProcessingResult.error_result(
                 error_stage="ocr",
                 message=str(e),
@@ -212,6 +256,11 @@ class UnifiedReceiptProcessor:
     async def _process_parsing(self, receipt: Receipt) -> ProcessingResult:
         """Process parsing for receipt."""
         try:
+            # Notify start of parsing
+            self.websocket_notifier.send_receipt_status_update(
+                receipt.id, 'parsing_in_progress', 'Analiza paragonu...', progress=75
+            )
+            
             if not receipt.raw_ocr_text:
                 raise ReceiptProcessingError("parsing", "No OCR text to parse", receipt.id)
             
@@ -245,6 +294,11 @@ class UnifiedReceiptProcessor:
             receipt.status = "parsing_completed"
             receipt.save()
             
+            # Notify parsing completion
+            self.websocket_notifier.send_receipt_status_update(
+                receipt.id, 'parsing_completed', 'Paragon przeanalizowany', progress=85
+            )
+            
             return ProcessingResult.success_result(
                 receipt_id=receipt.id,
                 message="Parsing completed successfully",
@@ -253,6 +307,22 @@ class UnifiedReceiptProcessor:
             
         except Exception as e:
             receipt.mark_as_error(f"Parsing failed: {str(e)}")
+            
+            # Send critical error alert for parsing failures
+            error_details = {
+                'receipt_id': receipt.id,
+                'error_message': str(e),
+                'error_type': type(e).__name__,
+                'timestamp': timezone.now().isoformat(),
+                'stage': 'parsing',
+                'method': '_process_parsing'
+            }
+            
+            try:
+                send_critical_error_alert.delay(error_details)
+            except Exception as alert_error:
+                logger.error(f"Failed to send parsing error alert: {alert_error}")
+            
             return ProcessingResult.error_result(
                 error_stage="parsing",
                 message=str(e),
@@ -262,6 +332,11 @@ class UnifiedReceiptProcessor:
     async def _process_matching(self, receipt: Receipt) -> ProcessingResult:
         """Process product matching for receipt."""
         try:
+            # Notify start of matching
+            self.websocket_notifier.send_receipt_status_update(
+                receipt.id, 'matching_in_progress', 'Dopasowywanie produktów...', progress=90
+            )
+            
             if not receipt.extracted_data or 'products' not in receipt.extracted_data:
                 raise ReceiptProcessingError("matching", "No products to match", receipt.id)
             
@@ -292,6 +367,11 @@ class UnifiedReceiptProcessor:
             receipt.status = "completed"
             receipt.save()
             
+            # Notify matching completion
+            self.websocket_notifier.send_receipt_status_update(
+                receipt.id, 'matching_completed', 'Produkty dopasowane', progress=95
+            )
+            
             return ProcessingResult.success_result(
                 receipt_id=receipt.id,
                 message="Product matching completed",
@@ -315,6 +395,12 @@ class UnifiedReceiptProcessor:
             
             # Mark receipt as ready for review instead of auto-updating inventory
             receipt.mark_as_ready_for_review()
+            
+            # Notify that receipt is ready for review
+            self.websocket_notifier.send_receipt_status_update(
+                receipt.id, 'ready_for_review', 'Gotowe do przeglądu', progress=100,
+                message='Paragon został przetworzony i jest gotowy do przeglądu'
+            )
             
             return ProcessingResult.success_result(
                 receipt_id=receipt.id,

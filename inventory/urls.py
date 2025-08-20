@@ -33,6 +33,11 @@ urlpatterns = [
     ),
     path("receipts/recent/", views.recent_receipts, name="recent_receipts"),
     path("receipts/upload/", views.upload_receipt, name="upload_receipt"),
+    path(
+        "receipts/<int:receipt_id>/status/",
+        views.receipt_processing_status,
+        name="receipt_processing_status",
+    ),
     # Categories
     path("categories/", views.CategoryListView.as_view(), name="category_list"),
 ]

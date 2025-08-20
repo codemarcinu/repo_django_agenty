@@ -103,7 +103,8 @@ class ReceiptUploadView(FormView):
         
         receipt = form.save(commit=False)
         receipt.user = self.request.user if self.request.user.is_authenticated else None
-        receipt.status = 'pending_ocr'
+        receipt.status = 'pending_ocr'  # Use legacy status for compatibility
+        receipt.processing_step = 'uploaded'  # Set processing step
         receipt.save()
         
         logger.info(f"✅ New Receipt record created successfully with ID: {receipt.id}")

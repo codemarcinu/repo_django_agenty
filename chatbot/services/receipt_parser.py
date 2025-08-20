@@ -173,10 +173,12 @@ class RegexReceiptParser(ReceiptParser):
             "mila": [r"mila"],
         }
 
-        # Price patterns (Polish format: 12,34 or 12.34)
+        # Price patterns (Polish format: 12,34 or 12.34, also handles formats like 1234c = 12.34)
         self.price_patterns = [
             r"(\d{1,4})[,.](\d{2})\s*(?:zł|PLN|A)?",  # 12,34 zł or 12.34
             r"(\d{1,4})[,.](\d{2})$",  # Just the number at end of line
+            r"(\d{3,6})c",  # Format like 1234c = 12.34 PLN
+            r"(\d{1,4})\s*[,.]?\s*(\d{2})\s*(?:PLN|zł|€|C)$",  # Various endings
         ]
 
         # Product line patterns
@@ -191,6 +193,8 @@ class RegexReceiptParser(ReceiptParser):
             r"^(.+?)\s+(\d+(?:[,.]?\d+)?)\s+(\d+[,.]?\d{2})\s+(\d+[,.]?\d{2})",
             # Pattern: NAME TOTAL_PRICE (simple)
             r"^(.+?)\s+(\d+[,.]?\d{2})$",
+            # Pattern: Auchan-style PRODUCT_CODE_WITH_PRICE like "492359C" = 49.23 PLN
+            r"^(\d{2,6})\s*([Cc€])\s*$",
         ]
 
         # Date patterns
@@ -566,6 +570,27 @@ class RegexReceiptParser(ReceiptParser):
                     raw_line=line,
                 )
 
+            elif pattern_index == 5:  # Auchan-style PRODUCT_CODE_WITH_PRICE
+                price_code, currency_code = groups
+                # Convert format like "492359C" to "49.23" PLN (last 2 digits = cents)
+                if len(price_code) >= 2:
+                    if len(price_code) == 2:
+                        # For 2-digit codes like "99C", treat as 0.99 PLN
+                        total_price = Decimal(f"0.{price_code}")
+                    else:
+                        # For longer codes, last 2 digits are cents
+                        price_major = price_code[:-2]
+                        price_minor = price_code[-2:]
+                        total_price = Decimal(f"{price_major}.{price_minor}")
+                    
+                    return ParsedProduct(
+                        name=f"Product {price_code}",  # Placeholder name
+                        total_price=total_price,
+                        line_number=line_number,
+                        confidence=0.5,  # Lower confidence due to missing name
+                        raw_line=line,
+                    )
+
         except (ValueError, InvalidOperation, IndexError) as e:
             logger.warning(f"Failed to parse product from line '{line}': {e}")
             return None
@@ -585,6 +610,12 @@ class RegexReceiptParser(ReceiptParser):
                     if match.groups():
                         if len(match.groups()) == 2:
                             price_str = f"{match.group(1)}.{match.group(2)}"
+                        elif pattern == r"(\d{3,6})c":  # Handle "1234c" format
+                            price_code = match.group(1)
+                            if len(price_code) >= 3:
+                                price_str = f"{price_code[:-2]}.{price_code[-2:]}"
+                            else:
+                                continue
                         else:
                             price_str = match.group(0).replace(",", ".")
                     else:
@@ -673,10 +704,12 @@ class LidlReceiptParser(RegexReceiptParser):
         
         # Override with Lidl-specific patterns
         self.product_patterns = [
-            # Lidl PRIMARY format - NAME QUANTITY * UNIT_PRICE TOTAL_PRICE TAX_CODE
-            r"^(.+?)\s+(\d+(?:[,.]?\d+)?)\s*\*\s*(\d+[,.]?\d{2})\s+(\d+[,.]?\d{2})\s+[ABC]\s*$",
-            # Lidl SECONDARY format - NAME TOTAL_PRICE TAX_CODE
-            r"^(.+?)\s+(\d+[,.]?\d{2})\s+[ABC]\s*$",
+            # Lidl format: QTY * UNIT_PRICE TOTAL_PRICE (like "2 * 3, 59 7,18")
+            r"^(\d+)\s*\*\s*(\d+)\s*,\s*(\d{2})\s+(\d+),(\d{2})$",
+            # Lidl format: QTY * PRICE (like "1 * 0, 79")
+            r"^(\d+)\s*\*\s*(\d+)\s*,\s*(\d{2})$",
+            # Lidl format: just price (like "0, 79")
+            r"^(\d+)\s*,\s*(\d{2})$",
             # Generic fallbacks
             r"^(.+?)\s+(\d+(?:[,.]?\d+)?)\s*x\s*(\d+[,.]?\d{2})\s*=?\s*(\d+[,.]?\d{2})",
             r"^(.+?)\s+(\d+[,.]?\d{2})$",
@@ -688,32 +721,104 @@ class LidlReceiptParser(RegexReceiptParser):
             r"^Razem\s+(\d+[,.]?\d{2})$",
         ]
         
+    def _extract_product_from_match(
+        self, match, line: str, line_number: int, pattern_index: int
+    ) -> ParsedProduct | None:
+        """Extract product information from regex match for Lidl receipts."""
+        try:
+            groups = match.groups()
+
+            if pattern_index == 0:  # QTY * UNIT_PRICE TOTAL_PRICE (like "2 * 3, 59 7,18")
+                quantity, unit_major, unit_minor, total_major, total_minor = groups
+                unit_price = Decimal(f"{unit_major}.{unit_minor}")
+                total_price = Decimal(f"{total_major}.{total_minor}")
+                
+                return ParsedProduct(
+                    name=f"Product (line {line_number})",  # Placeholder - name is usually on previous line
+                    quantity=float(quantity),
+                    unit_price=unit_price,
+                    total_price=total_price,
+                    line_number=line_number,
+                    confidence=0.9,
+                    raw_line=line,
+                )
+
+            elif pattern_index == 1:  # QTY * PRICE (like "1 * 0, 79")
+                quantity, price_major, price_minor = groups
+                total_price = Decimal(f"{price_major}.{price_minor}")
+                unit_price = total_price / Decimal(quantity)
+                
+                return ParsedProduct(
+                    name=f"Product (line {line_number})",  # Placeholder
+                    quantity=float(quantity),
+                    unit_price=unit_price,
+                    total_price=total_price,
+                    line_number=line_number,
+                    confidence=0.8,
+                    raw_line=line,
+                )
+
+            elif pattern_index == 2:  # Just price (like "0, 79")
+                price_major, price_minor = groups
+                total_price = Decimal(f"{price_major}.{price_minor}")
+                
+                return ParsedProduct(
+                    name=f"Product (line {line_number})",  # Placeholder
+                    total_price=total_price,
+                    line_number=line_number,
+                    confidence=0.6,
+                    raw_line=line,
+                )
+                
+            else:
+                # Fall back to parent method for other patterns
+                return super()._extract_product_from_match(match, line, line_number, pattern_index)
+
+        except (ValueError, InvalidOperation, IndexError) as e:
+            logger.warning(f"Failed to parse Lidl product from line '{line}': {e}")
+            return None
+        
     def _looks_like_product(self, line: str) -> bool:
         """Lidl-specific product detection."""
-        # Call parent method first
-        if not super()._looks_like_product(line):
+        line = line.strip()
+        
+        # Skip empty lines
+        if not line:
             return False
             
-        line_lower = line.lower().strip()
+        line_lower = line.lower()
         
         # Lidl-specific exclusions
         if re.match(r"^ptu\s+[abc]\s+\d+[,.]?\d{2}", line_lower):
             return False
         if re.match(r"^kwota\s+[abc]\s+\d+[,.]?\d+%?\s+\d+[,.]?\d{2}", line_lower):
             return False
-        if line_lower.startswith("suma"):
+        if line_lower.startswith(("suma", "razem", "ptu", "kwota")):
+            return False
+        if "www" in line_lower or "lidl.pl" in line_lower:
+            return False
+        if re.search(r"^\d{4}-\d{2}-\d{2}$", line):  # Date format
+            return False
+        if "tarnowo podgórne" in line_lower or "jankowice" in line_lower:
             return False
             
-        # Must end with tax code for Lidl format
-        if re.search(r"[ABC]\s*$", line):
-            return True
-            
-        # Or contain * multiplication
+        # Lidl-specific inclusions
+        # Lines with * multiplication (like "1 * 0, 79" or "2 * 3, 59 7,18")
         if "*" in line and re.search(r"\d+[,.]?\d{2}", line):
             return True
             
-        # Standard checks
-        return len(line.strip()) > 5 and re.search(r"\d+[,.]?\d{2}", line)
+        # Lines that are just prices (like "0, 79")
+        if re.match(r"^\d+\s*,\s*\d{2}$", line):
+            return True
+            
+        # Product names that might not have prices on same line
+        if any(c.isalpha() for c in line) and len(line) >= 3:
+            # Could be a product name, but be conservative
+            # Only accept if it's not obviously something else
+            if not any(word in line_lower for word in ["płatność", "karta", "zł", "pln", "www", "tel", "adres"]):
+                return True
+            
+        return False
     
     def _find_products_end(self, lines: list[str]) -> int:
         """Lidl-specific end detection."""

@@ -323,7 +323,27 @@ class OptimizedInventoryService:
         ).order_by('-total_consumed')
 
 
-# Convenience functions for easy access
+# Convenience functions for easy access as specified in Prompt 4
+def get_receipts_for_listing():
+    """
+    Get receipts for listing with optimized prefetch_related.
+    Eliminates N+1 problem by prefetching line_items and matched_products.
+    """
+    return Receipt.objects.prefetch_related(
+        'line_items__matched_product__category'
+    ).order_by('-purchased_at')
+
+
+def get_inventory_items_for_listing():
+    """
+    Get inventory items for listing with optimized select_related.
+    Eliminates N+1 problem by selecting product and category in single query.
+    """
+    return InventoryItem.objects.select_related(
+        'product__category'
+    ).filter(quantity_remaining__gt=0).order_by('-purchase_date')
+
+
 def get_optimized_receipt_service() -> OptimizedReceiptService:
     """Get optimized receipt service instance."""
     return OptimizedReceiptService()

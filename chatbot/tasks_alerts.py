@@ -193,6 +193,50 @@ def send_inventory_alerts_notification(self, alerts: list[dict[str, Any]]):
 
 
 @shared_task(bind=True, ignore_result=True)
+def send_critical_error_alert(self, error_details: dict):
+    """
+    Send critical error alert for receipt processing failures.
+    
+    Args:
+        error_details (dict): Contains receipt_id, error_message, timestamp, etc.
+    """
+    try:
+        receipt_id = error_details.get('receipt_id', 'unknown')
+        error_message = error_details.get('error_message', 'Unknown error')
+        timestamp = error_details.get('timestamp', 'unknown')
+        error_type = error_details.get('error_type', 'ProcessingError')
+        
+        # Log critical error with detailed information
+        logger.critical(
+            f"CRITICAL RECEIPT PROCESSING ERROR - "
+            f"Receipt ID: {receipt_id}, "
+            f"Error: {error_message}, "
+            f"Type: {error_type}, "
+            f"Timestamp: {timestamp}"
+        )
+        
+        # TODO: Future integration points for other notification methods:
+        # - Email notification to administrators
+        # - Slack/Discord webhook notifications  
+        # - SMS alerts for critical errors
+        # - Push notifications to mobile app
+        # - Integration with monitoring services (PagerDuty, etc.)
+        
+        # For now, we're using logging as the primary alert mechanism
+        # This can be easily extended to include email or other services
+        
+        return {
+            "success": True, 
+            "message": f"Critical error alert sent for receipt {receipt_id}",
+            "details": error_details
+        }
+        
+    except Exception as e:
+        logger.error(f"Error in send_critical_error_alert task: {str(e)}")
+        return {"success": False, "error": str(e)}
+
+
+@shared_task(bind=True, ignore_result=True)
 def send_test_alert(self, test_message: str = "Test alert from inventory system"):
     """
     Test task to verify alert system is working.

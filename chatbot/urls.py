@@ -68,4 +68,5 @@ urlpatterns = [
     path("monitoring/api/metrics/", views_monitoring.api_metrics, name="monitoring_api_metrics"),
     path("monitoring/api/alerts/", views_monitoring.api_alerts, name="monitoring_api_alerts"),
     path("monitoring/api/timeline/", views_monitoring.api_processing_timeline, name="monitoring_api_timeline"),
+    path("api/monitoring/stats/", views_monitoring.monitoring_stats_api, name="monitoring_stats_api"),
 ]

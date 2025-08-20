@@ -3,6 +3,8 @@
 {% block title %}Receipt Processing Monitoring{% endblock %}
 
 {% block content %}
+<!-- Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <div class="container mx-auto px-4 py-8">
     <div class="mb-8">
         <h1 class="text-4xl font-bold gradient-text mb-2">Receipt Processing Monitoring</h1>
@@ -72,6 +74,42 @@
             </div>
             <p id="queue-size" class="text-3xl font-bold text-orange-600 mb-2">{{ metrics_24h.pending_count }}</p>
             <p class="text-sm text-secondary-600">Pending receipts</p>
+        </div>
+    </div>
+
+    <!-- Service Status Section -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <!-- Service Status -->
+        <div class="bg-white rounded-2xl shadow-lg p-6 border border-secondary-100">
+            <h3 class="text-xl font-semibold text-secondary-800 mb-4">Service Status</h3>
+            <div class="space-y-4">
+                <div class="flex items-center justify-between p-3 bg-secondary-50 rounded-lg">
+                    <div class="flex items-center">
+                        <div id="redis-indicator" class="w-3 h-3 rounded-full mr-3 {% if redis_status %}bg-green-500{% else %}bg-red-500{% endif %}"></div>
+                        <span class="font-medium text-secondary-800">Redis</span>
+                    </div>
+                    <span id="redis-status-text" class="text-sm {% if redis_status %}text-green-600{% else %}text-red-600{% endif %}">
+                        {% if redis_status %}Online{% else %}Offline{% endif %}
+                    </span>
+                </div>
+                <div class="flex items-center justify-between p-3 bg-secondary-50 rounded-lg">
+                    <div class="flex items-center">
+                        <div id="ollama-indicator" class="w-3 h-3 rounded-full mr-3 {% if ollama_status %}bg-green-500{% else %}bg-red-500{% endif %}"></div>
+                        <span class="font-medium text-secondary-800">Ollama</span>
+                    </div>
+                    <span id="ollama-status-text" class="text-sm {% if ollama_status %}text-green-600{% else %}text-red-600{% endif %}">
+                        {% if ollama_status %}Online{% else %}Offline{% endif %}
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Receipt Status Chart -->
+        <div class="bg-white rounded-2xl shadow-lg p-6 border border-secondary-100">
+            <h3 class="text-xl font-semibold text-secondary-800 mb-4">Receipt Status Distribution</h3>
+            <div class="relative h-64">
+                <canvas id="receiptStatusChart"></canvas>
+            </div>
         </div>
     </div>
 
@@ -172,45 +210,127 @@
 </div>
 
 <script>
-// Real-time updates for monitoring dashboard
+// Real-time updates for monitoring dashboard with Chart.js integration
 class MonitoringDashboard {
     constructor() {
-        this.updateInterval = 30000; // 30 seconds
+        this.updateInterval = 5000; // 5 seconds as requested
+        this.receiptStatusChart = null;
+        this.timelineChart = null;
+        this.initializeCharts();
         this.startAutoUpdate();
-        this.initializeChart();
     }
 
-    async updateHealthStatus() {
+    async updateMonitoringStats() {
         try {
-            const response = await fetch('/monitoring/api/health/');
+            const response = await fetch('/api/monitoring/stats/');
             const data = await response.json();
             
-            // Update health status
-            const statusElement = document.getElementById('health-status');
-            const indicatorElement = document.getElementById('health-indicator');
-            const lastUpdatedElement = document.getElementById('last-updated');
+            // Update service statuses (Redis and Ollama indicators)
+            this.updateServiceStatuses(data.service_statuses);
             
-            if (statusElement) {
-                statusElement.textContent = data.status.charAt(0).toUpperCase() + data.status.slice(1);
-                statusElement.className = this.getHealthStatusClass(data.status);
+            // Update receipt statistics
+            if (data.receipt_stats) {
+                this.updateReceiptStats(data.receipt_stats);
             }
             
-            if (indicatorElement) {
-                indicatorElement.className = `w-4 h-4 rounded-full ${this.getHealthIndicatorClass(data.status)}`;
+            // Update inventory statistics  
+            if (data.inventory_stats) {
+                this.updateInventoryStats(data.inventory_stats);
             }
             
-            if (lastUpdatedElement) {
-                lastUpdatedElement.textContent = new Date().toLocaleTimeString();
+            // Update agent statistics
+            if (data.agent_stats) {
+                this.updateAgentStats(data.agent_stats);
             }
             
-            // Update metrics
-            if (data.metrics) {
-                this.updateMetrics(data.metrics);
-            }
+            // Update last updated timestamp
+            document.getElementById('last-updated').textContent = new Date().toLocaleTimeString();
             
         } catch (error) {
-            console.error('Error updating health status:', error);
+            console.error('Error updating monitoring stats:', error);
         }
+    }
+
+    updateServiceStatuses(serviceStatuses) {
+        // Update Redis status
+        const redisIndicator = document.getElementById('redis-indicator');
+        const redisStatusText = document.getElementById('redis-status-text');
+        
+        if (redisIndicator && redisStatusText) {
+            if (serviceStatuses.redis) {
+                redisIndicator.className = 'w-3 h-3 rounded-full mr-3 bg-green-500';
+                redisStatusText.className = 'text-sm text-green-600';
+                redisStatusText.textContent = 'Online';
+            } else {
+                redisIndicator.className = 'w-3 h-3 rounded-full mr-3 bg-red-500';
+                redisStatusText.className = 'text-sm text-red-600';
+                redisStatusText.textContent = 'Offline';
+            }
+        }
+        
+        // Update Ollama status
+        const ollamaIndicator = document.getElementById('ollama-indicator');
+        const ollamaStatusText = document.getElementById('ollama-status-text');
+        
+        if (ollamaIndicator && ollamaStatusText) {
+            if (serviceStatuses.ollama) {
+                ollamaIndicator.className = 'w-3 h-3 rounded-full mr-3 bg-green-500';
+                ollamaStatusText.className = 'text-sm text-green-600';
+                ollamaStatusText.textContent = 'Online';
+            } else {
+                ollamaIndicator.className = 'w-3 h-3 rounded-full mr-3 bg-red-500';
+                ollamaStatusText.className = 'text-sm text-red-600';
+                ollamaStatusText.textContent = 'Offline';
+            }
+        }
+    }
+
+    updateReceiptStats(receiptStats) {
+        // Update receipt status chart
+        if (this.receiptStatusChart && receiptStats) {
+            const statusData = [
+                receiptStats.completed || 0,
+                receiptStats.processing || 0, 
+                receiptStats.pending || 0,
+                receiptStats.error || 0
+            ];
+            
+            this.receiptStatusChart.data.datasets[0].data = statusData;
+            this.receiptStatusChart.update();
+        }
+        
+        // Update metric displays
+        if (receiptStats.success_rate !== undefined) {
+            const successRateElement = document.getElementById('success-rate');
+            if (successRateElement) {
+                successRateElement.textContent = `${receiptStats.success_rate.toFixed(1)}%`;
+            }
+        }
+        
+        if (receiptStats.pending_count !== undefined) {
+            const queueSizeElement = document.getElementById('queue-size');
+            if (queueSizeElement) {
+                queueSizeElement.textContent = receiptStats.pending_count;
+            }
+        }
+        
+        if (receiptStats.avg_processing_time !== undefined) {
+            const avgProcessingElement = document.getElementById('avg-processing-time');
+            if (avgProcessingElement) {
+                avgProcessingElement.textContent = receiptStats.avg_processing_time ? 
+                    `${receiptStats.avg_processing_time.toFixed(1)}s` : 'N/A';
+            }
+        }
+    }
+
+    updateInventoryStats(inventoryStats) {
+        // Implementation for inventory stats update if needed
+        console.log('Inventory stats updated:', inventoryStats);
+    }
+
+    updateAgentStats(agentStats) {
+        // Implementation for agent stats update if needed  
+        console.log('Agent stats updated:', agentStats);
     }
 
     async updateAlerts() {
@@ -250,45 +370,10 @@ class MonitoringDashboard {
         }
     }
 
-    updateMetrics(metrics) {
-        const elements = {
-            'success-rate': `${metrics.success_rate?.toFixed(1) || 0}%`,
-            'avg-processing-time': metrics.avg_processing_time ? `${metrics.avg_processing_time.toFixed(1)}s` : 'N/A',
-            'queue-size': metrics.pending_count || 0
-        };
-
-        Object.entries(elements).forEach(([id, value]) => {
-            const element = document.getElementById(id);
-            if (element) {
-                element.textContent = value;
-            }
-        });
-    }
-
-    getHealthStatusClass(status) {
-        const classes = {
-            'healthy': 'text-3xl font-bold text-green-600',
-            'warning': 'text-3xl font-bold text-yellow-600',
-            'degraded': 'text-3xl font-bold text-orange-600',
-            'critical': 'text-3xl font-bold text-red-600'
-        };
-        return classes[status] || 'text-3xl font-bold text-secondary-600';
-    }
-
-    getHealthIndicatorClass(status) {
-        const classes = {
-            'healthy': 'bg-green-500',
-            'warning': 'bg-yellow-500',
-            'degraded': 'bg-orange-500',
-            'critical': 'bg-red-500'
-        };
-        return classes[status] || 'bg-secondary-500';
-    }
-
     getAlertClass(severity) {
         const classes = {
             'critical': 'border-red-500 bg-red-50',
-            'high': 'border-orange-500 bg-orange-50',
+            'high': 'border-orange-500 bg-orange-50', 
             'medium': 'border-yellow-500 bg-yellow-50',
             'low': 'border-blue-500 bg-blue-50'
         };
@@ -305,124 +390,115 @@ class MonitoringDashboard {
         return classes[severity] || 'bg-secondary-200 text-secondary-800';
     }
 
-    async initializeChart() {
-        // Simple chart implementation using Canvas
-        // In production, you might want to use Chart.js or similar
+    initializeCharts() {
+        // Initialize Receipt Status Pie Chart
+        const receiptStatusCtx = document.getElementById('receiptStatusChart');
+        if (receiptStatusCtx) {
+            this.receiptStatusChart = new Chart(receiptStatusCtx, {
+                type: 'pie',
+                data: {
+                    labels: ['Completed', 'Processing', 'Pending', 'Error'],
+                    datasets: [{
+                        data: [0, 0, 0, 0], // Will be updated by updateMonitoringStats
+                        backgroundColor: [
+                            '#10B981', // Green for completed
+                            '#3B82F6', // Blue for processing  
+                            '#F59E0B', // Orange for pending
+                            '#EF4444'  // Red for error
+                        ],
+                        borderWidth: 2,
+                        borderColor: '#ffffff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        }
+
+        // Initialize Timeline Chart with Chart.js
+        this.initializeTimelineChart();
+    }
+
+    async initializeTimelineChart() {
         try {
-            await this.updateChart(7);
+            const response = await fetch('/monitoring/api/timeline/?days=7');
+            const data = await response.json();
+            
+            const timelineCtx = document.getElementById('processing-chart');
+            if (timelineCtx && data.timeline) {
+                this.timelineChart = new Chart(timelineCtx, {
+                    type: 'line',
+                    data: {
+                        labels: data.timeline.map(d => new Date(d.date).toLocaleDateString()),
+                        datasets: [{
+                            label: 'Total Receipts',
+                            data: data.timeline.map(d => d.total),
+                            borderColor: '#3B82F6',
+                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            borderWidth: 2,
+                            fill: true
+                        }, {
+                            label: 'Completed',
+                            data: data.timeline.map(d => d.completed),
+                            borderColor: '#10B981',
+                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                            borderWidth: 2,
+                            fill: false
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                display: true,
+                                position: 'top'
+                            }
+                        }
+                    }
+                });
+            }
         } catch (error) {
-            console.error('Error initializing chart:', error);
+            console.error('Error initializing timeline chart:', error);
         }
     }
 
-    async updateChart(days) {
+    async updateTimelineChart(days) {
         try {
             const response = await fetch(`/monitoring/api/timeline/?days=${days}`);
             const data = await response.json();
             
-            // Simple chart rendering (you could replace this with Chart.js)
-            const canvas = document.getElementById('processing-chart');
-            if (canvas && data.timeline) {
-                const ctx = canvas.getContext('2d');
-                this.drawSimpleChart(ctx, data.timeline, canvas.width, canvas.height);
+            if (this.timelineChart && data.timeline) {
+                this.timelineChart.data.labels = data.timeline.map(d => new Date(d.date).toLocaleDateString());
+                this.timelineChart.data.datasets[0].data = data.timeline.map(d => d.total);
+                this.timelineChart.data.datasets[1].data = data.timeline.map(d => d.completed);
+                this.timelineChart.update();
             }
         } catch (error) {
-            console.error('Error updating chart:', error);
+            console.error('Error updating timeline chart:', error);
         }
-    }
-
-    drawSimpleChart(ctx, data, width, height) {
-        // Clear canvas
-        ctx.clearRect(0, 0, width, height);
-        
-        if (data.length === 0) return;
-        
-        const padding = 40;
-        const chartWidth = width - 2 * padding;
-        const chartHeight = height - 2 * padding;
-        
-        // Find max value for scaling
-        const maxValue = Math.max(...data.map(d => d.total));
-        
-        // Draw axes
-        ctx.strokeStyle = '#e5e7eb';
-        ctx.lineWidth = 1;
-        
-        // Y-axis
-        ctx.beginPath();
-        ctx.moveTo(padding, padding);
-        ctx.lineTo(padding, height - padding);
-        ctx.stroke();
-        
-        // X-axis
-        ctx.beginPath();
-        ctx.moveTo(padding, height - padding);
-        ctx.lineTo(width - padding, height - padding);
-        ctx.stroke();
-        
-        // Draw data points and lines
-        if (data.length > 1) {
-            const stepX = chartWidth / (data.length - 1);
-            
-            // Total receipts line (blue)
-            ctx.strokeStyle = '#3b82f6';
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            
-            data.forEach((point, index) => {
-                const x = padding + index * stepX;
-                const y = height - padding - (point.total / maxValue) * chartHeight;
-                
-                if (index === 0) {
-                    ctx.moveTo(x, y);
-                } else {
-                    ctx.lineTo(x, y);
-                }
-            });
-            ctx.stroke();
-            
-            // Completed receipts line (green)
-            ctx.strokeStyle = '#10b981';
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            
-            data.forEach((point, index) => {
-                const x = padding + index * stepX;
-                const y = height - padding - (point.completed / maxValue) * chartHeight;
-                
-                if (index === 0) {
-                    ctx.moveTo(x, y);
-                } else {
-                    ctx.lineTo(x, y);
-                }
-            });
-            ctx.stroke();
-        }
-        
-        // Add labels
-        ctx.fillStyle = '#6b7280';
-        ctx.font = '12px sans-serif';
-        ctx.textAlign = 'center';
-        
-        // Date labels (show every few points to avoid crowding)
-        const labelStep = Math.max(1, Math.floor(data.length / 5));
-        data.forEach((point, index) => {
-            if (index % labelStep === 0) {
-                const x = padding + (index / (data.length - 1)) * chartWidth;
-                const date = new Date(point.date).toLocaleDateString();
-                ctx.fillText(date, x, height - 10);
-            }
-        });
     }
 
     startAutoUpdate() {
         // Initial update
-        this.updateHealthStatus();
+        this.updateMonitoringStats();
         this.updateAlerts();
         
-        // Set up periodic updates
+        // Set up periodic updates every 5 seconds
         setInterval(() => {
-            this.updateHealthStatus();
+            this.updateMonitoringStats();
             this.updateAlerts();
         }, this.updateInterval);
     }
@@ -436,13 +512,13 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('chart-7d')?.addEventListener('click', async () => {
         document.getElementById('chart-7d').className = 'px-3 py-1 text-sm bg-blue-100 text-blue-800 rounded-lg';
         document.getElementById('chart-30d').className = 'px-3 py-1 text-sm bg-secondary-100 text-secondary-600 rounded-lg';
-        await dashboard.updateChart(7);
+        await dashboard.updateTimelineChart(7);
     });
     
     document.getElementById('chart-30d')?.addEventListener('click', async () => {
         document.getElementById('chart-30d').className = 'px-3 py-1 text-sm bg-blue-100 text-blue-800 rounded-lg';
         document.getElementById('chart-7d').className = 'px-3 py-1 text-sm bg-secondary-100 text-secondary-600 rounded-lg';
-        await dashboard.updateChart(30);
+        await dashboard.updateTimelineChart(30);
     });
 });
 </script>

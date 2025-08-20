@@ -224,5 +224,177 @@ def cache_result(cache_key_prefix: str, timeout: int = 3600):
     return decorator
 
 
-# Global cache service instance
-cache_service = CacheService()
+# Enhanced cache service with database fallback
+class IntelligentCacheService:
+    """
+    Intelligent cache service with Redis primary and database fallback.
+    Implements the caching strategy from FAZA 5 of the plan.
+    """
+    
+    def __init__(self):
+        self.redis_available = REDIS_AVAILABLE
+        self.redis_client = None
+        self.use_redis = REDIS_AVAILABLE and getattr(settings, 'USE_REDIS_CACHE', True)
+        self.default_timeout = getattr(settings, 'CACHE_DEFAULT_TIMEOUT', 300)
+        
+        if self.use_redis:
+            self._init_redis()
+    
+    def _init_redis(self):
+        """Initialize Redis connection."""
+        try:
+            redis_url = getattr(settings, 'REDIS_URL', 'redis://localhost:6379/0')
+            # For sync operations, we'll use the sync redis client
+            import redis as sync_redis
+            self.redis_client = sync_redis.from_url(redis_url, decode_responses=True)
+            # Test connection
+            self.redis_client.ping()
+        except Exception as e:
+            logger.warning(f"Failed to initialize Redis: {e}. Falling back to Django cache.")
+            self.use_redis = False
+            self.redis_client = None
+    
+    def get(self, key: str):
+        """
+        Get value from cache with intelligent fallback.
+        
+        Args:
+            key: Cache key
+            
+        Returns:
+            Cached value or None if not found
+        """
+        try:
+            # Try Redis cache first
+            if self.use_redis and self.redis_client:
+                result = self.redis_client.get(key)
+                if result is not None:
+                    logger.debug(f"Cache hit (Redis): {key}")
+                    try:
+                        return json.loads(result)
+                    except (json.JSONDecodeError, TypeError):
+                        return result
+                        
+        except Exception as e:
+            logger.warning(f"Redis cache error for key '{key}': {e}")
+            # Redis failed, mark as unavailable for this request
+            self.use_redis = False
+        
+        try:
+            # Fallback to Django database cache
+            result = cache.get(key)
+            if result is not None:
+                logger.debug(f"Cache hit (Database): {key}")
+                return result
+                
+        except Exception as e:
+            logger.error(f"Database cache error for key '{key}': {e}")
+        
+        logger.debug(f"Cache miss: {key}")
+        return None
+    
+    def set(self, key: str, value, timeout: Optional[int] = None):
+        """
+        Set value in cache with intelligent fallback.
+        
+        Args:
+            key: Cache key
+            value: Value to cache
+            timeout: Cache timeout in seconds
+            
+        Returns:
+            True if successfully cached in at least one backend
+        """
+        timeout = timeout or self.default_timeout
+        success = False
+        
+        try:
+            # Try Redis cache first
+            if self.use_redis and self.redis_client:
+                if isinstance(value, (dict, list)):
+                    self.redis_client.setex(key, timeout, json.dumps(value, default=str))
+                else:
+                    self.redis_client.setex(key, timeout, str(value))
+                success = True
+                logger.debug(f"Cached (Redis): {key}")
+                
+        except Exception as e:
+            logger.warning(f"Redis cache set error for key '{key}': {e}")
+            self.use_redis = False
+        
+        try:
+            # Always try to set in Django database cache as well
+            cache.set(key, value, timeout)
+            success = True
+            logger.debug(f"Cached (Database): {key}")
+            
+        except Exception as e:
+            logger.error(f"Database cache set error for key '{key}': {e}")
+        
+        return success
+    
+    def delete(self, key: str):
+        """Delete key from both cache backends."""
+        success = False
+        
+        try:
+            if self.use_redis and self.redis_client:
+                self.redis_client.delete(key)
+                success = True
+                logger.debug(f"Deleted from Redis: {key}")
+        except Exception as e:
+            logger.warning(f"Redis cache delete error for key '{key}': {e}")
+        
+        try:
+            cache.delete(key)
+            success = True
+            logger.debug(f"Deleted from Database: {key}")
+        except Exception as e:
+            logger.error(f"Database cache delete error for key '{key}': {e}")
+        
+        return success
+    
+    def get_or_set(self, key: str, default_func, timeout: Optional[int] = None):
+        """Get from cache or set using default function."""
+        result = self.get(key)
+        if result is None:
+            result = default_func()
+            self.set(key, result, timeout)
+        return result
+    
+    def check_status(self) -> dict:
+        """Check status of both cache backends."""
+        status = {
+            'redis': {'available': False, 'error': None},
+            'database': {'available': False, 'error': None}
+        }
+        
+        # Test Redis
+        try:
+            if self.redis_client:
+                self.redis_client.ping()
+                status['redis']['available'] = True
+        except Exception as e:
+            status['redis']['error'] = str(e)
+        
+        # Test Django cache (database)
+        try:
+            test_key = '_test_db_cache'
+            cache.set(test_key, 'test', 1)
+            cache.get(test_key)
+            cache.delete(test_key)
+            status['database']['available'] = True
+        except Exception as e:
+            status['database']['error'] = str(e)
+        
+        return status
+
+
+# Global cache service instances
+cache_service = CacheService()  # Original OCR/LLM cache service
+intelligent_cache = IntelligentCacheService()  # New intelligent cache with fallback
+
+
+def get_intelligent_cache():
+    """Get the intelligent cache service instance."""
+    return intelligent_cache

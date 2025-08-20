@@ -139,7 +139,7 @@ document.getElementById('receipt-upload-form').addEventListener('submit', functi
             // Update the view receipt link if we have receipt ID
             if (data.receipt_id) {
                 const viewLink = document.getElementById('view-receipt-link');
-                viewLink.href = '{% url "chatbot:receipt_processing_status" 0 %}'.replace('0', data.receipt_id);
+                viewLink.href = '{% url "inventory:receipt_processing_status" 0 %}'.replace('0', data.receipt_id);
             }
         } else {
             showError(data.error || 'Wystąpił nieoczekiwany błąd.');

@@ -5,7 +5,9 @@
 ✨ **Prywatność przede wszystkim** - Wszystkie dane pozostają na Twoim komputerze  
 🚀 **GPU Acceleration** - Wykorzystuje karty graficzne NVIDIA dla maksymalnej wydajności  
 🧠 **Multi-Agent Architecture** - Inteligentny system routingu i specjalizowanych agentów AI  
-📊 **Comprehensive Analytics** - Zaawansowane analizy wydatków i konsumpcji
+📊 **Advanced Analytics & Dashboard** - Zaawansowane analizy wydatków, konsumpcji i wizualizacje  
+🛒 **Complete Receipt Processing Pipeline** - Kompletny pipeline: OCR → Parse → Match → Inventory  
+🗄️ **Unified Inventory System** - Kompleksowy system zarządzania zapasami z alertami i śledzeniem dat ważności
 
 ---
 
@@ -25,17 +27,22 @@
 - Semantyczne wyszukiwanie w dokumentach z wykorzystaniem embeddings
 - Zaawansowane indeksowanie i kategoryzacja treści
 
-### 🛒 Receipt Processing Pipeline
-- Rozpoznawanie tekstu z paragonów (OCR) z EasyOCR i Tesseract
-- AI-powered parsing strukturalnych danych z paragonów
-- Automatyczne dopasowywanie produktów do katalogu
-- GPU-accelerated processing dla szybkiej analizy
+### 🛒 Complete Receipt Processing Pipeline
+- **Advanced OCR System**: EasyOCR (GPU-accelerated) + Tesseract fallback with confidence scoring
+- **Unified Receipt Model**: Single Receipt model consolidating all processing stages
+- **AI-Powered Parsing**: LLM-based structured data extraction using Qwen models
+- **Intelligent Product Matching**: Fuzzy matching with product catalog and automatic alias creation
+- **Async Background Processing**: Celery-based pipeline with real-time status updates
+- **Granular Status Tracking**: Complete pipeline visibility (uploaded→OCR→parsing→matching→inventory→review)
+- **Error Handling & Alerts**: Comprehensive error tracking with critical error notifications
 
-### 🏠 Inventory Management System
-- Automatyczne zarządzanie spiżarnią na podstawie paragonów
-- Tracking dat przydatności i alertów o produktach
-- System kategorii produktów z hierarchiczną strukturą
-- Analytics konsumpcji i trendów zakupowych
+### 🏠 Unified Inventory Management System
+- **Complete Data Models**: Receipt, ReceiptLineItem, Product, Category, InventoryItem, ConsumptionEvent
+- **Smart Expiry Management**: Automatic expiry date calculation based on category metadata
+- **Multi-Location Storage**: Fridge, freezer, pantry, cabinet with consumption tracking
+- **Advanced Analytics**: Spending patterns, consumption heatmaps, waste tracking
+- **Intelligent Alerts**: Expiry warnings, low stock notifications, reorder point management
+- **Batch Processing**: Support for batch receipt processing with transaction safety
 
 ### 🌐 External Integrations
 - Weather API (OpenWeatherMap) z intelligent routing
@@ -82,44 +89,52 @@ agenty/
 │   ├── settings.py                # Auto-detecting settings module
 │   ├── settings_dev.py            # Development (SQLite, Debug)
 │   ├── settings_prod.py           # Production (PostgreSQL optimized)
-│   ├── celery.py                  # Celery configuration with Redis
+│   ├── celery.py                  # Celery configuration with Valkey/Redis
 │   └── database_config.py         # Multi-database configuration
-- **Database**: PostgreSQL (recommended for production due to JSONB support), SQLite (for development)
 ├── chatbot/                       # Main AI Application
 │   ├── api/                      # REST API Layer
-│   │   ├── views.py              # Django views with @csrf_exempt
+│   │   ├── views.py              # Core API endpoints
 │   │   ├── receipt_views.py      # Receipt processing endpoints
-│   │   ├── drf_views.py          # Django REST Framework backup
+│   │   ├── tests.py              # Comprehensive API tests
+│   │   ├── tests_inventory.py    # Inventory API tests
 │   │   └── urls.py               # API routing and versioning
-│   ├── services/                 # Business Logic (Fat Service Layer)
+│   ├── services/                 # Business Logic Layer (35+ services)
 │   │   ├── agent_factory.py      # Multi-agent creation factory
 │   │   ├── agents.py             # Specialized AI agent implementations
 │   │   ├── model_router.py       # AI model routing and selection
-│   │   ├── receipt_service.py    # Receipt processing pipeline
-│   │   ├── receipt_processor_v2.py # Advanced receipt processing
-│   │   ├── ocr_service.py        # OCR backend abstraction
-│   │   ├── vision_service.py     # Vision processing utilities
-│   │   ├── product_matcher.py    # Product matching algorithms
-│   │   ├── inventory_service.py  # Inventory management logic
-│   │   ├── cache_service.py      # Redis/DB cache abstraction
-│   │   └── async_services.py     # Async operation handlers
-│   ├── models.py                 # Fat Models with business logic
+│   │   ├── unified_receipt_processor.py # NEW: Unified receipt processing pipeline
+│   │   ├── receipt_parser.py     # Receipt text parsing with LLM
+│   │   ├── product_matcher.py    # Advanced product matching with fuzzy logic
+│   │   ├── inventory_service.py  # Inventory management business logic
+│   │   ├── async_ocr_service.py  # Async OCR processing service
+│   │   ├── hybrid_ocr_service.py # EasyOCR + Tesseract hybrid
+│   │   ├── cache_service.py      # Multi-tier caching (Redis + DB)
+│   │   ├── async_services.py     # Async operation handlers
+│   │   ├── websocket_notifier.py # Real-time notifications
+│   │   ├── monitoring.py         # System health monitoring
+│   │   └── optimized_queries.py  # Database query optimization
+│   ├── models.py                 # Fat Models: Agent, Document, Conversation, Message
 │   ├── tasks.py                  # Celery background tasks
+│   ├── tasks_alerts.py           # Alert and notification tasks
 │   ├── views.py                  # HTML template views
-│   └── templates/                # Modern responsive templates
-├── inventory/                     # Inventory Management App
-│   ├── models.py                 # Product, Receipt, InventoryItem models
-│   ├── views.py                  # Inventory dashboard and analytics
-│   └── templates/                # Inventory-specific UI components
-└── requirements.txt              # Production dependencies
+│   ├── views_monitoring.py       # Monitoring dashboard views
+│   └── templates/                # Modern responsive UI templates
+├── inventory/                     # NEW: Dedicated Inventory App
+│   ├── models.py                 # UNIFIED: Receipt, ReceiptLineItem, Product, Category, InventoryItem, ConsumptionEvent
+│   ├── views.py                  # Dashboard with analytics and visualizations
+│   ├── templates/inventory/      # Complete inventory UI components
+│   ├── tests_performance.py     # Performance optimization tests
+│   └── urls.py                   # Inventory routing
+└── requirements.txt              # Production dependencies (45+ packages)
 ```
 
 ### AI & Machine Learning Infrastructure
-- **Ollama Integration**: Local LLM serving with GPU optimization
-- **Model Router**: Intelligent routing to specialized models
+- **Ollama Integration**: Local LLM serving with GPU optimization (qwen2:7b, mistral:7b, qwen2.5vl:7b)
+- **Multi-Agent System**: Router agents with specialized task routing
 - **ChromaDB**: Vector database for RAG and semantic search
-- **EasyOCR/Tesseract**: Multi-backend OCR with fallback support
-- **Multi-Agent Architecture**: Specialized agents for different tasks
+- **Advanced OCR Pipeline**: EasyOCR (GPU) + Tesseract fallback with confidence scoring
+- **Receipt AI Processing**: LLM-powered structured data extraction from OCR text
+- **Product Matching**: Fuzzy matching with aliases and barcode support
 
 ### Frontend Architecture (Modern Responsive Design)
 - **Vanilla JavaScript**: High-performance client-side logic
@@ -134,10 +149,11 @@ agenty/
 
 ### ✅ Każdy komputer może uruchomić Agenty
 **Podstawowe wymagania (wystarczy dla wszystkich funkcji):**
-- Komputer z systemem Windows, Mac lub Linux
+- Komputer z systemem Linux (CachyOS, Ubuntu, Debian, Arch)
 - **8 GB pamięci RAM** (4GB minimum, ale 8GB zalecane dla płynności)
-- **10 GB wolnego miejsca na dysku** (dla wszystkich modeli AI)
-- Nowoczesna przeglądarka internetowa
+- **15 GB wolnego miejsca na dysku** (dla wszystkich modeli AI)
+- Python 3.13+ z venv
+- Valkey/Redis dla cache'owania i kolejek zadań
 
 ### 🚀 Mam kartę graficzną NVIDIA? Świetnie!
 **Jeśli masz kartę RTX (2000, 3000, 4000 series):**
@@ -159,10 +175,10 @@ System sam zainstaluje wszystko co potrzebne:
 - **Interfejs webowy** z nowoczesnym designem
 
 **📥 Pobieranie modeli AI (automatyczne):**
-- **Pierwszy start:** Pobieranie Bielik + mxbai (~8.6GB total)
+- **Pierwszy start:** Pobieranie qwen2:7b + mistral:7b + qwen2.5vl:7b (~15GB total)
 - **Pierwszy dokument:** Pobranie modelu RAG (jeśli nie było wcześniej)
 - **Pierwszy paragon:** Pobranie modeli OCR (~50MB)
-- **Na szybkim internecie:** 15-20 minut całość
+- **Na szybkim internecie:** 25-30 minut całość
 - **Modele zostają na zawsze** - następne uruchomienia: instant!
 
 ---
@@ -209,12 +225,13 @@ cp .env.example .env
 ./start.sh
 
 # System automatycznie wykonuje:
-# ✅ Sprawdza i konfiguruje środowisko GPU
-# ✅ Uruchamia Ollama z optymalizacją dla NVIDIA
-# ✅ Pobiera wymagane modele AI (qwen2:7b, qwen2.5vl:7b, mistral:7b)
-# ✅ Konfiguruje Redis/Valkey dla cache'owania
+# ✅ Sprawdza i konfiguruje środowisko GPU (NVIDIA)
+# ✅ Uruchamia Ollama z optymalizacją dla RTX 3060/4060
+# ✅ Sprawdza dostępność modeli AI (qwen2:7b, qwen2.5vl:7b, mistral:7b)
+# ✅ Konfiguruje Valkey/Redis dla cache'owania i kolejek
+# ✅ Stosuje migracje bazy danych (SQLite dev/PostgreSQL prod)
 # ✅ Uruchamia Celery worker dla zadań w tle
-# ✅ Startuje Django development server
+# ✅ Startuje Django development server (127.0.0.1:8000)
 ```
 
 **🕐 First Installation Timeline:**
@@ -248,11 +265,19 @@ Otwórz przeglądarkę i wejdź na:
 
 ### 🎯 Current Model Configuration
 
-**Primary Models (Auto-downloaded via start.sh):**
-- **qwen2:7b** - Main conversational AI model for Polish language support
-- **qwen2.5vl:7b** - Vision-language model for image and document analysis  
-- **mistral:7b** - Backup/alternative model for specialized tasks
-- **mxbai-embed-large** - RAG embeddings for semantic document search
+**Primary Models (Manual download required):**
+- **qwen2:7b** (~4.5GB) - Main conversational AI model
+- **qwen2.5vl:7b** (~4.9GB) - Vision-language model for receipt and document analysis  
+- **mistral:7b** (~4.1GB) - Alternative model for specialized tasks
+- **mxbai-embed-large** (~670MB) - RAG embeddings for semantic document search
+
+**Download Commands:**
+```bash
+ollama pull qwen2:7b
+ollama pull qwen2.5vl:7b
+ollama pull mistral:7b
+ollama pull mxbai-embed-large
+```
 
 ### 🚀 GPU Optimization & Performance
 
@@ -265,9 +290,9 @@ export CUDA_VISIBLE_DEVICES=0         # Primary GPU only
 ```
 
 **Performance Benchmarks:**
-- **RTX 3060/4060**: 3-8 seconds response time, ~2GB VRAM usage
-- **RTX 3070+**: 2-5 seconds response time, ~2.5GB VRAM usage  
-- **CPU Fallback**: 15-30 seconds response time, ~8GB RAM usage
+- **RTX 3060**: 5-10 seconds response time, ~3GB VRAM usage (optimized for 8GB VRAM)
+- **RTX 4060+**: 3-8 seconds response time, ~2.5GB VRAM usage  
+- **CPU Fallback**: 20-45 seconds response time, ~8GB RAM usage
 
 ### 🔧 Multi-Backend OCR System
 
@@ -325,10 +350,11 @@ nvidia-smi -l 1
 ```
 
 **💡 Total Storage Requirements:**
-- Core models (qwen2:7b + qwen2.5vl:7b + mistral:7b): ~20GB
+- Core models (qwen2:7b + qwen2.5vl:7b + mistral:7b): ~14GB
 - RAG embeddings (mxbai-embed-large): ~670MB
 - OCR models (EasyOCR): ~50MB
-- **Total: ~21GB for full capabilities**
+- Application code + database + logs: ~500MB
+- **Total: ~15GB for full capabilities**
 
 ---
 
@@ -375,15 +401,18 @@ nvidia-smi -l 1
 - Lub zeskanuj paragon jako PDF
 - Prześlij przez stronę z uploadem
 
-**Krok 2: Magia się dzieje automatycznie ✨**
-- System rozpoznaje tekst (wykorzystuje kartę graficzną dla szybkości!)
-- AI wyciąga nazwy produktów, ceny, ilości
-- Automatycznie dodaje produkty do Twojej cyfrowej spiżarni
+**Krok 2: Kompletny pipeline automatyczny ✨**
+- **OCR**: System rozpoznaje tekst (GPU-accelerated dla szybkości!)
+- **AI Parsing**: LLM wyciąga strukturalne dane (produkty, ceny, ilości)
+- **Product Matching**: Inteligentne dopasowywanie do katalogu produktów
+- **Inventory Update**: Automatyczne dodanie do spiżarni z datami ważności
+- **Real-time Status**: Otrzymujesz powiadomienia na każdym etapie
 
-**Krok 3: Sprawdź wyniki**
-- Dostaniesz listę rozpoznanych produktów
-- Możesz poprawić błędy jeśli jakieś są
-- Kliknij "Zatwierdź" i produkty trafiają do spiżarni
+**Krok 3: Przegląd i zatwierdzenie**
+- System automatycznie przeanalizuje paragon
+- Otrzymujesz powiadomienie o zakończeniu przetwarzania
+- Możesz przejrzeć rozpoznane produkty w dashboard
+- Produkty automatycznie trafiają do spiżarni z obliczonymi datami ważności
 
 **Co zyskujesz:**
 - Nie musisz ręcznie przepisywać zakupów
@@ -391,8 +420,9 @@ nvidia-smi -l 1
 - Możesz pytać AI "Co mam w lodówce?"
 - Dostaniesz przypomnienia o produktach kończących się
 
-**🚀 Z kartą NVIDIA:** Analiza zajmuje ~10 sekund  
-**💻 Na zwykłym procesorze:** Analiza zajmuje ~30 sekund
+**🚀 Z kartą NVIDIA:** Kompletny pipeline zajmuje ~15-30 sekund  
+**💻 Na zwykłym procesorze:** Kompletny pipeline zajmuje ~45-60 sekund  
+**⚡ Real-time Updates:** Otrzymujesz powiadomienia na każdym etapie przetwarzania
 
 ### 🏠 Twoja cyfrowa spiżarnia
 
@@ -414,11 +444,13 @@ nvidia-smi -l 1
 - "Co mi się kończy?" - Pokaże produkty o kończących się terminach
 - "Co mogę ugotować?" - Zaproponuje przepisy na podstawie produktów
 
-**Panel zarządzania:**
-- Zobacz wszystkie produkty na jednej liście
-- Edytuj daty, ilości, nazwy
-- Oznacz jako zużyte lub wyrzucone
-- Historia zakupów i wydatków
+**Advanced Analytics Dashboard:**
+- Zobacz wszystkie produkty z filtrowaniem i wyszukiwaniem
+- Heatmapy konsumpcji i wzorce wydatkowania
+- Analiza top kategorii i trendów zakupowych
+- Wizualizacje aktywności i alertów dotyczących dat ważności
+- Historia zakupów z detalami finansowymi
+- Raporty waste'u i optymalizacji zakupów
 
 ### 🌐 Integracje Zewnętrzne
 
@@ -643,33 +675,35 @@ LOGGING = {
 
 ---
 
-## 📊 Current Development Status (v2.5)
+## 📊 Current Development Status (v4.0)
 
 ### ✅ Production-Ready Features
-- **🏗️ Multi-Agent Architecture** - Intelligent routing and specialized AI agents
-- **⚡ GPU-Optimized Pipeline** - NVIDIA GPU acceleration for OCR and AI inference
-- **📊 Advanced Analytics** - Comprehensive inventory and consumption analytics
-- **🔄 Async Processing** - Celery-based background task processing
-- **💾 Intelligent Caching** - Redis primary with database fallback
-- **🗄️ RAG Document System** - ChromaDB vector database with semantic search
-- **🛒 Receipt Processing Pipeline** - End-to-end OCR → Parse → Match → Inventory
-- **📱 Responsive UI/UX** - Modern glassmorphism design with Tailwind CSS
-- **🔒 Production Security** - CSRF, input validation, error handling
+- **🏗️ Multi-Agent Architecture** - Router-based agent system with specialized task routing and model selection
+- **⚡ GPU-Optimized Pipeline** - RTX 3060/4060 optimized NVIDIA GPU acceleration with memory management
+- **🛒 Complete Receipt Processing Pipeline** - Unified OCR (EasyOCR+Tesseract) → LLM Parse → Fuzzy Match → Inventory
+- **📦 Unified Inventory Management** - Single Receipt model with complete product lifecycle tracking
+- **🔄 Async Background Processing** - Celery tasks with real-time WebSocket notifications and error alerts
+- **💾 Multi-Tier Intelligent Caching** - Redis primary with database fallback and optimized queries
+- **🗄️ Advanced RAG Document System** - ChromaDB vector database with semantic search and context management
+- **📱 Modern Analytics Dashboard** - Responsive UI with consumption heatmaps, spending analytics, and visualizations
+- **🔒 Enterprise Security** - Comprehensive CSRF protection, file validation, and secure processing
+- **🧪 Comprehensive Testing Suite** - 40+ test files covering all components with performance benchmarking
 
-### 🔄 Current Development Focus
-- **🤖 Advanced AI Model Integration** - Fine-tuning model selection and routing
-- **📈 Performance Optimization** - Memory usage and response time improvements  
-- **🧪 Enhanced Testing Suite** - Comprehensive unit and integration tests
-- **📊 Dashboard Analytics** - Real-time consumption and spending insights
-- **🔧 System Monitoring** - Health checks and performance metrics
+### ✅ Latest Implementation Achievements (Recent Commits)
+- **✅ Unified Receipt Model** - Complete consolidation of receipt processing into single model
+- **✅ Advanced Analytics Dashboard** - Spending patterns, consumption heatmaps, and inventory insights  
+- **✅ Real-time Status Updates** - WebSocket-based progress monitoring for receipt processing
+- **✅ Intelligent Product Matching** - Fuzzy matching with automatic alias creation and confidence scoring
+- **✅ Critical Error Alert System** - Automated error notifications with detailed diagnostics
+- **✅ Performance Optimization** - Query optimization and database indexing for large datasets
 
-### 🎯 Next Major Features (v3.0)
-- **🌙 Dark Mode Support** - Complete UI theme system
-- **🔔 Real-time Notifications** - WebSocket-based live updates
-- **📱 Progressive Web App** - Mobile-first PWA implementation
-- **🗣️ Voice Interface** - Speech-to-text conversational AI
-- **📊 Advanced Reports** - Export capabilities and trend analysis
-- **👥 Multi-user Support** - User management and permissions
+### 🎯 Future Enhancements
+- **🌙 Dark Mode Support** - Complete UI theme system with user preferences
+- **📱 Progressive Web App** - Mobile-first PWA implementation with offline capabilities
+- **🤖 AI Recipe Suggestions** - Smart meal planning based on current inventory
+- **📦 Barcode Scanning** - Mobile barcode scanner integration for manual product entry
+- **🔔 Enhanced Push Notifications** - Mobile push notifications for expiry alerts
+- **📊 Advanced Waste Analytics** - Food waste tracking and optimization suggestions
 
 ### 🚀 Long-term Vision
 - **🔗 IoT Integration** - Smart home device connectivity

@@ -10,6 +10,7 @@ logs/
 *.sqlite3
 *.rdb
 *.db
+chroma_db/
 
 # Virtual environment
 .venv/
@@ -26,3 +27,4 @@ benchmark_results_*.json
 # Other generated files
 .coverage
 .ruff_cache/
+inspiration/

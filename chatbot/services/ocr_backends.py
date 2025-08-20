@@ -239,10 +239,11 @@ class EasyOCRBackend(OCRBackend):
                     finally:
                         os.unlink(temp_img_path)
 
-            doc.close()
-
             combined_text = "\n\n".join(all_text)
             avg_confidence = total_confidence / page_count if page_count > 0 else 0.0
+
+            total_pages = len(doc) if hasattr(doc, '__len__') else 0
+            doc.close()
 
             return OCRResult(
                 text=combined_text,
@@ -251,7 +252,7 @@ class EasyOCRBackend(OCRBackend):
                 processing_time=0.0,  # Will be set by parent
                 metadata={
                     "pages_processed": page_count,
-                    "total_pages": len(doc) if "doc" in locals() else 0,
+                    "total_pages": total_pages,
                     "languages": self.languages,
                 },
                 success=True,
@@ -416,10 +417,11 @@ class TesseractBackend(OCRBackend):
                         total_confidence += page_confidence
                         page_count += 1
 
-            doc.close()
-
             combined_text = "\n\n".join(all_text)
             avg_confidence = total_confidence / page_count if page_count > 0 else 0.0
+
+            total_pages = len(doc) if hasattr(doc, '__len__') else 0
+            doc.close()
 
             return OCRResult(
                 text=combined_text,
@@ -428,7 +430,7 @@ class TesseractBackend(OCRBackend):
                 processing_time=0.0,  # Will be set by parent
                 metadata={
                     "pages_processed": page_count,
-                    "total_pages": len(doc) if "doc" in locals() else 0,
+                    "total_pages": total_pages,
                     "language": self.language,
                 },
                 success=True,

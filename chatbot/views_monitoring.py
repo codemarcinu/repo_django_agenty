@@ -4,15 +4,60 @@ Implements monitoring dashboards from FAZA 4 of the plan.
 """
 
 import json
+import subprocess
 from datetime import datetime, timedelta
 
+import redis
+from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.shortcuts import render
 from django.utils import timezone
 from django.views.decorators.http import require_http_methods
+from django.db.models import Q # Import Q for complex lookups
 
+from inventory.models import Receipt, InventoryItem
+from chatbot.models import Agent
 from .services.monitoring import get_receipt_monitor, get_alerting_system, check_system_health
+from .services.optimized_queries import get_receipts_for_listing
+
+
+def check_redis_status():
+    try:
+        # Assuming Redis connection details are in settings.py
+        # For simplicity, using default host/port. Adjust if needed.
+        r = redis.StrictRedis(
+            host=settings.REDIS_HOST,
+            port=settings.REDIS_PORT,
+            db=settings.REDIS_DB,
+            socket_connect_timeout=1, # Short timeout
+        )
+        r.ping()
+        return True
+    except redis.exceptions.ConnectionError:
+        return False
+    except Exception:
+        return False
+
+
+def check_ollama_status():
+    try:
+        # Execute 'ollama list' command
+        result = subprocess.run(
+            ["ollama", "list"],
+            capture_output=True,
+            text=True,
+            check=True,
+            timeout=5, # Short timeout
+        )
+        # If command runs successfully, Ollama is likely up
+        return True
+    except (subprocess.CalledProcessError, FileNotFoundError, subprocess.TimeoutExpired):
+        return False
+    except Exception:
+        return False
+
+
 
 
 @login_required
@@ -33,6 +78,15 @@ def monitoring_dashboard(request):
         
         # Get recent alerts
         recent_alerts = monitor.get_recent_alerts(hours=24)
+
+        # Get statistics from models
+        receipt_stats = Receipt.get_statistics()
+        inventory_stats = InventoryItem.get_statistics()
+        agent_stats = Agent.get_statistics()
+
+        # Check external service statuses
+        redis_status = check_redis_status()
+        ollama_status = check_ollama_status()
         
         context = {
             'health_summary': health_summary,
@@ -40,7 +94,12 @@ def monitoring_dashboard(request):
             'metrics_7d': metrics_7d,
             'metrics_30d': metrics_30d,
             'recent_alerts': recent_alerts,
-            'page_title': 'Receipt Processing Monitoring',
+            'receipt_stats': receipt_stats,
+            'inventory_stats': inventory_stats,
+            'agent_stats': agent_stats,
+            'redis_status': redis_status,
+            'ollama_status': ollama_status,
+            'page_title': 'System Monitoring Dashboard',
         }
         
         return render(request, 'chatbot/monitoring_dashboard.html', context)
@@ -48,8 +107,43 @@ def monitoring_dashboard(request):
     except Exception as e:
         return render(request, 'chatbot/monitoring_dashboard.html', {
             'error': f'Error loading monitoring data: {str(e)}',
-            'page_title': 'Receipt Processing Monitoring - Error',
+            'page_title': 'System Monitoring Dashboard - Error',
         })
+
+
+@login_required
+@require_http_methods(["GET"])
+def monitoring_stats_api(request):
+    """
+    API endpoint for aggregated monitoring statistics.
+    Returns JSON with key metrics and service statuses.
+    """
+    try:
+        # Get statistics from models
+        receipt_stats = Receipt.get_statistics()
+        inventory_stats = InventoryItem.get_statistics()
+        agent_stats = Agent.get_statistics()
+
+        # Check external service statuses
+        redis_status = check_redis_status()
+        ollama_status = check_ollama_status()
+
+        data = {
+            'receipt_stats': receipt_stats,
+            'inventory_stats': inventory_stats,
+            'agent_stats': agent_stats,
+            'service_statuses': {
+                'redis': redis_status,
+                'ollama': ollama_status,
+            },
+            'timestamp': timezone.now().isoformat(),
+        }
+        return JsonResponse(data)
+    except Exception as e:
+        return JsonResponse({
+            'status': 'error',
+            'message': str(e)
+        }, status=500)
 
 
 @login_required
@@ -164,8 +258,8 @@ def api_processing_timeline(request):
         
         cutoff_date = timezone.now() - timedelta(days=days)
         
-        # Get daily receipt counts
-        daily_data = Receipt.objects.filter(
+        # Get daily receipt counts using optimized query
+        daily_data = get_receipts_for_listing().filter(
             created_at__gte=cutoff_date
         ).extra(
             select={'day': 'date(created_at)'}

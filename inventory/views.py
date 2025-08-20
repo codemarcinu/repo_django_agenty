@@ -9,8 +9,14 @@ from django.core.paginator import Paginator
 from django.db.models import Count, F, Q, Sum
 from django.shortcuts import render
 from django.views.generic import DetailView, ListView
+from django.http import JsonResponse 
+from celery.result import AsyncResult 
 
 from chatbot.services.inventory_service import get_inventory_service
+from chatbot.services.optimized_queries import (
+    get_receipts_for_listing,
+    get_inventory_items_for_listing,
+)
 
 from .models import (
     Category,
@@ -36,11 +42,7 @@ def dashboard(request):
     low_stock_items = inventory_service.get_low_stock_items()[:5]
 
     # Get recent receipts (optimized)
-    recent_receipts = (
-        Receipt.objects.filter(status="completed")
-        .select_related()
-        .order_by("-purchased_at")[:5]
-    )
+    recent_receipts = get_receipts_for_listing().filter(status="completed")[:5]
 
     # Get advanced statistics (Prompt 10 features)
     top_categories = inventory_service.get_top_spending_categories(days=30)
@@ -69,11 +71,7 @@ class InventoryListView(ListView):
     paginate_by = 20
 
     def get_queryset(self):
-        queryset = (
-            InventoryItem.objects.select_related("product", "product__category")
-            .filter(quantity_remaining__gt=0)
-            .order_by("-purchase_date")
-        )
+        queryset = get_inventory_items_for_listing()
 
         # Filter by search query
         search = self.request.GET.get("search")
@@ -224,7 +222,7 @@ class ReceiptListView(ListView):
     paginate_by = 20
 
     def get_queryset(self):
-        queryset = Receipt.objects.order_by("-purchased_at")
+        queryset = get_receipts_for_listing()
 
         # Filter by search query
         search = self.request.GET.get("search")
@@ -312,13 +310,7 @@ def low_stock_items(request):
 
 def inventory_by_location(request, location):
     """View for inventory items filtered by storage location."""
-    items = (
-        InventoryItem.objects.filter(
-            storage_location=location, quantity_remaining__gt=0
-        )
-        .select_related("product", "product__category")
-        .order_by("-purchase_date")
-    )
+    items = get_inventory_items_for_listing().filter(storage_location=location)
 
     # Add pagination
     paginator = Paginator(items, 20)
@@ -340,7 +332,7 @@ def inventory_by_location(request, location):
 
 def recent_receipts(request):
     """View for recent receipts."""
-    receipts = Receipt.objects.filter(status="completed").order_by("-purchased_at")[:20]
+    receipts = get_receipts_for_listing().filter(status="completed")[:20]
 
     context = {
         "receipts": receipts,
@@ -371,3 +363,26 @@ def upload_receipt(request):
     # This is a placeholder - the actual upload functionality
     # is handled by the API endpoint
     return render(request, "inventory/upload_receipt.html")
+
+
+def receipt_processing_status(request, receipt_id):
+    """
+    Checks the status of a receipt processing task.
+    """
+    try:
+        receipt = Receipt.objects.get(pk=receipt_id)
+        if receipt.task_id:
+            task_result = AsyncResult(receipt.task_id)
+            status = task_result.status
+            result = task_result.result
+        else:
+            status = receipt.status
+            result = receipt.processing_notes
+            
+        return JsonResponse({
+            "receipt_id": receipt_id,
+            "status": status,
+            "result": result
+        })
+    except Receipt.DoesNotExist:
+        return JsonResponse({"error": "Receipt not found"}, status=404)
