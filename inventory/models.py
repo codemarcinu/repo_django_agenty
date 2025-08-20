@@ -182,17 +182,11 @@ class Receipt(models.Model):
     ]
 
     STATUS_CHOICES = [
-        ("pending", "Pending Processing"),
-        ("pending_ocr", "Pending OCR"),  # Legacy compatibility
-        ("processing", "Processing in Progress"),
-        ("processing_ocr", "OCR in Progress"),  # Legacy compatibility
-        ("ocr_completed", "OCR Completed"),  # Legacy compatibility
-        ("processing_parsing", "Processing Parsing"),  # Legacy compatibility
-        ("parsing_completed", "Parsing Completed"),  # Legacy compatibility
-        ("matching", "Matching Products"),  # Legacy compatibility
-        ("ready_for_review", "Ready for Review"),
-        ("completed", "Completed"),
-        ("error", "Error"),
+        ("pending", "Oczekuje"),
+        ("processing", "W trakcie przetwarzania"),
+        ("review_pending", "Oczekuje na weryfikację"),
+        ("completed", "Zakończono"),
+        ("error", "Błąd"),
     ]
 
     PROCESSING_STEP_CHOICES = [
@@ -319,7 +313,7 @@ class Receipt(models.Model):
 
     def mark_as_ready_for_review(self):
         """Mark receipt as ready for user review"""
-        self.status = "ready_for_review"
+        self.status = "review_pending"
         self.processing_step = "review_pending"
         self.save()
 
@@ -339,7 +333,7 @@ class Receipt(models.Model):
 
     def is_ready_for_review(self) -> bool:
         """Check if receipt is ready for user review"""
-        return self.status == "ready_for_review"
+        return self.status == "review_pending"
 
     def is_completed(self) -> bool:
         """Check if receipt processing is completed"""
@@ -409,11 +403,11 @@ class Receipt(models.Model):
         """Get receipt processing statistics"""
         return {
             "total": cls.objects.count(),
-            "uploaded": cls.objects.filter(status="uploaded").count(),
+            "pending": cls.objects.filter(status="pending").count(),
             "processing": cls.objects.filter(
                 status="processing"
             ).count(),
-            "ready_for_review": cls.objects.filter(status="ready_for_review").count(),
+            "review_pending": cls.objects.filter(status="review_pending").count(),
             "completed": cls.objects.filter(status="completed").count(),
             "error": cls.objects.filter(status="error").count(),
         }
