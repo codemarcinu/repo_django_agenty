@@ -123,7 +123,7 @@ class ProductMatcher:
         self.exact_match_threshold = 0.95
         self.fuzzy_match_threshold = 0.7
 
-    def match_product(self, parsed_product: ParsedProduct) -> MatchResult:
+    def match_product(self, parsed_product: ParsedProduct, all_parsed_products: list[ParsedProduct] = None) -> MatchResult:
         """
         Match a parsed product to existing catalog product.
 
@@ -168,15 +168,33 @@ class ProductMatcher:
         # Try fuzzy match
         fuzzy_match, similarity = self._find_fuzzy_match(normalized_name)
         if fuzzy_match and similarity >= self.fuzzy_match_threshold:
+            # Apply category-based boosting
+            boosted_similarity = similarity
+            dominant_category = None
+            if all_parsed_products:
+                dominant_category = self._get_dominant_category(all_parsed_products)
+
+            if dominant_category:
+                # Get category of the fuzzy matched product
+                matched_product_category = fuzzy_match.category
+                if not matched_product_category:
+                    # If product has no category, try to guess from its name
+                    matched_product_category = self._guess_category(fuzzy_match.name)
+
+                if matched_product_category and matched_product_category.id == dominant_category.id:
+                    boost_amount = 0.1 # Small boost for category alignment
+                    boosted_similarity = min(1.0, similarity + boost_amount)
+                    logger.debug(f"Category boost applied for {fuzzy_match.name}. New similarity: {boosted_similarity:.2f}")
+
             logger.info(
-                f"Fuzzy match found: {fuzzy_match.name} (similarity: {similarity:.2f})"
+                f"Fuzzy match found: {fuzzy_match.name} (similarity: {boosted_similarity:.2f})"
             )
             return MatchResult(
                 product=fuzzy_match,
-                confidence=similarity,
+                confidence=boosted_similarity,
                 match_type="fuzzy",
                 normalized_name=normalized_name,
-                similarity_score=similarity,
+                similarity_score=boosted_similarity,
             )
 
         # No match found - create new ghost product
@@ -382,6 +400,23 @@ class ProductMatcher:
             logger.error(f"Error guessing category: {e}")
             return None
 
+    def _get_dominant_category(self, all_parsed_products: list[ParsedProduct]) -> Category | None:
+        """
+        Determine the most frequent category among all parsed products on a receipt.
+        """
+        category_counts = {}
+        for p_product in all_parsed_products:
+            normalized_name = self.normalize_product_name(p_product.name)
+            guessed_category = self._guess_category(normalized_name)
+            if guessed_category:
+                category_counts[guessed_category.id] = category_counts.get(guessed_category.id, 0) + 1
+        
+        if not category_counts:
+            return None
+        
+        dominant_category_id = max(category_counts, key=category_counts.get)
+        return Category.objects.get(id=dominant_category_id)
+
     def batch_match_products(
         self, parsed_products: list[ParsedProduct]
     ) -> list[MatchResult]:
@@ -399,7 +434,7 @@ class ProductMatcher:
         results = []
         for parsed_product in parsed_products:
             try:
-                result = self.match_product(parsed_product)
+                result = self.match_product(parsed_product, all_parsed_products=parsed_products)
                 results.append(result)
             except Exception as e:
                 logger.error(f"Error matching product '{parsed_product.name}': {e}")
