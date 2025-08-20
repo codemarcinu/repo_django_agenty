@@ -6,7 +6,7 @@ Combines multiple OCR engines with confidence scoring and automatic fallback.
 import logging
 import asyncio
 from typing import Dict, List, Optional, Tuple
-from dataclasses import dataclass
+from .ocr_backends import OCRResult, GoogleVisionBackend
 from abc import ABC, abstractmethod
 import time
 from pathlib import Path
@@ -14,18 +14,7 @@ from pathlib import Path
 logger = logging.getLogger(__name__)
 
 
-@dataclass
-class OCRResult:
-    """Result from OCR processing."""
-    text: str
-    confidence: float
-    method: str
-    processing_time: float
-    metadata: Dict = None
-    
-    def __post_init__(self):
-        if self.metadata is None:
-            self.metadata = {}
+
 
 
 class OCRBackend(ABC):
@@ -299,7 +288,8 @@ class HybridOCRService:
         self.backends = [
             EasyOCRBackend(),
             TesseractBackend(),
-            PaddleOCRBackend()
+            PaddleOCRBackend(),
+            GoogleVisionBackend() # Added Google Vision Backend
         ]
         
         # Filter available backends
@@ -333,33 +323,68 @@ class HybridOCRService:
         # Use processed image if available, otherwise use original
         ocr_image_path = processing_result.processed_path if processing_result.success else image_path
         
-        # Try multiple backends
-        results = []
-        backends_tried = 0
+        # Define confidence thresholds for adaptive OCR
+        HIGH_CONFIDENCE_THRESHOLD = 0.85 # Image is very clear, try fast OCR first
+        MEDIUM_CONFIDENCE_THRESHOLD = 0.6 # Image is decent, use hybrid approach
+        LOW_CONFIDENCE_THRESHOLD = 0.3 # Image is poor, try robust OCR first
+
+        # Determine OCR strategy based on image processing confidence
+        ocr_backends_to_try = []
+        if processing_result.confidence >= HIGH_CONFIDENCE_THRESHOLD:
+            logger.info(f"Image confidence {processing_result.confidence:.2f} is HIGH. Prioritizing fast OCR.")
+            # Try Tesseract first for speed, then EasyOCR
+            for b in self.available_backends:
+                if b.name == "Tesseract":
+                    ocr_backends_to_try.append(b)
+            for b in self.available_backends:
+                if b.name == "EasyOCR":
+                    ocr_backends_to_try.append(b)
+            # Fallback to PaddleOCR if others fail
+            for b in self.available_backends:
+                if b.name == "PaddleOCR":
+                    ocr_backends_to_try.append(b)
+        elif processing_result.confidence >= MEDIUM_CONFIDENCE_THRESHOLD:
+            logger.info(f"Image confidence {processing_result.confidence:.2f} is MEDIUM. Using hybrid OCR.")
+            # Use the existing order (EasyOCR, Tesseract, PaddleOCR)
+            ocr_backends_to_try = self.available_backends
+        else:
+            logger.info(f"Image confidence {processing_result.confidence:.2f} is LOW. Prioritizing robust OCR.")
+            # Try Google Vision first, then PaddleOCR, then others
+            for b in self.available_backends:
+                if b.name == "google_vision":
+                    ocr_backends_to_try.append(b)
+            for b in self.available_backends:
+                if b.name == "PaddleOCR":
+                    ocr_backends_to_try.append(b)
+            for b in self.available_backends:
+                if b.name not in ["google_vision", "PaddleOCR"]:
+                    ocr_backends_to_try.append(b)
+
+        # Ensure unique backends and respect max_backends
+        unique_backends_to_try = []
+        seen_names = set()
+        for backend in ocr_backends_to_try:
+            if backend.name not in seen_names:
+                unique_backends_to_try.append(backend)
+                seen_names.add(backend.name)
         
-        for backend in self.available_backends:
-            if backends_tried >= self.max_backends:
-                break
-            
+        # Limit to max_backends
+        final_backends_to_try = unique_backends_to_try[:self.max_backends]
+
+        results = []
+        for backend in final_backends_to_try:
             try:
-                logger.info(f"Trying OCR with {backend.name}")
-                
-                # Run OCR with timeout
+                logger.info(f"Trying OCR with {backend.name} (Adaptive Strategy)")
                 result = await asyncio.wait_for(
                     backend.extract_text(ocr_image_path),
                     timeout=self.timeout
                 )
-                
                 results.append(result)
-                backends_tried += 1
-                
-                # If we get high confidence result, we can stop
-                if result.confidence >= self.confidence_threshold:
-                    logger.info(f"High confidence result from {backend.name}: {result.confidence:.2f}")
+                if result.success and result.confidence >= self.confidence_threshold:
+                    logger.info(f"High confidence result from {backend.name}: {result.confidence:.2f}. Stopping adaptive OCR.")
                     break
-                    
             except Exception as e:
-                logger.warning(f"OCR backend {backend.name} failed: {e}")
+                logger.warning(f"OCR backend {backend.name} failed in adaptive strategy: {e}")
                 continue
         
         if not results:

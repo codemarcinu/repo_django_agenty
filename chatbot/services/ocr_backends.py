@@ -497,6 +497,36 @@ class FallbackOCRBackend(OCRBackend):
                 logger.warning(f"Backend {backend.name} failed: {str(e)}")
 
         # All backends failed
+        def _try_backends(self, method_name: str, file_path: str) -> OCRResult:
+        """Try multiple backends in order until one succeeds."""
+        last_error = None
+        attempted_backends = []
+
+        for backend in self.backends:
+            try:
+                method = getattr(backend, method_name)
+                result = method(file_path)
+
+                if result.success and result.text.strip():
+                    # Success! Update metadata to show it was from fallback
+                    result.metadata["fallback_used"] = True
+                    result.metadata["attempted_backends"] = attempted_backends + [
+                        backend.name
+                    ]
+                    result.metadata["successful_backend"] = backend.name
+                    result.backend = f"{self.name}({backend.name})"
+                    return result
+                else:
+                    attempted_backends.append(backend.name)
+                    if result.error_message:
+                        last_error = result.error_message
+
+            except Exception as e:
+                attempted_backends.append(backend.name)
+                last_error = str(e)
+                logger.warning(f"Backend {backend.name} failed: {str(e)}")
+
+        # All backends failed
         return OCRResult(
             text="",
             confidence=0.0,
@@ -509,4 +539,123 @@ class FallbackOCRBackend(OCRBackend):
             },
             success=False,
             error_message=f"All OCR backends failed. Last error: {last_error}",
+        )
+
+
+class GoogleVisionBackend(OCRBackend):
+    """Google Cloud Vision API OCR implementation."""
+
+    def __init__(self):
+        super().__init__("google_vision")
+
+    def _check_availability(self) -> bool:
+        """Check if Google Cloud Vision API client is available."""
+        try:
+            from google.cloud import vision
+            # Check if GOOGLE_APPLICATION_CREDENTIALS is set or other auth is configured
+            # A simple client creation will raise an exception if credentials are not found
+            vision.ImageAnnotatorClient()
+            return True
+        except ImportError:
+            logger.warning("Google Cloud Vision client not available. Install with: pip install google-cloud-vision")
+            return False
+        except Exception as e:
+            logger.warning(f"Google Cloud Vision API not configured or accessible: {e}")
+            return False
+
+    def extract_text_from_image(self, image_path: str) -> OCRResult:
+        """Extract text from image using Google Cloud Vision API."""
+        if not self.is_available:
+            return OCRResult(
+                text="",
+                confidence=0.0,
+                backend=self.name,
+                processing_time=0.0,
+                metadata={"error": "Google Vision API not available"},
+                success=False,
+                error_message="Google Vision API not available",
+            )
+
+        import time
+        from google.cloud import vision
+        from google.cloud.vision_v1 import types
+
+        start_time = time.time()
+        client = vision.ImageAnnotatorClient()
+
+        try:
+            with open(image_path, "rb") as image_file:
+                content = image_file.read()
+            image = types.Image(content=content)
+
+            response = client.document_text_detection(image=image)
+            full_text_annotation = response.full_text_annotation
+
+            text = full_text_annotation.text
+            # Google Vision API provides confidence at word/symbol level, not overall document.
+            # We can approximate by averaging block confidences or use 1.0 if text is found.
+            # For simplicity, if text is extracted, we'll assign a high confidence.
+            confidence = 1.0 if text else 0.0
+
+            processing_time = time.time() - start_time
+
+            return OCRResult(
+                text=text,
+                confidence=confidence,
+                backend=self.name,
+                processing_time=processing_time,
+                metadata={
+                    "pages": len(full_text_annotation.pages),
+                    "blocks": sum(len(page.blocks) for page in full_text_annotation.pages),
+                    "raw_response": response.to_dict(), # Store full response for debugging
+                },
+                success=True,
+            )
+        except Exception as e:
+            logger.error(f"Google Vision API image processing failed: {e}", exc_info=True)
+            return OCRResult(
+                text="",
+                confidence=0.0,
+                backend=self.name,
+                processing_time=time.time() - start_time,
+                metadata={"error": str(e)},
+                success=False,
+                error_message=str(e),
+            )
+
+    def extract_text_from_pdf(self, pdf_path: str) -> OCRResult:
+        """Extract text from PDF using Google Cloud Vision API (async batch processing)."""
+        if not self.is_available:
+            return OCRResult(
+                text="",
+                confidence=0.0,
+                backend=self.name,
+                processing_time=0.0,
+                metadata={"error": "Google Vision API not available"},
+                success=False,
+                error_message="Google Vision API not available",
+            )
+
+        import time
+        from google.cloud import vision
+        from google.cloud.vision_v1 import types
+        from google.cloud import storage # Required for GCS operations
+
+        start_time = time.time()
+        client = vision.ImageAnnotatorClient()
+
+        # Google Vision API requires PDF to be in Google Cloud Storage
+        # This is a simplified example. In a real scenario, you'd upload the PDF
+        # to GCS first, then process it. For local files, this is a placeholder.
+        # For now, we'll return an error as direct local PDF processing is not supported.
+        error_message = "Google Vision API requires PDF files to be in Google Cloud Storage for batch processing. Direct local PDF processing is not supported."
+        logger.error(error_message)
+        return OCRResult(
+            text="",
+            confidence=0.0,
+            backend=self.name,
+            processing_time=time.time() - start_time,
+            metadata={"error": error_message},
+            success=False,
+            error_message=error_message,
         )
