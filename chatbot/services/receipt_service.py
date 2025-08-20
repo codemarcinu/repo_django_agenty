@@ -3,6 +3,7 @@ Receipt processing service implementing business logic for receipt operations.
 Part of the fat model, thin view pattern implementation.
 """
 
+import hashlib
 import logging
 
 from django.db import transaction
@@ -12,12 +13,12 @@ from inventory.models import Receipt
 
 from .exceptions_receipt import (
     DatabaseError,
-    ReceiptNotFoundError,
     ReceiptError,
+    ReceiptNotFoundError,
 )
-
 from .ocr_service import get_ocr_service
 from .pantry_service_v2 import PantryServiceV2
+from .receipt_cache import get_cache_manager
 from .receipt_parser import get_receipt_parser
 
 logger = logging.getLogger(__name__)
@@ -53,7 +54,7 @@ class ReceiptService:
         """
         try:
             receipt = Receipt.objects.create(
-                receipt_file=receipt_file, status="uploaded"
+                receipt_file=receipt_file, status="pending"
             )
             logger.info(f"Created receipt processing record: {receipt.id}")
             return receipt
@@ -82,16 +83,15 @@ class ReceiptService:
             receipt = Receipt.objects.get(id=receipt_id)
             logger.debug(f"Found receipt: {receipt}, current status: {receipt.status}")
 
-            # It's better to let the task itself manage the status,
-            # but setting it here gives immediate feedback.
-            receipt.status = "ocr_in_progress"
+            receipt.status = "processing"
+            receipt.processing_step = "ocr_in_progress"
             receipt.error_message = ""
             receipt.save()
 
             # Trigger Celery task
-            from ..tasks import process_receipt_task
+            from ..tasks import orchestrate_receipt_processing
 
-            task_result = process_receipt_task.delay(receipt_id)
+            task_result = orchestrate_receipt_processing.delay(receipt_id)
             logger.info(
                 f"✅ Celery task queued successfully for receipt {receipt_id}, task ID: {task_result.id}"
             )
@@ -109,13 +109,11 @@ class ReceiptService:
             # Revert status and save error
             try:
                 receipt = Receipt.objects.get(id=receipt_id)
-                receipt.status = "error"
-                receipt.error_message = "Nie można było zakolejkować zadania. Sprawdź połączenie z Redis/Valkey."
-                receipt.save()
+                receipt.mark_as_error("Nie można było zakolejkować zadania. Sprawdź połączenie z Redis/Valkey.")
             except Receipt.DoesNotExist:
                 pass # Nothing to revert if it wasn't found in the first place
 
-            raise ReceiptProcessingError(error_msg) from e
+            raise ReceiptError(error_msg) from e
 
     def update_processing_status(
         self,
@@ -231,7 +229,9 @@ class ReceiptService:
             return []
 
     def finalize_receipt_processing(
-        self, receipt_id: int, reviewed_products: list[dict]
+        self,
+        receipt_id: int,
+        reviewed_products: list[dict]
     ) -> tuple[bool, str | None]:
         """
         Finalize receipt processing by updating pantry with reviewed products.
@@ -245,7 +245,7 @@ class ReceiptService:
         """
         try:
             with transaction.atomic():
-                receipt = ReceiptProcessing.objects.get(id=receipt_id)
+                receipt = Receipt.objects.get(id=receipt_id)
 
                 if not receipt.is_ready_for_review():
                     return False, "Paragon nie jest gotowy do finalizacji"
@@ -265,7 +265,7 @@ class ReceiptService:
                 logger.info(f"Finalized receipt {receipt_id}: {success_msg}")
                 return True, success_msg
 
-        except ReceiptProcessing.DoesNotExist:
+        except Receipt.DoesNotExist:
             error_msg = f"Paragon {receipt_id} nie został znaleziony"
             logger.error(error_msg)
             return False, error_msg
@@ -275,9 +275,9 @@ class ReceiptService:
 
             # Mark receipt as error
             try:
-                receipt = ReceiptProcessing.objects.get(id=receipt_id)
+                receipt = Receipt.objects.get(id=receipt_id)
                 receipt.mark_as_error(error_msg)
-            except (ReceiptProcessing.DoesNotExist, Exception) as mark_error_ex:
+            except (Receipt.DoesNotExist, Exception) as mark_error_ex:
                 logger.error(f"Failed to mark receipt {receipt_id} as error: {mark_error_ex}")
 
             return False, error_msg
@@ -285,78 +285,72 @@ class ReceiptService:
     def process_receipt_ocr(self, receipt_id: int, use_fallback: bool = True) -> bool:
         """
         Process receipt with OCR using the new inventory Receipt model.
-
-        Args:
-            receipt_id: ID of the Receipt to process
-            use_fallback: Whether to use fallback OCR backends
-
-        Returns:
-            True if OCR processing succeeded, False otherwise
         """
+        cache_manager = get_cache_manager()
         try:
             receipt = Receipt.objects.get(id=receipt_id)
 
-            if receipt.status != "pending_ocr":
-                logger.warning(
-                    f"Receipt {receipt_id} is not in pending_ocr status: {receipt.status}"
-                )
+            if not receipt.receipt_file:
+                receipt.mark_as_error("No file uploaded for receipt")
                 return False
 
-            # Update status to processing
-            receipt.status = "processing_ocr"
+            # --- Caching Logic: Check for existing OCR result ---
+            try:
+                with receipt.receipt_file.open('rb') as f:
+                    file_content = f.read()
+                file_hash = hashlib.sha256(file_content).hexdigest()
+                
+                cached_ocr = cache_manager.get_cached_ocr_result(file_hash)
+                if cached_ocr:
+                    logger.info(f"CACHE HIT: Found cached OCR result for receipt {receipt_id}")
+                    receipt.raw_text = cached_ocr
+                    receipt.status = "processing"
+                    receipt.processing_step = "ocr_completed"
+                    receipt.processing_notes = f"OCR completed from cache (hash: {file_hash[:8]})
+                    receipt.save()
+                    return True
+            except Exception as e:
+                logger.warning(f"Could not read receipt file for caching: {e}")
+            # --- End Caching Logic ---
+
+            receipt.status = "processing"
+            receipt.processing_step = "ocr_in_progress"
             receipt.save()
 
-            # Check if receipt has a file
-            if not receipt.receipt_file:
-                error_msg = "No file uploaded for receipt"
-                logger.error(error_msg)
-                receipt.status = "error"
-                receipt.processing_notes = error_msg
-                receipt.save()
-                return False
+            logger.info(f"Starting OCR processing for receipt {receipt_id}")
 
-            file_path = receipt.receipt_file.path
-            logger.info(
-                f"Starting OCR processing for receipt {receipt_id}: {file_path}"
-            )
-
-            # Get OCR service
             ocr_service = get_ocr_service()
-
             if not ocr_service.is_available():
-                error_msg = "No OCR backends available"
-                logger.error(error_msg)
-                receipt.status = "error"
-                receipt.processing_notes = error_msg
-                receipt.save()
+                receipt.mark_as_error("No OCR backends available")
                 return False
 
-            # Process file with OCR
             ocr_result = ocr_service.process_file(
-                file_path, use_fallback=use_fallback
+                receipt.receipt_file.path, use_fallback=use_fallback
             )
 
             if ocr_result.success and ocr_result.text.strip():
-                # OCR succeeded
                 receipt.raw_text = ocr_result.to_dict()
-                receipt.status = "ocr_completed"
+                receipt.processing_step = "ocr_completed"
                 receipt.processing_notes = f"OCR completed with {ocr_result.backend} (confidence: {ocr_result.confidence:.2f})"
                 receipt.save()
+                
+                # --- Cache the successful result ---
+                try:
+                    with receipt.receipt_file.open('rb') as f:
+                        file_content_for_hash = f.read()
+                    file_hash_for_cache = hashlib.sha256(file_content_for_hash).hexdigest()
+                    cache_manager.cache_ocr_result(file_hash_for_cache, ocr_result.to_dict())
+                except Exception as e:
+                    logger.warning(f"Failed to cache OCR result for receipt {receipt_id}: {e}")
+                # --- End Caching ---
 
-                logger.info(
-                    f"OCR completed for receipt {receipt_id}: {len(ocr_result.text)} characters extracted"
-                )
+                logger.info(f"OCR completed for receipt {receipt_id}: {len(ocr_result.text)} chars extracted")
                 return True
             else:
-                # OCR failed
                 error_msg = ocr_result.error_message or "OCR failed to extract text"
-                receipt.status = "error"
-                receipt.processing_notes = f"OCR failed: {error_msg}"
-                receipt.raw_text = (
-                    ocr_result.to_dict()
-                )  # Store result even if failed for debugging
+                receipt.mark_as_error(f"OCR failed: {error_msg}")
+                receipt.raw_text = ocr_result.to_dict()
                 receipt.save()
-
                 logger.error(f"OCR failed for receipt {receipt_id}: {error_msg}")
                 return False
 
@@ -364,15 +358,9 @@ class ReceiptService:
             logger.error(f"Receipt {receipt_id} not found")
             return False
         except Exception as e:
-            logger.error(
-                f"Error during OCR processing for receipt {receipt_id}: {e}",
-                exc_info=True,
-            )
+            logger.error(f"Error in OCR process for receipt {receipt_id}: {e}", exc_info=True)
             try:
-                receipt = Receipt.objects.get(id=receipt_id)
-                receipt.status = "error"
-                receipt.processing_notes = f"OCR processing error: {str(e)}"
-                receipt.save()
+                Receipt.objects.get(id=receipt_id).mark_as_error(f"OCR processing error: {str(e)}")
             except (Receipt.DoesNotExist, Exception) as update_error:
                 logger.error(f"Failed to update receipt {receipt_id} status after OCR error: {update_error}")
             return False
@@ -380,97 +368,72 @@ class ReceiptService:
     def process_receipt_parsing(self, receipt_id: int) -> bool:
         """
         Process receipt parsing from OCR text to structured data.
-
-        Args:
-            receipt_id: ID of the Receipt to parse
-
-        Returns:
-            True if parsing succeeded, False otherwise
         """
+        cache_manager = get_cache_manager()
         try:
             receipt = Receipt.objects.get(id=receipt_id)
 
-            if receipt.status != "ocr_completed":
-                logger.warning(
-                    f"Receipt {receipt_id} is not in ocr_completed status: {receipt.status}"
-                )
-                return False
-
-            # Check if we have OCR text
-            if not receipt.raw_text or not isinstance(receipt.raw_text, dict):
-                error_msg = "No valid OCR text data"
-                logger.error(f"Receipt {receipt_id} has no valid OCR text data")
-                receipt.status = "error"
-                receipt.processing_notes = f"Parsing failed: {error_msg}"
+            # --- Caching Logic: Check for existing parsed data ---
+            cached_parsing = cache_manager.get_cached_parsed_receipt(receipt_id)
+            if cached_parsing:
+                logger.info(f"CACHE HIT: Found cached parsed data for receipt {receipt_id}")
+                receipt.parsed_data = cached_parsing
+                receipt.status = "processing"
+                receipt.processing_step = "parsing_completed"
+                receipt.processing_notes = "Parsing completed from cache"
                 receipt.save()
+                return True
+            # --- End Caching Logic ---
+
+            if receipt.processing_step != "ocr_completed":
+                logger.warning(f"Receipt {receipt_id} not ready for parsing: {receipt.processing_step}")
+                return receipt.processing_step == "parsing_completed"
+
+            if not receipt.raw_text or not isinstance(receipt.raw_text, dict):
+                receipt.mark_as_error("Parsing failed: No valid OCR text data")
                 return False
 
             ocr_text = receipt.raw_text.get("text", "")
             if not ocr_text.strip():
-                error_msg = "Empty OCR text"
-                logger.error(f"Receipt {receipt_id} has empty OCR text")
-                receipt.status = "error"
-                receipt.processing_notes = f"Parsing failed: {error_msg}"
-                receipt.save()
+                receipt.mark_as_error("Parsing failed: Empty OCR text")
                 return False
 
-            # Update status to processing
-            receipt.status = "processing_parsing"
+            receipt.processing_step = "parsing_in_progress"
             receipt.save()
 
-            logger.info(
-                f"Starting parsing for receipt {receipt_id}: {len(ocr_text)} characters"
-            )
+            logger.info(f"Starting parsing for receipt {receipt_id}: {len(ocr_text)} chars")
 
-            # Get parser and parse the text
             parser = get_receipt_parser()
             parsed_receipt = parser.parse(ocr_text)
 
-            if not parsed_receipt:
-                error_msg = "Parser returned empty result"
-                logger.error(f"Parsing failed for receipt {receipt_id}: {error_msg}")
-                receipt.status = "error"
-                receipt.processing_notes = f"Parsing failed: {error_msg}"
-                receipt.save()
+            if not parsed_receipt or not parsed_receipt.products:
+                receipt.mark_as_error("Parsing failed: Parser returned empty or no-product result")
                 return False
 
-            # Store parsed data
-            receipt.parsed_data = parsed_receipt.to_dict()
-            receipt.status = "parsing_completed"
+            parsed_data_dict = parsed_receipt.to_dict()
+            receipt.parsed_data = parsed_data_dict
+            receipt.processing_step = "parsing_completed"
 
-            # Add processing notes with parsing summary
             products_count = len(parsed_receipt.products)
-            store_info = (
-                f"Store: {parsed_receipt.store_name}"
-                if parsed_receipt.store_name
-                else "Store: Unknown"
-            )
-            total_info = (
-                f"Total: {parsed_receipt.total_amount}"
-                if parsed_receipt.total_amount
-                else "Total: Unknown"
-            )
-
+            store_info = f"Store: {parsed_receipt.store_name or 'Unknown'}"
+            total_info = f"Total: {parsed_receipt.total_amount or 'Unknown'}"
             receipt.processing_notes = f"Parsing completed: {products_count} products found. {store_info}, {total_info}"
             receipt.save()
 
-            logger.info(
-                f"Parsing completed for receipt {receipt_id}: {products_count} products extracted"
-            )
+            # --- Cache the successful result ---
+            cache_manager.cache_parsed_receipt(receipt_id, parsed_data_dict)
+            # --- End Caching ---
+
+            logger.info(f"Parsing completed for receipt {receipt_id}: {products_count} products extracted")
             return True
 
         except Receipt.DoesNotExist:
             logger.error(f"Receipt {receipt_id} not found")
             return False
         except Exception as e:
-            logger.error(
-                f"Error during parsing for receipt {receipt_id}: {e}", exc_info=True
-            )
+            logger.error(f"Error in parsing process for receipt {receipt_id}: {e}", exc_info=True)
             try:
-                receipt = Receipt.objects.get(id=receipt_id)
-                receipt.status = "error"
-                receipt.processing_notes = f"Parsing error: {str(e)}"
-                receipt.save()
+                Receipt.objects.get(id=receipt_id).mark_as_error(f"Parsing error: {str(e)}")
             except (Receipt.DoesNotExist, Exception) as update_error:
                 logger.error(f"Failed to update receipt {receipt_id} status after parsing error: {update_error}")
             return False
@@ -488,91 +451,58 @@ class ReceiptService:
         try:
             receipt = Receipt.objects.get(id=receipt_id)
 
-            if receipt.status != "parsing_completed":
-                logger.warning(
-                    f"Receipt {receipt_id} is not in parsing_completed status: {receipt.status}"
-                )
-                return False
+            if receipt.processing_step != "parsing_completed":
+                logger.warning(f"Receipt {receipt_id} not ready for matching: {receipt.processing_step}")
+                return receipt.processing_step == "matching_completed"
 
-            # Check if we have parsed data
             if not receipt.parsed_data or not isinstance(receipt.parsed_data, dict):
-                error_msg = "No valid parsed data"
-                logger.error(f"Receipt {receipt_id} has no valid parsed data")
-                receipt.status = "error"
-                receipt.processing_notes = f"Matching failed: {error_msg}"
-                receipt.save()
+                receipt.mark_as_error("Matching failed: No valid parsed data")
                 return False
 
             products_data = receipt.parsed_data.get("products", [])
             if not products_data:
-                error_msg = "No products in parsed data"
-                logger.error(f"Receipt {receipt_id} has no products in parsed data")
-                receipt.status = "error"
-                receipt.processing_notes = f"Matching failed: {error_msg}"
+                receipt.mark_as_completed() # No products to match, consider it done
+                receipt.processing_notes += "\nMatching skipped: No products found in parsed data."
                 receipt.save()
-                return False
+                logger.info(f"Matching skipped for receipt {receipt_id}: no products to match.")
+                return True
 
-            # Update status to matching
-            receipt.status = "matching"
+            receipt.processing_step = "matching_in_progress"
             receipt.save()
 
-            logger.info(
-                f"Starting product matching for receipt {receipt_id}: {len(products_data)} products"
-            )
+            logger.info(f"Starting product matching for receipt {receipt_id}: {len(products_data)} products")
 
-            # Convert parsed data to ParsedProduct objects
             from decimal import Decimal
-
             from .product_matcher import get_product_matcher
             from .receipt_parser import ParsedProduct
 
-            parsed_products = []
-            for product_data in products_data:
-                parsed_product = ParsedProduct(
-                    name=product_data.get("name", ""),
-                    quantity=product_data.get("quantity"),
-                    unit_price=(
-                        Decimal(product_data["unit_price"])
-                        if product_data.get("unit_price")
-                        else None
-                    ),
-                    total_price=(
-                        Decimal(product_data["total_price"])
-                        if product_data.get("total_price")
-                        else None
-                    ),
-                    unit=product_data.get("unit"),
-                    category=product_data.get("category"),
-                    confidence=product_data.get("confidence", 0.0),
-                    raw_line=product_data.get("raw_line"),
-                )
-                parsed_products.append(parsed_product)
+            parsed_products = [
+                ParsedProduct(
+                    name=p.get("name", ""),
+                    quantity=p.get("quantity"),
+                    unit_price=Decimal(p["unit_price"]) if p.get("unit_price") else None,
+                    total_price=Decimal(p["total_price"]) if p.get("total_price") else None,
+                    unit=p.get("unit"),
+                    category=p.get("category"),
+                    confidence=p.get("confidence", 0.0),
+                    raw_line=p.get("raw_line"),
+                ) for p in products_data
+            ]
 
-            # Get matcher and match products
             matcher = get_product_matcher()
             match_results = matcher.batch_match_products(parsed_products)
 
             if not match_results:
-                error_msg = "Product matching returned no results"
-                logger.error(f"Matching failed for receipt {receipt_id}: {error_msg}")
-                receipt.status = "error"
-                receipt.processing_notes = f"Matching failed: {error_msg}"
-                receipt.save()
+                receipt.mark_as_error("Matching failed: Product matching returned no results")
                 return False
 
-            # Create ReceiptLineItem records for matched products
-            from decimal import Decimal
-
             from inventory.models import ReceiptLineItem
-
+            
             line_items_created = 0
             total_calculated = Decimal("0.00")
 
-            for i, (parsed_product, match_result) in enumerate(
-                zip(parsed_products, match_results, strict=False)
-            ):
+            for i, (parsed_product, match_result) in enumerate(zip(parsed_products, match_results)):
                 try:
-                    # Create line item
                     line_item = ReceiptLineItem.objects.create(
                         receipt=receipt,
                         product_name=parsed_product.name,
@@ -589,84 +519,38 @@ class ReceiptService:
                             "line_number": i + 1,
                         },
                     )
-
                     line_items_created += 1
                     total_calculated += line_item.line_total
 
-                    # Add alias to matched product if it's a good match
                     if match_result.product and match_result.confidence >= 0.8:
-                        matcher.update_product_aliases(
-                            match_result.product, parsed_product.name
-                        )
-
+                        matcher.update_product_aliases(match_result.product, parsed_product.name)
                 except Exception as e:
-                    logger.error(
-                        f"Error creating line item for product '{parsed_product.name}': {e}"
-                    )
+                    logger.error(f"Error creating line item for '{parsed_product.name}': {e}")
                     continue
 
-            # Update receipt with matching results
-            receipt.status = "completed"
-
-            # Calculate matching statistics
             exact_matches = sum(1 for r in match_results if r.match_type == "exact")
             fuzzy_matches = sum(1 for r in match_results if r.match_type == "fuzzy")
             alias_matches = sum(1 for r in match_results if r.match_type == "alias")
             ghost_created = sum(1 for r in match_results if r.match_type == "created")
 
-            # Update processing notes
-            receipt.processing_notes += (
-                f"\nMatching completed: {line_items_created} line items created. "
-            )
-            receipt.processing_notes += f"Exact: {exact_matches}, Fuzzy: {fuzzy_matches}, Alias: {alias_matches}, New: {ghost_created}. "
-            receipt.processing_notes += f"Calculated total: {total_calculated}"
-
-            # Update total if we calculated one and original is missing
-            if receipt.total == Decimal("0.00") and total_calculated > Decimal("0.00"):
+            receipt.processing_step = "matching_completed"
+            receipt.processing_notes += f"\nMatching completed: {line_items_created} items. Exact: {exact_matches}, Fuzzy: {fuzzy_matches}, Alias: {alias_matches}, New: {ghost_created}."
+            
+            if not receipt.total and total_calculated > 0:
                 receipt.total = total_calculated
-
-            receipt.save()
-
-            # Process inventory updates
-            from .inventory_service import get_inventory_service
-
-            inventory_service = get_inventory_service()
-
-            inventory_success, inventory_message = (
-                inventory_service.process_receipt_for_inventory(receipt_id)
-            )
-
-            if not inventory_success:
-                logger.warning(
-                    f"Inventory update failed for receipt {receipt_id}: {inventory_message}"
-                )
-                # Don't fail the whole process, just log the warning
-                receipt.processing_notes += (
-                    f"\nInventory update warning: {inventory_message}"
-                )
-            else:
-                logger.info(
-                    f"Inventory updated successfully for receipt {receipt_id}: {inventory_message}"
-                )
-                receipt.processing_notes += f"\nInventory update: {inventory_message}"
-
-            logger.info(
-                f"Matching completed for receipt {receipt_id}: {line_items_created} line items created"
-            )
+            
+            receipt.mark_as_ready_for_review() # Now ready for user review
+            
+            logger.info(f"Matching completed for receipt {receipt_id}: {line_items_created} line items created")
             return True
 
         except Receipt.DoesNotExist:
             logger.error(f"Receipt {receipt_id} not found")
             return False
         except Exception as e:
-            logger.error(
-                f"Error during matching for receipt {receipt_id}: {e}", exc_info=True
-            )
+            logger.error(f"Error in matching process for receipt {receipt_id}: {e}", exc_info=True)
             try:
-                receipt = Receipt.objects.get(id=receipt_id)
-                receipt.status = "error"
-                receipt.processing_notes = f"Matching error: {str(e)}"
-                receipt.save()
+                Receipt.objects.get(id=receipt_id).mark_as_error(f"Matching error: {str(e)}")
             except (Receipt.DoesNotExist, Exception) as update_error:
                 logger.error(f"Failed to update receipt {receipt_id} status after matching error: {update_error}")
             return False
@@ -712,8 +596,12 @@ class ReceiptService:
                 return False
 
             # Reset status and clear error message
-            receipt.status = "uploaded"
+            receipt.status = "pending"
+            receipt.processing_step = "uploaded"
             receipt.error_message = ""
+            receipt.parsed_data = {{}}
+            receipt.raw_text = {{}}
+            receipt.line_items.all().delete() # Clear old items
             receipt.save()
 
             # Start processing again
