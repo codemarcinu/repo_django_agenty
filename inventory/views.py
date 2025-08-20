@@ -16,6 +16,7 @@ from chatbot.services.inventory_service import get_inventory_service
 from chatbot.services.optimized_queries import (
     get_receipts_for_listing,
     get_inventory_items_for_listing,
+    get_product_details,
 )
 
 from .models import (
@@ -176,41 +177,9 @@ class ProductDetailView(DetailView):
     template_name = "inventory/product_detail.html"
     context_object_name = "product"
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        product = self.get_object()
-
-        # Get current inventory items
-        context["inventory_items"] = product.inventory_items.filter(
-            quantity_remaining__gt=0
-        ).order_by("-purchase_date")
-
-        # Get consumption history
-        context["consumption_events"] = (
-            ConsumptionEvent.objects.filter(inventory_item__product=product)
-            .select_related("inventory_item")
-            .order_by("-consumed_at")[:10]
-        )
-
-        # Get receipt history
-        context["receipt_items"] = (
-            ReceiptLineItem.objects.filter(matched_product=product)
-            .select_related("receipt")
-            .order_by("-receipt__purchased_at")[:10]
-        )
-
-        # Calculate statistics
-        total_inventory = (
-            product.inventory_items.filter(quantity_remaining__gt=0).aggregate(
-                total=Sum("quantity_remaining")
-            )["total"]
-            or 0
-        )
-
-        context["total_inventory"] = total_inventory
-        context["is_low_stock"] = total_inventory <= product.reorder_point
-
-        return context
+    def get_queryset(self):
+        """Use optimized query to prefetch all related data."""
+        return get_product_details(self.kwargs['pk'])
 
 
 class ReceiptListView(ListView):

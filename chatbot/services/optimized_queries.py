@@ -344,6 +344,17 @@ def get_inventory_items_for_listing():
     ).filter(quantity_remaining__gt=0).order_by('-purchase_date')
 
 
+def get_product_details(product_id: int):
+    """
+    Get a single product with all related data prefetched for detail view.
+    """
+    return Product.objects.prefetch_related(
+        Prefetch('inventory_items', queryset=InventoryItem.objects.filter(quantity_remaining__gt=0).order_by('-purchase_date')),
+        Prefetch('receipt_items', queryset=ReceiptLineItem.objects.select_related('receipt').order_by('-receipt__purchased_at')),
+        Prefetch('inventory_items__consumption_events', queryset=ConsumptionEvent.objects.order_by('-consumed_at'))
+    ).get(id=product_id)
+
+
 def get_optimized_receipt_service() -> OptimizedReceiptService:
     """Get optimized receipt service instance."""
     return OptimizedReceiptService()
