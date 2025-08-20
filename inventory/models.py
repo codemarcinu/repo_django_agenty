@@ -126,7 +126,7 @@ class Product(models.Model):
     aliases = JSONField(
         default=list,
         blank=True,
-        help_text="Alternative names and variations for fuzzy matching",
+        help_text="List of dictionaries, each representing an alias with its metadata (name, count, first_seen, last_seen, status).",
     )
     is_active = models.BooleanField(
         default=True,
@@ -158,17 +158,39 @@ class Product(models.Model):
         return self.name
 
     def add_alias(self, alias_name):
-        """Add a new alias for fuzzy matching."""
-        if alias_name not in self.aliases:
-            self.aliases.append(alias_name)
-            self.save(update_fields=["aliases"])
+        """
+        Add a new alias for fuzzy matching or update an existing one.
+        If the alias already exists, increment its count and update last_seen.
+        Otherwise, add a new alias entry.
+        """
+        from django.utils import timezone
+
+        found = False
+        for alias_entry in self.aliases:
+            if alias_entry.get("name") == alias_name:
+                alias_entry["count"] = alias_entry.get("count", 0) + 1
+                alias_entry["last_seen"] = timezone.now().isoformat()
+                found = True
+                break
+        if not found:
+            self.aliases.append(
+                {
+                    "name": alias_name,
+                    "count": 1,
+                    "first_seen": timezone.now().isoformat(),
+                    "last_seen": timezone.now().isoformat(),
+                    "status": "unverified",  # Initial status
+                }
+            )
+        self.save(update_fields=["aliases"])
 
     def get_all_names(self):
         """Returns all possible names including aliases for matching."""
         names = [self.name]
         if self.brand:
             names.append(f"{self.brand} {self.name}")
-        names.extend(self.aliases)
+        # Extract 'name' from each alias dictionary
+        names.extend([alias_entry.get("name") for alias_entry in self.aliases if alias_entry.get("name")])
         return names
 
 
@@ -687,3 +709,21 @@ class ConsumptionEvent(models.Model):
 
     def __str__(self):
         return f"Consumed {self.consumed_qty} of {self.inventory_item.product.name}"
+
+
+class Rule(models.Model):
+    name = models.CharField(max_length=255, unique=True)
+    description = models.TextField(blank=True)
+    # Używamy prostego JSON-a do definicji warunków. Jest to bezpieczne i elastyczne.
+    # Przykład: {"field": "product.category.name", "operator": "equals", "value": "Nabiał"}
+    condition = JSONField()
+    # Przykład: {"action_type": "set_expiry", "params": {"days": 7}}
+    action = JSONField()
+    priority = models.IntegerField(default=100, help_text="Niższa liczba = wyższy priorytet")
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        ordering = ['priority']
+
+    def __str__(self):
+        return self.name

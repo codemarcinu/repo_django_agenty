@@ -136,6 +136,22 @@ OPENWEATHERMAP_API_KEY = env("OPENWEATHERMAP_API_KEY")
 CELERY_BROKER_URL = env("CELERY_BROKER_URL", default="redis://localhost:6379/0")
 CELERY_RESULT_BACKEND = env("CELERY_RESULT_BACKEND", default="redis://localhost:6379/0")
 
+# Celery Beat Configuration (Periodic Tasks)
+CELERY_BEAT_SCHEDULE = {
+    "check-inventory-alerts": {
+        "task": "chatbot.tasks_alerts.check_inventory_alerts",
+        "schedule": 86400.0,  # Run daily (24 hours in seconds)
+    },
+    "manage-alias-reputation": {
+        "task": "inventory.tasks.manage_alias_reputation",
+        "schedule": 86400.0,  # Run daily
+    },
+}
+
+# Alias Management Settings
+ALIAS_CONFIRMATION_THRESHOLD = env.int("ALIAS_CONFIRMATION_THRESHOLD", default=10)
+ALIAS_EXPIRATION_DAYS = env.int("ALIAS_EXPIRATION_DAYS", default=90)
+
 # Security settings for production
 SECURE_SSL_REDIRECT = env.bool("SECURE_SSL_REDIRECT", default=True)
 SECURE_HSTS_SECONDS = env.int("SECURE_HSTS_SECONDS", default=31536000)

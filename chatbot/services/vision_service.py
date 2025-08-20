@@ -1,8 +1,3 @@
-"""
-Vision service for analyzing images using Ollama vision models.
-Updated to use /api/chat format for Qwen2.5-VL and other vision models.
-"""
-
 import base64
 import logging
 import json
@@ -10,6 +5,8 @@ from typing import Dict, Any, List, Optional
 from dataclasses import dataclass
 
 import httpx
+
+from chatbot.schemas import ParsedReceipt, ProductSchema # Import new schemas
 
 logger = logging.getLogger(__name__)
 
@@ -116,14 +113,8 @@ class VisionService:
                     {
                         "role": "user",
                         "content": [
-                            {
-                                "type": "text",
-                                "text": prompt
-                            },
-                            {
-                                "type": "image",
-                                "image": b64_image
-                            }
+                            {"type": "text", "text": prompt},
+                            {"type": "image", "image": b64_image}
                         ]
                     }
                 ],
@@ -249,6 +240,46 @@ WAŻNE: Zwróć TYLKO JSON, bez dodatkowych komentarzy."""
         
         return result
     
+    async def extract_data_from_image(self, image_path: str) -> ParsedReceipt:
+        """
+        Extracts structured data from a receipt image using the vision model.
+        
+        Args:
+            image_path: Path to the receipt image file.
+            
+        Returns:
+            A ParsedReceipt object containing the extracted store name, total amount, and items.
+        """
+        vision_result = await self.analyze_receipt(image_path)
+        
+        if vision_result.success and vision_result.metadata and "parsed_products" in vision_result.metadata:
+            items = []
+            for item_data in vision_result.metadata["parsed_products"]:
+                try:
+                    # Assuming the vision model returns 'product', 'quantity', 'unit', 'price'
+                    # Need to map 'product' to 'product_name' for ProductSchema
+                    items.append(ProductSchema(
+                        product_name=item_data.get("product", ""),
+                        quantity=item_data.get("quantity", 1.0),
+                        unit=item_data.get("unit", "szt."),
+                        price=item_data.get("price", 0.0) # Assuming price is part of ProductSchema if needed
+                    ))
+                except Exception as e:
+                    logger.warning(f"Failed to parse product item from vision result: {item_data}. Error: {e}")
+            
+            # The vision model prompt currently only extracts items.
+            # If store_name and total_amount are needed, the prompt for analyze_receipt
+            # would need to be updated to include them in the JSON output.
+            # For now, they will be None or default values.
+            return ParsedReceipt(
+                store_name=None, # Vision model doesn't extract this yet
+                total_amount=None, # Vision model doesn't extract this yet
+                items=items
+            )
+        else:
+            logger.error(f"Vision service failed to extract data or no products found for {image_path}. Error: {vision_result.error}")
+            return ParsedReceipt() # Return an empty ParsedReceipt on failure
+    
     async def analyze_document(self, image_path: str, model: Optional[str] = None) -> VisionResult:
         """
         Specialized method for general document analysis.
@@ -316,7 +347,8 @@ Odpowiedź podaj w języku polskim."""
         return False
     
     def get_service_info(self) -> Dict[str, Any]:
-        """Get service configuration and status"""
+        """
+        Get service configuration and status"""
         return {
             "service": "VisionService",
             "ollama_url": self.ollama_url,

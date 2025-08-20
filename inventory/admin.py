@@ -13,6 +13,7 @@ from .models import (
     Product,
     Receipt,
     ReceiptLineItem,
+    Rule, # Import the new Rule model
 )
 
 
@@ -367,3 +368,9 @@ class ConsumptionEventAdmin(admin.ModelAdmin):
 admin.site.site_header = "Inventory Management System"
 admin.site.site_title = "Inventory Admin"
 admin.site.index_title = "Receipt Processing Pipeline Administration"
+
+
+@admin.register(Rule)
+class RuleAdmin(admin.ModelAdmin):
+    list_display = ('name', 'priority', 'is_active')
+    list_filter = ('is_active',)

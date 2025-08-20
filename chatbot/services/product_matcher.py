@@ -268,26 +268,50 @@ class ProductMatcher:
             return None
 
     def _find_alias_match(self, normalized_name: str) -> tuple[Product | None, str]:
-        """Find match through product aliases, prioritizing exact alias match."""
+        """
+        Find match through product aliases, prioritizing confirmed aliases and higher counts.
+        """
         try:
-            # First, try to find an exact match within aliases
+            best_match_product = None
+            best_match_alias_name = ""
+            best_match_score = -1 # Use a score to prioritize
+
+            # Iterate through all active products
             for product in Product.objects.filter(is_active=True):
-                for alias in product.aliases:
-                    if normalized_name == alias.lower():
-                        return product, alias
+                for alias_entry in product.aliases:
+                    alias_name = alias_entry.get("name")
+                    alias_count = alias_entry.get("count", 0)
+                    alias_status = alias_entry.get("status", "unverified")
 
-            # If no exact alias match, fall back to similarity-based alias matching
-            products = Product.objects.filter(
-                aliases__icontains=normalized_name, is_active=True
-            )
+                    if not alias_name:
+                        continue
 
-            for product in products:
-                for alias in product.aliases:
-                    if (
-                        self._calculate_similarity(normalized_name, alias.lower())
-                        >= self.exact_match_threshold
-                    ):
-                        return product, alias
+                    current_score = 0
+
+                    # Prioritize exact name match
+                    if normalized_name == alias_name.lower():
+                        current_score = 100 # Highest priority for exact match
+
+                    # Prioritize confirmed status
+                    if alias_status == "confirmed":
+                        current_score += 50 # Boost for confirmed status
+
+                    # Prioritize higher counts
+                    current_score += min(alias_count, 20) # Cap count boost to avoid extreme values
+
+                    # Calculate similarity for non-exact matches
+                    if current_score < 100: # If not already an exact match
+                        similarity = self._calculate_similarity(normalized_name, alias_name.lower())
+                        if similarity >= self.exact_match_threshold:
+                            current_score += similarity * 10 # Add similarity as a score
+
+                    if current_score > best_match_score:
+                        best_match_score = current_score
+                        best_match_product = product
+                        best_match_alias_name = alias_name
+
+            if best_match_product and best_match_score > 0: # Ensure a valid match was found
+                return best_match_product, best_match_alias_name
 
             return None, ""
 
@@ -314,13 +338,15 @@ class ProductMatcher:
                     best_match = product
 
                 # Check similarity with aliases
-                for alias in product.aliases:
-                    alias_similarity = self._calculate_similarity(
-                        normalized_name, alias.lower()
-                    )
-                    if alias_similarity > best_similarity:
-                        best_similarity = alias_similarity
-                        best_match = product
+                for alias_entry in product.aliases: # Iterate through alias dictionaries
+                    alias_name = alias_entry.get("name")
+                    if alias_name: # Ensure alias_name exists
+                        alias_similarity = self._calculate_similarity(
+                            normalized_name, alias_name.lower()
+                        )
+                        if alias_similarity > best_similarity:
+                            best_similarity = alias_similarity
+                            best_match = product
 
             if best_similarity >= self.fuzzy_match_threshold:
                 return best_match, best_similarity
@@ -479,8 +505,9 @@ class ProductMatcher:
                 return False
 
             # Don't add if alias already exists
-            for alias in product.aliases:
-                if self._calculate_similarity(normalized_new_name, alias.lower()) > 0.9:
+            for alias_entry in product.aliases: # Iterate through alias dictionaries
+                alias_name = alias_entry.get("name")
+                if alias_name and self._calculate_similarity(normalized_new_name, alias_name.lower()) > 0.9:
                     return False
 
             # Add new alias

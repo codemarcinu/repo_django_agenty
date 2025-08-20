@@ -496,9 +496,7 @@ class FallbackOCRBackend(OCRBackend):
                 last_error = str(e)
                 logger.warning(f"Backend {backend.name} failed: {str(e)}")
 
-        # All backends failed
-        def _try_backends(self, method_name: str, file_path: str) -> OCRResult:
-        """Try multiple backends in order until one succeeds."""
+        
         last_error = None
         attempted_backends = []
 

@@ -17,6 +17,7 @@ from inventory.models import (
     Receipt,
     ReceiptLineItem,
 )
+from inventory.services.rule_engine_service import RuleEngineService # Import RuleEngineService
 
 logger = logging.getLogger(__name__)
 
@@ -175,6 +176,10 @@ class InventoryService:
                 batch_id=f"R{line_item.receipt.id}-L{line_item.id}",
             )
 
+            # --- INTEGRACJA SILNIKA REGUŁ ---
+            rule_engine = RuleEngineService()
+            rule_engine.apply_rules(new_item) # Apply rules to the newly created item
+
             result["created"].append(
                 {"item": new_item, "quantity": quantity, "expiry_date": expiry_date}
             )
@@ -188,7 +193,9 @@ class InventoryService:
     def _calculate_expiry_date(
         self, product: Product, purchase_date: date
     ) -> date | None:
-        """Calculate expiry date for a product."""
+        """
+        Calculate expiry date for a product.
+        """
         try:
             # First, check if product category has expiry days metadata
             if product.category and product.category.meta.get("expiry_days"):

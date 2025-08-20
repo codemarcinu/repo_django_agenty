@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 
 from pydantic import BaseModel, Field
 
@@ -27,3 +27,18 @@ class ProductSchema(BaseModel):
 # The root model for the entire JSON structure expected from the LLM.
 # The LLM is prompted to return a list of products, so we validate against a list of the schema.
 ReceiptDataSchema = List[ProductSchema]
+
+
+class OCRResult(BaseModel):
+    full_text: str
+    lines: List[str] = []
+    confidences: List[float] = []
+
+    def get_full_text(self) -> str:
+        return self.full_text
+
+
+class ParsedReceipt(BaseModel):
+    store_name: Optional[str] = None
+    total_amount: Optional[float] = None
+    items: List[ProductSchema] = []

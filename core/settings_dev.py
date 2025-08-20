@@ -315,6 +315,8 @@ OCR_CONFIG = {
     "confidence_threshold": 0.5,  # Minimum confidence to accept results
 }
 
+OCR_QUALITY_THRESHOLD = 80 # Threshold for switching to VisionService
+
 # Email Configuration for Inventory Alerts
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"  # For development
 DEFAULT_FROM_EMAIL = "agenty@example.com"
