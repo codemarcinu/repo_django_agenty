@@ -101,34 +101,36 @@ class ReceiptUploadView(FormView):
 
     def form_valid(self, form):
         logger.info("=== STARTING NEW RECEIPT UPLOAD PROCESS ===")
-        
-        receipt = form.save(commit=False)
-        receipt.user = self.request.user if self.request.user.is_authenticated else None
-        receipt.status = 'pending_ocr'  # Use legacy status for compatibility
-        receipt.processing_step = 'uploaded'  # Set processing step
-        receipt.save()
-        
-        logger.info(f"✅ New Receipt record created successfully with ID: {receipt.id}")
-
-        # Dispatch the new orchestration task
         try:
-            from .tasks import orchestrate_receipt_processing
-            orchestrate_receipt_processing.delay(receipt.id)
-            logger.info(f"✅ Orchestration task queued for receipt {receipt.id}")
-        except Exception as e:
-            logger.error(f"❌ Failed to queue orchestration task for receipt {receipt.id}: {e}")
-            receipt.status = 'error'
-            receipt.processing_notes = f"Failed to start processing: {e}"
-            receipt.save()
+            # Zapisz paragon w bazie danych, powiązując go z zalogowanym użytkownikiem
+            new_receipt = form.save(commit=False)
+            new_receipt.user = self.request.user # Assuming user is authenticated due to @login_required
+            new_receipt.status = 'pending'
+            new_receipt.save()
+            logger.info(f"✅ New Receipt record created successfully with ID: {new_receipt.id}")
 
-        # Redirect to the new status page (assuming it will be created)
-        self.success_url = reverse_lazy(
-            "chatbot:receipt_status",  # Updated URL name
-            kwargs={"receipt_id": receipt.id},
-        )
-        
-        logger.info("=== NEW RECEIPT UPLOAD PROCESS COMPLETED ===")
-        return super().form_valid(form)
+            # Importuj zadanie Celery lokalnie, aby uniknąć cyklicznych zależności
+            from .tasks import orchestrate_receipt_processing
+            
+            # Uruchom zadanie Celery w tle
+            orchestrate_receipt_processing.delay(new_receipt.id)
+            logger.info(f"✅ Orchestration task queued for receipt {new_receipt.id}")
+
+            # Przekieruj użytkownika na stronę statusu
+            self.success_url = reverse_lazy('chatbot:receipt_status', kwargs={'receipt_id': new_receipt.id})
+            return super().form_valid(form)
+        except Exception as e:
+            logger.error(f"❌ Failed to queue orchestration task for receipt {new_receipt.id}: {e}", exc_info=True)
+            # If an error occurs before saving, new_receipt might not exist.
+            # If it exists, update its status to failed.
+            if 'new_receipt' in locals() and new_receipt.id:
+                new_receipt.status = 'failed'
+                new_receipt.processing_notes = f"Failed to start processing: {e}"
+                new_receipt.save()
+            # Re-raise the exception or handle it gracefully
+            raise
+        finally:
+            logger.info("=== NEW RECEIPT UPLOAD PROCESS COMPLETED ===")
 
 
 class ReceiptStatusView(View):
