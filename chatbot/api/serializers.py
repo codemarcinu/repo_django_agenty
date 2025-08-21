@@ -7,6 +7,13 @@ import os
 import magic
 from django.core.files.uploadedfile import UploadedFile
 from rest_framework import serializers
+from chatbot.models import Document
+
+
+class DocumentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Document
+        fields = '__all__'
 
 
 class ReceiptUploadSerializer(serializers.Serializer):
@@ -95,11 +102,3 @@ class ReceiptUploadResponseSerializer(serializers.Serializer):
     file_path = serializers.CharField()
     file_size = serializers.IntegerField()
     uploaded_at = serializers.DateTimeField()
-
-
-from chatbot.models import Document
-
-class DocumentSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Document
-        fields = '__all__
