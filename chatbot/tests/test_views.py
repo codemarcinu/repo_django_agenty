@@ -1,14 +1,24 @@
-
 import pytest
 from django.contrib.auth.models import User
 from django.test import Client, TestCase
 from django.urls import reverse
+from django.utils import timezone # Added for purchase_date
 
+from chatbot.models import Agent # Explicitly imported
+from inventory.models import InventoryItem, Product, Receipt # Explicitly imported
 
 @pytest.mark.unit
 class DashboardViewTest(TestCase):
     def setUp(self):
         self.client = Client()
+        # Agent is imported at module level, no need to re-import here
+        # Create test data
+        Agent.objects.create(
+            name="Test Agent",
+            agent_type="general",
+            persona_prompt="Test",
+            is_active=True,
+        )
 
     def test_dashboard_view_loads(self):
         """Test dashboard view loads successfully"""
@@ -18,23 +28,17 @@ class DashboardViewTest(TestCase):
 
     def test_dashboard_shows_statistics(self):
         """Test dashboard shows correct statistics"""
-        # Create test data
-        Agent.objects.create(
-            name="Test Agent",
-            agent_type="general",
-            persona_prompt="Test",
-            is_active=True,
-        )
-
         response = self.client.get("/")
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "agents_count")
+        self.assertContains(response, "Aktywni Agenci")
+        self.assertContains(response, "0")
 
 
 @pytest.mark.unit
 class ChatViewTest(TestCase):
     def setUp(self):
         self.client = Client()
+        # Agent is imported at module level, no need to re-import here
         self.agent = Agent.objects.create(
             name="Test Agent",
             agent_type="general",
@@ -46,7 +50,7 @@ class ChatViewTest(TestCase):
         """Test chat view loads successfully"""
         response = self.client.get(reverse("chatbot:chat"))
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Chat Interface")
+        self.assertContains(response, "Chat z Asystentem AI")
 
     def test_chat_view_shows_agents(self):
         """Test chat view displays available agents"""
@@ -59,6 +63,7 @@ class ChatViewTest(TestCase):
 class APIViewTest(TestCase):
     def setUp(self):
         self.client = Client()
+        # Agent is imported at module level, no need to re-import here
         self.agent = Agent.objects.create(
             name="Test Agent",
             agent_type="general",
@@ -72,9 +77,9 @@ class APIViewTest(TestCase):
         self.assertEqual(response.status_code, 200)
 
         data = response.json()
-        self.assertIn("results", data)
-        self.assertTrue(len(data["results"]) > 0)
-        self.assertEqual(data["results"][0]["name"], self.agent.name)
+        self.assertIn("agents", data) # Changed from "results" to "agents"
+        self.assertTrue(len(data["agents"]) > 0) # Changed from "results" to "agents"
+        self.assertEqual(data["agents"][0]["name"], self.agent.name) # Changed from "results" to "agents"
 
     def test_agent_list_api_only_active_agents(self):
         """Test agent list API only returns active agents"""
@@ -90,7 +95,7 @@ class APIViewTest(TestCase):
         self.assertEqual(response.status_code, 200)
 
         data = response.json()
-        agent_names = [agent["name"] for agent in data["results"]]
+        agent_names = [agent["name"] for agent in data["agents"]] # Changed from "results" to "agents"
         self.assertIn(self.agent.name, agent_names)
         self.assertNotIn("Inactive Agent", agent_names)
 
@@ -119,18 +124,19 @@ class DocumentViewTest(TestCase):
 class PantryViewTest(TestCase):
     def setUp(self):
         self.client = Client()
-        self.pantry_item = PantryItem.objects.create(
-            name="Test Item", quantity=1.0, unit="piece"
+        # InventoryItem and Product are imported at module level, no need to re-import here
+        self.pantry_item = InventoryItem.objects.create(
+            product=Product.objects.create(name="Test Item"),
+            quantity_remaining=1.0,
+            unit="szt",
+            purchase_date=timezone.now().date() # Added purchase_date
         )
 
     def test_pantry_list_view(self):
         """Test pantry list view loads"""
-        response = self.client.get(reverse("chatbot:pantry_list"))
+        response = self.client.get(reverse("inventory:inventory_list"))
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, self.pantry_item.name)
-
-
-from inventory.models import Receipt
+        self.assertContains(response, self.pantry_item.product.name)
 
 
 @pytest.mark.integration

@@ -20,7 +20,7 @@ class OCRConfig:
     def from_settings(cls) -> 'OCRConfig':
         return cls(
             gpu_enabled=getattr(settings, 'OCR_GPU_ENABLED', cls.gpu_enabled),
-            languages=getattr(settings, 'OCR_LANGUAGES', cls.languages),
+            languages=getattr(settings, 'OCR_LANGUAGES', cls().languages),
             max_file_size=getattr(settings, 'MAX_RECEIPT_FILE_SIZE', cls.max_file_size),
             timeout=getattr(settings, 'OCR_TIMEOUT', cls.timeout)
         )
@@ -97,7 +97,7 @@ class FileConfig:
     @classmethod
     def from_settings(cls) -> 'FileConfig':
         return cls(
-            allowed_extensions=getattr(settings, 'RECEIPT_ALLOWED_EXTENSIONS', cls.allowed_extensions),
+            allowed_extensions=getattr(settings, 'RECEIPT_ALLOWED_EXTENSIONS', cls().allowed_extensions),
             max_file_size=getattr(settings, 'MAX_RECEIPT_FILE_SIZE', cls.max_file_size),
             upload_path=getattr(settings, 'RECEIPT_UPLOAD_PATH', cls.upload_path),
             temp_file_cleanup_enabled=getattr(settings, 'TEMP_FILE_CLEANUP_ENABLED', cls.temp_file_cleanup_enabled)
@@ -252,6 +252,18 @@ class ConfigLoader:
             return ConfigLoader.load_test_config()
         else:
             return ConfigLoader.load_development_config()
+
+
+def get_parser_config() -> Dict[str, Dict[str, Any]]:
+    """
+    Returns a dictionary of parser configurations.
+    This function is a placeholder and should be expanded with actual parser configurations.
+    """
+    return {
+        "lidl": {"class": "LidlReceiptParser"},
+        "regex": {"class": "RegexReceiptParser"},
+        # Add other parsers here as needed
+    }
 
 
 # Global configuration instance

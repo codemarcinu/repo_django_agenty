@@ -6,7 +6,7 @@ Inspired by FoodSave AI architecture.
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any
+from typing import Any, Dict
 
 
 class ErrorSeverity(Enum):
@@ -107,4 +107,13 @@ class AgentFactoryInterface(ABC):
     @abstractmethod
     def list_available_agents(self) -> list[str]:
         """List all available agent types"""
+        pass
+
+
+class ReceiptParser(ABC):
+    """Base receipt parser interface."""
+
+    @abstractmethod
+    def parse(self, raw_text: str) -> Dict:
+        """Parse raw text into structured receipt data."""
         pass

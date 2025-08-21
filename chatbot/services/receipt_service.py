@@ -28,7 +28,7 @@ from .pantry_service_v2 import PantryServiceV2
 from .receipt_cache import get_cache_manager
 
 from .websocket_notifier import get_websocket_notifier
-from .registry import receipt_parser
+from .registry import get_receipt_parser
 
 logger = logging.getLogger(__name__)
 
@@ -261,7 +261,7 @@ class ReceiptService:
             receipt.save()
             diag_logger.debug(f"Receipt {receipt_id} status updated to 'parsing_in_progress'.")
 
-            parser = receipt_parser
+            parser = get_receipt_parser()
             diag_logger.debug(f"Calling receipt parser for receipt {receipt_id}.")
             parsed_receipt = parser.parse(ocr_text)
 

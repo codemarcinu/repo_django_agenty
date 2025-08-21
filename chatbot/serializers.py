@@ -1,6 +1,7 @@
 from rest_framework import serializers
 
 from inventory.models import Receipt
+from chatbot.models import Agent, Document
 
 
 class AgentSerializer(serializers.ModelSerializer):

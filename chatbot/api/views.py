@@ -14,9 +14,10 @@ from django.views.decorators.csrf import csrf_exempt
 from inventory.models import InventoryItem, Product, Receipt
 
 from ..conversation_manager import conversation_manager
-from ..models import Agent
+from ..models import Agent, Document # Import Document model
 from ..services.agent_factory import agent_factory
 from ..services.product_matcher import get_product_matcher
+from ..services.exceptions import AgentNotFoundError # Corrected import # Corrected import
 
 logger = logging.getLogger(__name__)
 
@@ -104,8 +105,10 @@ class ConversationCreateView(View):
             session_id = await conversation_manager.create_conversation(
                 agent_name=agent_name, user_id=user_id, title=title
             )
-            return JsonResponse({"success": True, "session_id": session_id})
+            return JsonResponse({"success": True, "session_id": session_id}, status=201)
         except ValueError as e:
+            return JsonResponse({"success": False, "error": str(e)}, status=400)
+        except AgentNotFoundError as e: # Catch AgentNotFoundError specifically
             return JsonResponse({"success": False, "error": str(e)}, status=400)
         except Exception as e:
             logger.error(f"Error creating conversation: {str(e)}")

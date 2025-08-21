@@ -46,4 +46,6 @@ urlpatterns = [
         views.ConsumeInventoryView.as_view(),
         name="inventory-consume",
     ),
+    # Document endpoints
+    path("documents/", views.DocumentListAPIView.as_view(), name="document-list"),
 ]

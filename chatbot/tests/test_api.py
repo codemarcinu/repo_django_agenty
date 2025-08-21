@@ -1,4 +1,3 @@
-
 import pytest
 from django.contrib.auth.models import User
 from django.test import TestCase
@@ -26,9 +25,9 @@ class APIEndpointsTest(APITestCase):
         response = self.client.get(url)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertIn("results", response.data)
-        self.assertEqual(len(response.data["results"]), 1)
-        self.assertEqual(response.data["results"][0]["name"], self.agent.name)
+        self.assertIn("agents", response.json())
+        self.assertEqual(len(response.json()["agents"]), 1)
+        self.assertEqual(response.json()["agents"][0]["name"], self.agent.name)
 
     def test_conversation_create_endpoint(self):
         """Test conversation creation endpoint"""
@@ -42,8 +41,8 @@ class APIEndpointsTest(APITestCase):
         response = self.client.post(url, data, format="json")
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertTrue(response.data["success"])
-        self.assertIn("session_id", response.data)
+        self.assertTrue(response.json()["success"])
+        self.assertIn("session_id", response.json())
 
     def test_conversation_create_missing_agent(self):
         """Test conversation creation with missing agent name"""
@@ -53,8 +52,8 @@ class APIEndpointsTest(APITestCase):
         response = self.client.post(url, data, format="json")
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertFalse(response.data["success"])
-        self.assertIn("errors", response.data)
+        self.assertFalse(response.json()["success"])
+        self.assertIn("error", response.json())
 
     def test_conversation_create_invalid_agent(self):
         """Test conversation creation with invalid agent name"""
@@ -64,7 +63,7 @@ class APIEndpointsTest(APITestCase):
         response = self.client.post(url, data, format="json")
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertFalse(response.data["success"])
+        self.assertFalse(response.json()["success"])
 
     def test_receipt_status_endpoint(self):
         """Test receipt processing status endpoint"""
@@ -74,7 +73,7 @@ class APIEndpointsTest(APITestCase):
         response = self.client.get(url)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data["status"], "uploaded")
+        self.assertEqual(response.json()["status"], "uploaded")
 
     def test_receipt_status_not_found(self):
         """Test receipt status endpoint with non-existent receipt"""
@@ -82,7 +81,7 @@ class APIEndpointsTest(APITestCase):
         response = self.client.get(url)
 
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-        self.assertIn("error", response.data)
+        self.assertIn("error", response.json())
 
 
 @pytest.mark.integration
