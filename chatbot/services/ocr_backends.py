@@ -657,3 +657,140 @@ class GoogleVisionBackend(OCRBackend):
             success=False,
             error_message=error_message,
         )
+
+
+class MistralOCRBackend(OCRBackend):
+    """Mistral OCR API implementation."""
+
+    def __init__(self):
+        super().__init__("mistral_ocr")
+        from django.conf import settings
+        self.api_key = getattr(settings, "MISTRAL_API_KEY", None)
+        # Placeholder for Mistral API URL. This should be configured in settings.
+        self.api_url = "https://api.mistral.ai/v1/ocr"
+
+    def _check_availability(self) -> bool:
+        """Check if Mistral API key is available."""
+        if not self.api_key:
+            logger.warning("MISTRAL_API_KEY is not set in Django settings.")
+            return False
+        # Optionally, add a test call to the API to verify credentials
+        return True
+
+    def extract_text_from_image(self, image_path: str) -> OCRResult:
+        """Extract text from image using Mistral OCR API."""
+        if not self.is_available:
+            return OCRResult(
+                text="",
+                confidence=0.0,
+                backend=self.name,
+                processing_time=0.0,
+                metadata={"error": "Mistral OCR API not available"},
+                success=False,
+                error_message="Mistral OCR API not available",
+            )
+
+        import requests
+        import time
+
+        start_time = time.time()
+
+        try:
+            with open(image_path, "rb") as f:
+                files = {"file": f}
+                headers = {"Authorization": f"Bearer {self.api_key}"}
+                response = requests.post(self.api_url, files=files, headers=headers, timeout=60)
+                response.raise_for_status()  # Raise HTTPError for bad responses (4xx or 5xx)
+
+            data = response.json()
+            # Assuming Mistral API returns text in a 'text' key or similar
+            extracted_text = data.get("text", "")
+            # Mistral API might provide confidence scores, use a placeholder if not explicit
+            confidence = data.get("confidence", 1.0) # Assume high confidence if text is returned
+
+            processing_time = time.time() - start_time
+
+            return OCRResult(
+                text=extracted_text,
+                confidence=confidence,
+                backend=self.name,
+                processing_time=processing_time,
+                metadata={
+                    "mistral_response": data, # Store full response for debugging
+                },
+                success=True,
+            )
+
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Mistral OCR API request failed: {e}")
+            return OCRResult(
+                text="",
+                confidence=0.0,
+                backend=self.name,
+                processing_time=time.time() - start_time,
+                metadata={"error": str(e)},
+                success=False,
+                error_message=f"Mistral OCR API request failed: {e}",
+            )
+        except Exception as e:
+            logger.error(f"Error processing Mistral OCR response: {e}")
+            return OCRResult(
+                text="",
+                confidence=0.0,
+                backend=self.name,
+                processing_time=time.time() - start_time,
+                metadata={"error": str(e)},
+                success=False,
+                error_message=f"Error processing Mistral OCR response: {e}",
+            )
+
+    def extract_text_from_pdf(self, pdf_path: str) -> OCRResult:
+        """Extract text from PDF using Mistral OCR API by converting to image."""
+        # This is a simplified approach. For multi-page PDFs, each page should be processed.
+        # For now, convert the first page to an image and send it.
+        import fitz # PyMuPDF
+        import tempfile
+        import os
+        import time
+
+        start_time = time.time()
+
+        try:
+            doc = fitz.open(pdf_path)
+            if not doc.page_count:
+                return OCRResult(
+                    text="",
+                    confidence=0.0,
+                    backend=self.name,
+                    processing_time=time.time() - start_time,
+                    metadata={"error": "PDF has no pages"},
+                    success=False,
+                    error_message="PDF has no pages",
+                )
+
+            page = doc.load_page(0) # Process only the first page for simplicity
+            pix = page.get_pixmap()
+
+            with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as temp_img:
+                pix.save(temp_img.name)
+                temp_img_path = temp_img.name
+
+            try:
+                # Use the image extraction method for the temporary image
+                ocr_result = self.extract_text_from_image(temp_img_path)
+                ocr_result.processing_time = time.time() - start_time # Update total time
+                return ocr_result
+            finally:
+                os.unlink(temp_img_path)
+
+        except Exception as e:
+            logger.error(f"Error processing PDF with Mistral OCR backend: {e}")
+            return OCRResult(
+                text="",
+                confidence=0.0,
+                backend=self.name,
+                processing_time=time.time() - start_time,
+                metadata={"error": str(e)},
+                success=False,
+                error_message=f"Error processing PDF with Mistral OCR backend: {e}",
+            )
