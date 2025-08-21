@@ -316,7 +316,7 @@ OCR_CONFIG = {
 }
 
 OCR_QUALITY_THRESHOLD = 80 # Threshold for switching to VisionService
-
+POPPLER_PATH = None
 # Email Configuration for Inventory Alerts
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"  # For development
 DEFAULT_FROM_EMAIL = "agenty@example.com"
