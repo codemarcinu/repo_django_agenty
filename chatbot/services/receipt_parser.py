@@ -8,7 +8,7 @@ import re
 from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal, InvalidOperation
-from typing import Any
+from typing import Any, Dict, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -856,46 +856,47 @@ class GenericReceiptParser(RegexReceiptParser):
 
 
 class AdaptiveReceiptParser(ReceiptParser):
-    """Adaptive parser that selects the best parser based on store detection."""
-    
+    """
+    Parser, który adaptacyjnie wybiera strategię w zależności od wykrytego sklepu.
+    """
     def __init__(self):
-        """Initialize adaptive parser."""
-        self.detector = StoreDetector()
-        self.parsers = {
-            "lidl": LidlReceiptParser(),
-            "generic": GenericReceiptParser()
-        }
+        # Inicjalizujemy pusty słownik na parsery.
+        self.parsers: Dict[str, ReceiptParser] = {}
+        # Definiujemy domyślny parser, jeśli żaden inny nie pasuje.
+        self.default_parser = RegexReceiptParser()
+        logger.info(f"Initialized AdaptiveReceiptParser with default: {type(self.default_parser).__name__}")
+
+    def register_parser(self, store_keyword: str, parser_instance: ReceiptParser):
+        """
+        Rejestruje instancję parsera dla danego słowa kluczowego sklepu.
+        """
+        self.parsers[store_keyword] = parser_instance
+        logger.info(f"Registered parser {type(parser_instance).__name__} for keyword '{store_keyword}'")
+
+    def _detect_store(self, text: str) -> Optional[str]:
+        """
+        Wykrywa sklep na podstawie słów kluczowych w tekście.
+        """
+        text_lower = text.lower()
+        for keyword in self.parsers.keys():
+            if keyword in text_lower:
+                logger.debug(f"Detected store keyword: '{keyword}'")
+                return keyword
+        logger.debug("No specific store keyword detected.")
+        return None
+
+    def parse(self, text: str) -> ParsedReceipt:
+        """
+        Wybiera odpowiedni parser i przetwarza tekst.
+        """
+        store = self._detect_store(text)
+        if store and store in self.parsers:
+            parser = self.parsers[store]
+            logger.info(f"Using {type(parser).__name__} for detected store '{store}'")
+            return parser.parse(text)
         
-    def parse(self, ocr_text: str) -> ParsedReceipt:
-        """Parse using the most appropriate parser."""
-        if not ocr_text or not ocr_text.strip():
-            logger.warning("Empty OCR text provided to adaptive parser")
-            return ParsedReceipt()
-            
-        # Detect store type
-        store_type, confidence = self.detector.detect_store(ocr_text)
-        
-        # Select parser
-        if store_type in self.parsers and confidence >= 0.8:
-            parser = self.parsers[store_type]
-            logger.info(f"Using {store_type} parser (confidence: {confidence:.2f})")
-        else:
-            parser = self.parsers["generic"] 
-            logger.info(f"Using generic parser (store: {store_type}, confidence: {confidence:.2f})")
-            
-        # Parse with selected parser
-        result = parser.parse(ocr_text)
-        
-        # Add metadata about parsing
-        result.meta.update({
-            'detected_store': store_type,
-            'detection_confidence': confidence,
-            'parser_used': type(parser).__name__
-        })
-        
-        return result
+        logger.info(f"No specific parser found, falling back to {type(self.default_parser).__name__}")
+        return self.default_parser.parse(text)
 
 
-def get_receipt_parser() -> ReceiptParser:
-    """Get default receipt parser instance."""
-    return AdaptiveReceiptParser()
+

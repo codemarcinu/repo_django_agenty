@@ -340,6 +340,10 @@ RECEIPT_OLLAMA_CONFIG = {
     }
 }
 
+# Settings for the standalone VisionService, used in the receipt processing pipeline
+OLLAMA_API_BASE_URL = "http://127.0.0.1:11434"
+OLLAMA_VISION_MODEL = "qwen2.5-vl:7b"
+
 # Security settings for development (some disabled for local dev)
 # Note: These should be enabled in production
 if not DEBUG:

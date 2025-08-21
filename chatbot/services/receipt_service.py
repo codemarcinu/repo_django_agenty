@@ -26,8 +26,9 @@ from .image_processor import get_image_processor
 from .ocr_service import get_ocr_service
 from .pantry_service_v2 import PantryServiceV2
 from .receipt_cache import get_cache_manager
-from .receipt_parser import get_receipt_parser
+
 from .websocket_notifier import get_websocket_notifier
+from .registry import receipt_parser
 
 logger = logging.getLogger(__name__)
 
@@ -51,23 +52,40 @@ class ReceiptService:
         self.pantry_service = PantryServiceV2()
         self.notifier = get_websocket_notifier()
 
-    def create_receipt_record(self, receipt_file) -> Receipt:
+    def process_and_queue_receipt(self, receipt_file, user):
         """
-        Create new receipt processing record.
+        Tworzy rekord paragonu w bazie danych, zapisuje plik i kolejkuje zadanie Celery.
         """
-        diag_logger.debug(f"Attempting to create new receipt record for file: {receipt_file.name}")
+        receipt = None  # Inicjalizujemy zmienną, aby była dostępna w bloku except
         try:
+            # Krok 1: Stwórz obiekt Receipt w bazie danych
             receipt = Receipt.objects.create(
-                receipt_file=receipt_file, status="pending", processing_step="uploaded"
+                user=user,
+                status='pending',
+                processing_step='queued'
             )
-            logger.info(f"Created receipt processing record: {receipt.id}")
-            diag_logger.info(f"Successfully created receipt record with ID: {receipt.id}. Status: {receipt.status}, Step: {receipt.processing_step}")
-            self.notifier.notify_receipt_created(receipt.id, receipt.status)
+            
+            # Krok 2: Zapisz plik. Django automatycznie przypisze go do obiektu.
+            receipt.receipt_file.save(receipt_file.name, receipt_file, save=True)
+            
+            logger.info(f"✅ New Receipt record created successfully with ID: {receipt.id}")
+
+            # Krok 3: Wywołaj zadanie asynchroniczne Celery
+            from ..tasks import orchestrate_receipt_processing
+            orchestrate_receipt_processing.delay(receipt.id)
+            logger.info(f"✅ Queued orchestration task for receipt {receipt.id}")
+
             return receipt
+        
         except Exception as e:
-            logger.error(f"Error creating receipt record: {e}")
-            diag_logger.critical(f"CRITICAL ERROR: Failed to create receipt record for file {receipt_file.name}: {e}", exc_info=True)
-            raise DatabaseError(f"Failed to create receipt record: {e}") from e
+            # Ten blok jest OBOWIĄZKOWY i musi następować zaraz po bloku `try`
+            logger.error(f"❌ Failed to create or queue receipt: {e}", exc_info=True)
+            
+            # Jeśli paragon został już utworzony, oznacz go jako błędny
+            if receipt and receipt.pk:
+                receipt.mark_as_error(f"Failed during initial creation/queuing: {e}")
+                
+            return None
 
     def start_processing(self, receipt_id: int):
         """
@@ -97,18 +115,11 @@ class ReceiptService:
             diag_logger.error(f"Receipt {receipt_id} not found during start_processing: {e}", exc_info=True)
             raise ReceiptNotFoundError(f"Receipt {receipt_id} not found") from e
         except Exception as e:
-            error_msg = f"Failed to queue Celery task for receipt {receipt_id}: {e}"
-            logger.error(f"❌ {error_msg}", exc_info=True)
-            diag_logger.critical(f"CRITICAL ERROR: Failed to queue Celery task for receipt {receipt_id}: {e}", exc_info=True)
-            try:
-                receipt = Receipt.objects.get(id=receipt_id)
-                receipt.mark_as_error("Task queueing failed")
-                self.notifier.send_error(receipt_id, "Błąd kolejki zadań. Sprawdź połączenie z Redis.")
-                diag_logger.info(f"Receipt {receipt_id} marked as error due to task queueing failure.")
-            except Receipt.DoesNotExist:
-                diag_logger.warning(f"Could not find receipt {receipt_id} to mark as error after task queueing failure.")
-                pass
-            raise ReceiptError(error_msg) from e
+            logger.error(f"❌ Failed to queue orchestration task for receipt {receipt.id}: {e}", exc_info=True)
+            if 'receipt' in locals() and receipt.pk:
+                receipt.mark_as_error(f"Failed to queue task: {e}")
+            # Możesz tutaj rzucić wyjątek dalej lub zwrócić None, w zależności od logiki
+            return None
 
     def process_receipt_ocr(self, receipt_id: int, use_fallback: bool = True):
         """
@@ -250,7 +261,7 @@ class ReceiptService:
             receipt.save()
             diag_logger.debug(f"Receipt {receipt_id} status updated to 'parsing_in_progress'.")
 
-            parser = get_receipt_parser()
+            parser = receipt_parser
             diag_logger.debug(f"Calling receipt parser for receipt {receipt_id}.")
             parsed_receipt = parser.parse(ocr_text)
 

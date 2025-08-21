@@ -307,11 +307,18 @@ class Receipt(models.Model):
         return abs(self.total - calculated)
 
     # UNIFIED BUSINESS LOGIC - combining methods from ReceiptProcessing
-    def mark_as_processing(self):
-        """Mark receipt as being processed"""
-        self.status = "processing"
-        self.processing_step = "ocr_in_progress"
-        self.save()
+    def mark_as_processing(self, step: str = None):
+        """
+        Ustawia status paragonu na 'processing' i opcjonalnie aktualizuje
+        krok przetwarzania.
+        """
+        self.status = 'processing'
+        update_fields_list = ['status', 'updated_at']
+        if step:
+            self.processing_step = step
+            update_fields_list.append('processing_step')
+        
+        self.save(update_fields=update_fields_list)
 
     def mark_ocr_done(self, raw_text: str):
         """Mark OCR processing as completed"""
