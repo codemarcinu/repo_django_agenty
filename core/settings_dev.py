@@ -325,7 +325,7 @@ INVENTORY_ALERTS_EMAIL = "admin@example.com"  # Where to send inventory alerts
 # Ollama Configuration for Receipt Processing (Updated for RTX 3060 optimization)
 RECEIPT_OLLAMA_CONFIG = {
     "ollama_url": "http://127.0.0.1:11434",
-    "model": "qwen2.5-vl:7b",  # Vision model for receipt processing
+    "model": "qwen2:7b",  # Text model for receipt processing
     "timeout": 300,  # Reduced timeout for faster 7B models
     "max_retries": 2,
     "stream": False,
