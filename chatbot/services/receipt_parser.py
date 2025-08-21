@@ -92,7 +92,7 @@ def get_receipt_parser() -> AdaptiveReceiptParser:
     if _receipt_parser_instance is None:
         # 1. Stwórz domyślny parser (może to być LLM lub prosty Regex)
         # Na razie używamy Regex jako podstawy.
-        default_parser = RegexReceiptParser()
+        default_parser = ReceiptLLMService()
 
         # 2. Stwórz główny adapter z domyślnym parserem
         instance = AdaptiveReceiptParser(default_parser=default_parser)
