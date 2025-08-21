@@ -423,3 +423,6 @@ CHANNEL_LAYERS = {
         # },
     },
 }
+
+MISTRAL_API_KEY = env("MISTRAL_API_KEY")
+
