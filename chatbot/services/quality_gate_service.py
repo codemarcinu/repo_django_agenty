@@ -1,53 +1,51 @@
-from chatbot.schemas import OCRResult
+from .ocr_service import OCRResult
+import logging
+
+logger = logging.getLogger(__name__)
+
 
 class QualityGateService:
-    MIN_LINE_COUNT = 5 # Minimalna sensowna liczba linii na paragonie
-    REQUIRED_KEYWORDS = ["SUMA", "PLN", "PARAGON"]
+    """
+    Ocenia jakość wyniku OCR na podstawie zdefiniowanych kryteriów.
+    """
+    MIN_LINE_COUNT = 3  # Minimalna wymagana liczba linii
+    MIN_CONFIDENCE_SCORE = 0.6  # Minimalny próg pewności OCR
 
-    def __init__(self, ocr_result: OCRResult):
-        self.result = ocr_result
+    def __init__(self, result: OCRResult):
+        if not isinstance(result, OCRResult):
+            raise TypeError("result must be an instance of OCRResult")
+        self.result = result
         self.score = 0
         self.reasons = []
 
     def calculate_quality_score(self) -> int:
+        """
+        Oblicza ogólny wynik jakości na podstawie różnych kontroli.
+        """
         self._check_line_count()
-        self._check_average_confidence()
-        self._check_keyword_presence()
-        # ... inne metryki ...
+        self._check_confidence()
+        logger.info(f"Quality Gate for OCR completed with score: {self.score}. Reasons: {self.reasons}")
         return self.score
 
     def _check_line_count(self):
-        # Logika oceny liczby linii
-        # Example logic:
-        if len(self.result.lines) >= self.MIN_LINE_COUNT:
-            self.score += 30 # Arbitrary score for meeting minimum lines
-        else:
-            self.reasons.append("Niewystarczająca liczba linii.")
+        """
+        Sprawdza, czy liczba linii w tekście OCR jest wystarczająca.
+        """
+        # Poprawka: Dzielimy `self.result.text` na linie, aby policzyć ich liczbę.
+        lines = self.result.text.strip().split('n')
+        line_count = len(lines)
 
-    def _check_average_confidence(self):
-        # Logika oceny średniej pewności
-        # Example logic:
-        if self.result.confidences:
-            avg_confidence = sum(self.result.confidences) / len(self.result.confidences)
-            if avg_confidence > 0.8:
-                self.score += 40
-            elif avg_confidence > 0.6:
-                self.score += 20
-            else:
-                self.reasons.append(f"Niska średnia pewność OCR: {avg_confidence:.2f}")
+        if line_count >= self.MIN_LINE_COUNT:
+            self.score += 50
         else:
-            self.reasons.append("Brak danych o pewności OCR.")
+            self.reasons.append(f"Insufficient line count: {line_count} < {self.MIN_LINE_COUNT}")
 
-    def _check_keyword_presence(self):
-        # Logika sprawdzania obecności słów kluczowych
-        # Example logic:
-        found_keywords = 0
-        for keyword in self.REQUIRED_KEYWORDS:
-            if keyword in self.result.full_text.upper():
-                found_keywords += 1
-        if found_keywords == len(self.REQUIRED_KEYWORDS):
-            self.score += 30
-        elif found_keywords > 0:
-            self.score += 15
+    def _check_confidence(self):
+        """
+        Sprawdza, czy pewność wyniku OCR jest powyżej progu.
+        """
+        confidence = self.result.confidence or 0.0
+        if confidence >= self.MIN_CONFIDENCE_SCORE:
+            self.score += 50
         else:
-            self.reasons.append("Brak wymaganych słów kluczowych.")
+            self.reasons.append(f"Low confidence score: {confidence:.2f} < {self.MIN_CONFIDENCE_SCORE}")
