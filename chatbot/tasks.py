@@ -1,8 +1,9 @@
-import asyncio  # Potrzebne do wywołania asynchronicznego VisionService
-import logging
+# W pliku chatbot/tasks.py - dodaj debugging
 
 from celery import shared_task
-from django.conf import settings
+import logging
+import re
+import os
 
 from inventory.models import Receipt
 
@@ -42,16 +43,11 @@ def process_document_task(document_id):
 def orchestrate_receipt_processing(self, receipt_id: int):
     """
     Orchestrates the full, multi-step receipt processing pipeline.
-    1. OCR -> 2. Quality Gate -> 3. Parsing (LLM or Vision) -> 4. Matching
     """
-    # Importy wewnątrz funkcji, aby rozwiązać problem kolistego importu
     from .services.ocr_backends import OCRResult
     from .services.ocr_service import ocr_service
     from .services.quality_gate_service import QualityGateService
-    from .services.receipt_parser import (
-        get_receipt_parser,  # ZMIANA: Import funkcji zamiast instancji
-        AdaptiveReceiptParser, # Nowy import
-    )
+    from .services.receipt_parser import get_receipt_parser, AdaptiveReceiptParser
     from .services.receipt_service import get_receipt_service
     from .services.vision_service import VisionService
     from .services.basic_parser import BasicReceiptParser
@@ -62,7 +58,7 @@ def orchestrate_receipt_processing(self, receipt_id: int):
         receipt = Receipt.objects.get(id=receipt_id)
 
         # --- KROK 1: OCR ---
-        logger.info(f"  [1/4] OCR | Receipt ID: {receipt_id}")
+        logger.info(f" [1/4] OCR | Receipt ID: {receipt_id}")
         receipt.mark_as_processing(step="ocr_in_progress")
         ocr_result = ocr_service.process_file(receipt.receipt_file.path)
 
@@ -71,92 +67,137 @@ def orchestrate_receipt_processing(self, receipt_id: int):
             raise OCRError(f"OCR failed for receipt {receipt_id}")
 
         receipt.raw_ocr_text = ocr_result.text
-        receipt.raw_text = ocr_result.to_dict() # Zapisz pełny wynik jako JSON
+        receipt.raw_text = ocr_result.to_dict()
         receipt.save()
 
-        # --- KROK 2: BRAMKA JAKOŚCI ---
-        logger.info(f"  [2/4] QUALITY GATE | Receipt ID: {receipt_id}")
+        # 🔍 DEBUGGING: Pokaż surowy tekst OCR
+        logger.info(f"🔍 OCR RAW TEXT for Receipt {receipt_id}:")
+        logger.info(f"--- START OCR TEXT ---")
+        logger.info(ocr_result.text)
+        logger.info(f"--- END OCR TEXT ---")
+
+        # --- KROK 2: QUALITY GATE ---
+        logger.info(f" [2/4] QUALITY GATE | Receipt ID: {receipt_id}")
         receipt.mark_as_processing(step="quality_gate")
 
-        # WAŻNE: Upewnij się, że ocr_result to instancja OCRResult
-        # (OCRResult is imported from .services.ocr_service or .services.ocr_backends)
         if not isinstance(ocr_result, OCRResult):
-            raise TypeError(
-                f"OCRService.process_document() must return OCRResult instance, "
-                f"got {type(ocr_result).__name__}"
-            )
-
-        # Krok 2: Quality Gate
-        logger.info(f"  [2/4] QUALITY GATE | Receipt ID: {receipt_id}")
-        receipt.mark_as_processing(step="quality_gate")
+            raise TypeError(f"OCRService.process_document() must return OCRResult instance")
 
         quality_gate = QualityGateService(ocr_result)
         quality_score = quality_gate.calculate_quality_score()
         logger.info(f"Paragon {receipt_id}: Wynik jakości OCR to {quality_score}")
 
-        # --- KROK 3: GŁÓWNY PRZEŁĄCZNIK ---
+        # --- KROK 3: PARSING ---
+        logger.info(f" [3/4] PARSING | Receipt ID: {receipt_id}")
+        receipt.mark_as_processing(step="parsing_in_progress")
+
+        # Spróbuj Vision Service (jeśli działa)
         vision_result = None
         try:
             vision_service = VisionService()
-            vision_result = vision_service.analyze_receipt(receipt.receipt_file.path) # Use receipt.receipt_file.path
+            vision_result = vision_service.analyze_receipt(receipt.receipt_file.path)
             
-            if vision_result is None:
-                logger.warning(f"Vision service failed for receipt {receipt_id}, continuing without vision analysis")
-                
+            if vision_result and vision_result.get('success'):
+                logger.info(f"✅ Vision analysis successful for receipt {receipt_id}")
+                logger.info(f"Vision result: {vision_result.get('extracted_text', '')[:200]}...")
+            else:
+                logger.warning(f"Vision service failed for receipt {receipt_id}, using text parsing")
         except Exception as e:
             logger.error(f"Vision service error for receipt {receipt_id}: {e}")
-            logger.info("Continuing processing without vision analysis")
+
+        # Główny parser
+        parser_service = AdaptiveReceiptParser(default_parser=BasicReceiptParser())
         
-        parser_service = AdaptiveReceiptParser(
-            default_parser=BasicReceiptParser()
-        )
+        # 🔍 DEBUGGING: Sprawdź co parser otrzymuje
+        logger.info(f"🔍 PARSER INPUT for Receipt {receipt_id}:")
+        logger.info(f"OCR Text length: {len(ocr_result.text)} chars")
+        logger.info(f"First 300 chars: {ocr_result.text[:300]}...")
+
         parser_result = parser_service.parse(ocr_result.text)
 
+        # 🔍 DEBUGGING: Sprawdź wynik parsera
+        logger.info(f"🔍 PARSER OUTPUT for Receipt {receipt_id}:")
+        logger.info(f"Parser result: {parser_result}")
+        logger.info(f"Parser result type: {type(parser_result)}")
+
         if parser_result:
-            # Upewnij się, że parser_result jest słownikiem, a nie obiektem Pydantic
+            # Konwersja do słownika jeśli potrzebna
             extracted_dict = parser_result if isinstance(parser_result, dict) else parser_result.dict()
+            
+            # 🔍 DEBUGGING: Sprawdź wyodrębnione produkty  
+            products = extracted_dict.get('products', [])
+            logger.info(f"🔍 EXTRACTED PRODUCTS for Receipt {receipt_id}: {len(products)} products")
+            for i, product in enumerate(products[:3]):  # Pokaż pierwsze 3
+                logger.info(f"  Product {i+1}: {product}")
+
             receipt.extracted_data = extracted_dict
             receipt.mark_llm_done(extracted_dict)
         else:
-            receipt.mark_as_error("Parsing failed: No data extracted from OCR or Vision.")
-            raise ParsingError(f"No data extracted for receipt {receipt_id}")
+            logger.error(f"❌ Parser returned empty result for receipt {receipt_id}")
+            # FALLBACK: Spróbuj prostego parsowania regex
+            fallback_products = simple_text_parser(ocr_result.text)
+            if fallback_products:
+                logger.info(f"🔄 Fallback parser found {len(fallback_products)} products")
+                fallback_dict = {"products": fallback_products, "store_name": "", "total": 0}
+                receipt.extracted_data = fallback_dict
+                receipt.mark_llm_done(fallback_dict)
+            else:
+                receipt.mark_as_error("Parsing failed: No data extracted from OCR.")
+                raise ParsingError(f"No data extracted for receipt {receipt_id}")
 
-        # --- KROK 4: Product Matching ---
-        logger.info(f"  [4/4] MATCHING | Receipt ID: {receipt_id}")
+        # --- KROK 4: MATCHING ---
+        logger.info(f" [4/4] MATCHING | Receipt ID: {receipt_id}")
         receipt_service = get_receipt_service()
         receipt_service.process_receipt_matching(receipt_id)
 
         logger.info(f"✅ ORCHESTRATION COMPLETED for Receipt ID: {receipt_id}.")
 
-    except (OCRError, ParsingError, MatchingError, DatabaseError) as e:
-        logger.warning(f"Retrying task for Receipt ID {receipt_id} due to {type(e).__name__}: {str(e)}")
-        raise self.retry(exc=e)
     except Exception as e:
-        logger.error(
-            f"❌ CRITICAL ORCHESTRATION ERROR for Receipt ID: {receipt_id}: {e}",
-            exc_info=True,
-        )
+        logger.error(f"❌ ORCHESTRATION ERROR for Receipt ID: {receipt_id}: {e}", exc_info=True)
         try:
             receipt_to_update = Receipt.objects.get(id=receipt_id)
             receipt_to_update.mark_as_error(f"Critical error: {e}")
         except Receipt.DoesNotExist:
-            logger.error(f"Could not find receipt {receipt_id} to mark as error after critical failure.")
+            logger.error(f"Could not find receipt {receipt_id} to mark as error.")
         raise
 
-@shared_task(
-    bind=True,
-    autoretry_for=(Exception,),
-    retry_kwargs={"max_retries": 3, "countdown": 60},
-    task_time_limit=600,
-)
-def finalize_receipt_inventory(self, receipt_id: int):
+def simple_text_parser(text: str) -> list:
     """
-    Finalizes a receipt by processing its line items into the inventory.
+    Prosty fallback parser używający regex do znajdowania produktów.
     """
-    logger.info(f"▶️ FINALIZING INVENTORY for Receipt ID: {receipt_id}")
-    from .services.inventory_service import get_inventory_service
-    inventory_service = get_inventory_service()
-    success, message = inventory_service.process_receipt_for_inventory(receipt_id)
-    if not success:
-        logger.error(f"Inventory finalization failed for receipt {receipt_id}: {message}")
-    return success
+    
+    products = []
+    lines = text.split('n')
+    
+    for line in lines:
+        line = line.strip()
+        if not line:
+            continue
+            
+        # Szukaj wzorców: "produkt cena" lub "produkt liczba cena"
+        # Przykład: "Mleko 4,99" lub "Chleb 1 3,50"
+        pattern = r'^(.+?)s+(d+[,.]?d*)s*[A-Z]?s*$'
+        match = re.search(pattern, line)
+        
+        if match:
+            product_name = match.group(1).strip()
+            price_str = match.group(2).replace(',', '.')
+            
+            # Filtruj oczywiste nie-produkty
+            skip_words = ['suma', 'razem', 'total', 'podatek', 'vat', 'paragon', 'data', 'godzina']
+            if any(skip in product_name.lower() for skip in skip_words):
+                continue
+                
+            try:
+                price = float(price_str)
+                if price > 0 and len(product_name) > 2:  # Sensowne wartości
+                    products.append({
+                        "product": product_name,
+                        "quantity": 1.0,
+                        "unit": "szt.",
+                        "price": price
+                    })
+            except ValueError:
+                continue
+    
+    return products
