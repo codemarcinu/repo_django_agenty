@@ -734,3 +734,24 @@ class Rule(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class OcrTrainingSample(models.Model):
+    receipt = models.OneToOneField(Receipt, on_delete=models.CASCADE)
+    local_ocr_text = models.TextField()
+    ground_truth_text = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Training Sample for Receipt {self.receipt.id}"
+
+
+class OcrCorrectionPattern(models.Model):
+    error_pattern = models.CharField(max_length=255, unique=True, db_index=True)
+    correct_pattern = models.CharField(max_length=255)
+    confidence_score = models.FloatField()
+    times_applied = models.PositiveIntegerField(default=0)
+    is_active = models.BooleanField(default=True)
+
+    def __str__(self):
+        return f"'{self.error_pattern}' -> '{self.correct_pattern}'"
