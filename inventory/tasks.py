@@ -68,3 +68,51 @@ def manage_alias_reputation():
             products_updated += 1
 
     logger.info(f"Alias reputation management task completed. Products updated: {products_updated}, Aliases promoted: {aliases_promoted}, Aliases pruned: {aliases_pruned}")
+
+
+@shared_task
+def run_mistral_ocr_and_save_sample_task(receipt_id: int):
+    """
+    Celery task to run Mistral OCR on a receipt and save the result as an OcrTrainingSample.
+    This is triggered when local OCR confidence is low.
+    """
+    from inventory.models import Receipt, OcrTrainingSample
+    from chatbot.services.ocr_backends import MistralOCRBackend
+
+    logger.info(f"Running Mistral OCR for receipt ID: {receipt_id}")
+
+    try:
+        receipt = Receipt.objects.get(id=receipt_id)
+    except Receipt.DoesNotExist:
+        logger.error(f"Receipt with ID {receipt_id} not found.")
+        return
+
+    if not receipt.receipt_file:
+        logger.warning(f"Receipt ID {receipt_id} has no associated file. Skipping Mistral OCR.")
+        return
+
+    mistral_backend = MistralOCRBackend()
+    if not mistral_backend.is_available:
+        logger.error("Mistral OCR backend is not available. Skipping task.")
+        return
+
+    # Assuming receipt.receipt_file.path gives the absolute path to the file
+    file_path = receipt.receipt_file.path
+
+    mistral_ocr_result = mistral_backend.process_file(file_path)
+
+    if mistral_ocr_result.success:
+        ground_truth_text = mistral_ocr_result.text
+        logger.info(f"Mistral OCR successful for receipt {receipt_id}. Text length: {len(ground_truth_text)}")
+
+        # Save the training sample
+        OcrTrainingSample.objects.update_or_create(
+            receipt=receipt,
+            defaults={
+                "local_ocr_text": receipt.raw_ocr_text, # Assuming raw_ocr_text is stored after local OCR
+                "ground_truth_text": ground_truth_text,
+            }
+        )
+        logger.info(f"OcrTrainingSample saved for receipt {receipt_id}.")
+    else:
+        logger.error(f"Mistral OCR failed for receipt {receipt_id}: {mistral_ocr_result.error_message}")
