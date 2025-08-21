@@ -1,102 +1,336 @@
 # W pliku chatbot/services/vision_service.py
 
-import httpx
 import base64
 import logging
-from django.conf import settings
-from typing import Dict, Any, Optional
 import json
-from pathlib import Path
-from pdf2image import convert_from_path
-import tempfile
+from typing import Dict, Any, List, Optional
+from dataclasses import dataclass
+
+import httpx
+
+from chatbot.schemas import ParsedReceipt, ProductSchema
 
 logger = logging.getLogger(__name__)
 
 
+@dataclass
+class VisionResult:
+    """Result from vision model analysis"""
+    success: bool
+    content: str
+    model_used: str
+    error: Optional[str] = None
+    metadata: Optional[Dict[str, Any]] = None
+
+
 class VisionService:
     """
-    Serwis do interakcji z modelami wizyjnymi w celu ekstrakcji danych z obrazów.
-    Używa lokalnego serwera Ollama.
+    Service for image analysis using Ollama vision models.
+    Uses the new /api/chat format for better compatibility.
     """
-    DEFAULT_PROMPT = """
-    Jesteś ekspertem w analizie paragonów. Przeanalizuj ten obraz paragonu i zwróć listę produktów w formacie JSON.
-    Każdy produkt powinien zawierać 'name' (nazwa), 'quantity' (ilość) i 'price' (cena).
-    Odpowiedź zwracaj w postaci samego JSONa, bez żadnych dodatkowych opisów.
-    """
-
-    def __init__(self, model_name: str = "qwen2.5vl:7b", ollama_base_url: Optional[str] = None):
-        self.model_name = model_name
-        self.ollama_base_url = ollama_base_url or settings.OLLAMA_API_BASE_URL
-        self.api_url = f"{self.ollama_base_url}/api/generate"
-        logger.info(f"VisionService initialized for model: {self.model_name} at {self.api_url}")
-
-    def _get_image_bytes(self, image_path: Path) -> Optional[bytes]:
+    
+    def __init__(self, ollama_url: str = "http://127.0.0.1:11434"):
+        self.ollama_url = ollama_url.rstrip('/')
+        self.default_model = "qwen2.5-vl:7b"
+        self.timeout = 120.0
+        
+        # Model-specific configurations
+        self.model_configs = {
+            "qwen2.5-vl:7b": {
+                "temperature": 0.3,
+                "top_p": 0.8,
+                "num_ctx": 4096,
+                "num_predict": 1024
+            },
+            "llava:7b": {
+                "temperature": 0.4,
+                "top_p": 0.9,
+                "num_ctx": 3072,
+                "num_predict": 512
+            }
+        }
+    
+    def _encode_image_to_base64(self, image_path: str) -> str:
         """
-        Konwertuje plik (w tym PDF) na bajty obrazu PNG.
+        Encode image to base64 for API transmission.
+        
+        Args:
+            image_path: Path to image file
+            
+        Returns:
+            Base64 encoded image with data URI prefix
         """
         try:
-            if image_path.suffix.lower() == '.pdf':
-                logger.info(f"Wykryto plik PDF. Konwertowanie na obraz: {image_path}")
-                with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as temp_image:
-                    # Konwertuj pierwszą stronę PDF do obrazu
-                    images = convert_from_path(image_path, first_page=1, last_page=1, fmt='png', single_file=True, poppler_path=settings.POPPLER_PATH)
-                    if images:
-                        images[0].save(temp_image.name, 'PNG')
-                        temp_image.seek(0)
-                        return temp_image.read()
-                    else:
-                        logger.error(f"Nie udało się skonwertować PDF: {image_path}")
-                        return None
-            else:
-                # Dla standardowych formatów obrazu, po prostu odczytaj plik
-                with image_path.open("rb") as f:
-                    return f.read()
+            with open(image_path, 'rb') as image_file:
+                image_data = image_file.read()
+                b64_string = base64.b64encode(image_data).decode('utf-8')
+                
+                # Determine MIME type based on file extension
+                import os
+                ext = os.path.splitext(image_path)[1].lower()
+                mime_type = {
+                    '.jpg': 'image/jpeg',
+                    '.jpeg': 'image/jpeg',
+                    '.png': 'image/png',
+                    '.gif': 'image/gif',
+                    '.bmp': 'image/bmp',
+                    '.webp': 'image/webp'
+                }.get(ext, 'image/jpeg')
+                
+                return f"data:{mime_type};base64,{b64_string}"
+                
         except Exception as e:
-            logger.error(f"Błąd podczas przetwarzania pliku {image_path}: {e}")
-            return None
-
-    async def extract_data_from_image(self, image_path: str, prompt: Optional[str] = None) -> Optional[Dict[str, Any]]:
+            logger.error(f"Failed to encode image {image_path}: {e}")
+            raise
+    
+    async def analyze_image(
+        self, 
+        image_path: str, 
+        prompt: str,
+        model: Optional[str] = None
+    ) -> VisionResult:
         """
-        Przesyła obraz do modelu wizyjnego i zwraca wyekstrahowane dane w formacie JSON.
-        """
-        final_prompt = prompt or self.DEFAULT_PROMPT
-        logger.info(f"🖼️ Analizuję plik z {self.model_name}: {image_path}")
+        Analyze image using vision model with the new /api/chat format.
         
-        path = Path(image_path)
-        image_bytes = self._get_image_bytes(path)
+        Args:
+            image_path: Path to image file
+            prompt: Text prompt for analysis
+            model: Vision model to use (defaults to qwen2.5-vl:7b)
+            
+        Returns:
+            VisionResult with analysis
+        """
+        model = model or self.default_model
+        
+        try:
+            logger.info(f"🖼️ Analyzing image with {model}: {image_path}")
+            
+            # Encode image
+            b64_image = self._encode_image_to_base64(image_path)
+            
+            # Prepare payload using /api/chat format
+            payload = {
+                "model": model,
+                "messages": [
+                    {
+                        "role": "user",
+                        "content": [
+                            {"type": "text", "text": prompt},
+                            {"type": "image", "image": b64_image}
+                        ]
+                    }
+                ],
+                "stream": False,
+                "options": self.model_configs.get(model, {})
+            }
+            
+            # Make API request
+            async with httpx.AsyncClient(timeout=self.timeout) as client:
+                headers = {
+                    'Content-Type': 'application/json',
+                    'User-Agent': 'agenty-vision-service/1.0'
+                }
+                
+                response = await client.post(
+                    f"{self.ollama_url}/api/chat",
+                    json=payload,
+                    headers=headers
+                )
+                
+                response.raise_for_status()
+                result = response.json()
+                
+                # Extract response content
+                content = result.get("message", {}).get("content", "")
+                
+                if not content:
+                    return VisionResult(
+                        success=False,
+                        content="",
+                        model_used=model,
+                        error="Empty response from vision model"
+                    )
+                
+                logger.info(f"✅ Vision analysis completed: {len(content)} characters")
+                
+                return VisionResult(
+                    success=True,
+                    content=content,
+                    model_used=model,
+                    metadata={
+                        "response_length": len(content),
+                        "model_config": self.model_configs.get(model, {}),
+                        "image_path": image_path
+                    }
+                )
+                
+        except httpx.HTTPError as e:
+            error_msg = f"HTTP error during vision analysis: {e}"
+            logger.error(error_msg)
+            return VisionResult(
+                success=False,
+                content="",
+                model_used=model,
+                error=error_msg
+            )
+        except Exception as e:
+            error_msg = f"Vision analysis failed: {e}"
+            logger.error(error_msg, exc_info=True)
+            return VisionResult(
+                success=False,
+                content="",
+                model_used=model,
+                error=error_msg
+            )
+    
+    async def analyze_receipt(self, image_path: str, model: Optional[str] = None) -> VisionResult:
+        """
+        Specialized method for receipt analysis.
+        
+        Args:
+            image_path: Path to receipt image
+            model: Vision model to use
+            
+        Returns:
+            VisionResult with receipt analysis
+        """
+        receipt_prompt = """Przeanalizuj ten paragon i zwróć TYLKO JSON z produktami w następującym formacie:
 
-        if not image_bytes:
-            logger.error(f"Nie udało się odczytać lub skonwertować pliku obrazu: {image_path}")
-            return None
+[
+    {
+        "product": "nazwa produktu",
+        "quantity": 1.0,
+        "unit": "szt.",
+        "price": 12.34
+    }
+]
 
-        encoded_image = base64.b64encode(image_bytes).decode("utf-8")
+Wyciągnij wszystkie produkty z ich cenami. Jeśli nie możesz określić ilości, użyj 1.0. Jeśli nie możesz określić jednostki, użyj "szt.".
+WAŻNE: Zwróć TYLKO JSON, bez dodatkowych komentarzy."""
 
-        payload = {
-            "model": self.model_name,
-            "prompt": final_prompt,
-            "images": [encoded_image],
-            "stream": False,
-            "options": {"temperature": 0.0}
+        result = await self.analyze_image(image_path, receipt_prompt, model)
+        
+        if result.success:
+            # Try to parse JSON from response
+            try:
+                # Extract JSON from response
+                content = result.content.strip()
+                
+                # Find JSON array in response
+                json_start = content.find("[")
+                json_end = content.rfind("]")
+                
+                if json_start != -1 and json_end != -1 and json_end > json_start:
+                    json_string = content[json_start:json_end + 1]
+                    parsed_json = json.loads(json_string)
+                    
+                    # Validate JSON structure
+                    if isinstance(parsed_json, list):
+                        logger.info(f"✅ Receipt JSON parsed: {len(parsed_json)} products")
+                        
+                        # Add parsed data to metadata
+                        if result.metadata is None:
+                            result.metadata = {}
+                        result.metadata["parsed_products"] = parsed_json
+                        result.metadata["products_count"] = len(parsed_json)
+                
+            except json.JSONDecodeError as e:
+                logger.warning(f"Could not parse JSON from vision response: {e}")
+                if result.metadata is None:
+                    result.metadata = {}
+                result.metadata["json_parse_error"] = str(e)
+        
+        return result
+    
+    async def extract_data_from_image(self, image_path: str) -> ParsedReceipt:
+        """
+        Extracts structured data from a receipt image using the vision model.
+        
+        Args:
+            image_path: Path to the receipt image file.
+            
+        Returns:
+            A ParsedReceipt object containing the extracted store name, total amount, and items.
+        """
+        try:
+            vision_result = await self.analyze_receipt(image_path)
+            
+            if vision_result.success and vision_result.metadata and "parsed_products" in vision_result.metadata:
+                items = []
+                for item_data in vision_result.metadata["parsed_products"]:
+                    try:
+                        # Assuming the vision model returns 'product', 'quantity', 'unit', 'price'
+                        # Need to map 'product' to 'product_name' for ProductSchema
+                        items.append(ProductSchema(
+                            product_name=item_data.get("product", ""),
+                            quantity=item_data.get("quantity", 1.0),
+                            unit=item_data.get("unit", "szt."),
+                        ))
+                    except Exception as e:
+                        logger.warning(f"Failed to parse product item from vision result: {item_data}. Error: {e}")
+                
+                return ParsedReceipt(
+                    store_name=None, # Vision model doesn't extract this yet
+                    total_amount=None, # Vision model doesn't extract this yet
+                    items=items
+                )
+            else:
+                logger.error(f"Vision service failed to extract data or no products found for {image_path}. Error: {vision_result.error}")
+                return ParsedReceipt() # Return an empty ParsedReceipt on failure
+        except httpx.HTTPStatusError as e:
+            logger.critical(f"HTTP Status Error communicating with Ollama: {e.response.status_code} - {e.response.text}")
+            # Zwróć pusty obiekt, aby zadanie Celery mogło kontynuować lub ponowić próbę
+            return ParsedReceipt()
+        except Exception as e:
+            logger.critical(f"An unexpected error occurred in VisionService: {e}", exc_info=True)
+            return ParsedReceipt()
+    
+    async def check_model_availability(self, model: str) -> bool:
+        """
+        Check if vision model is available in Ollama.
+        
+        Args:
+            model: Model name to check
+            
+        Returns:
+            True if model is available
+        """
+        try:
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                response = await client.get(f"{self.ollama_url}/api/tags")
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    models = data.get("models", [])
+                    available_models = [m.get("name", "") for m in models]
+                    
+                    is_available = model in available_models
+                    logger.info(f"Model {model} availability: {is_available}")
+                    return is_available
+                
+        except Exception as e:
+            logger.error(f"Failed to check model availability: {e}")
+        
+        return False
+    
+    def get_service_info(self) -> Dict[str, Any]:
+        """
+        Get service configuration and status"""
+        return {
+            "service": "VisionService",
+            "ollama_url": self.ollama_url,
+            "default_model": self.default_model,
+            "timeout": self.timeout,
+            "supported_models": list(self.model_configs.keys()),
+            "api_format": "/api/chat",
+            "features": [
+                "receipt_analysis",
+                "document_analysis", 
+                "general_description",
+                "json_extraction"
+            ]
         }
 
-        try:
-            async with httpx.AsyncClient(timeout=180.0) as client:
-                response = await client.post(self.api_url, json=payload)
-                response.raise_for_status()
-                response_json = response.json()
-                
-                if 'response' in response_json:
-                    try:
-                        clean_response = response_json['response'].replace("```json", "").replace("```", "").strip()
-                        return json.loads(clean_response)
-                    except json.JSONDecodeError:
-                        logger.error(f"Błąd dekodowania JSON: {response_json['response']}")
-                        return {"error": "Invalid JSON response", "raw_response": response_json['response']}
-                return response_json
 
-        except httpx.HTTPStatusError as e:
-            logger.error(f"HTTP error during vision analysis: {e.response.text}")
-            raise
-        except Exception as e:
-            logger.error(f"Niespodziewany błąd podczas analizy wizualnej: {e}")
-            return None
+# Global service instance
+vision_service = VisionService()
