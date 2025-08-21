@@ -50,6 +50,7 @@ def orchestrate_receipt_processing(self, receipt_id: int):
     from .services.quality_gate_service import QualityGateService
     from .services.receipt_parser import (
         get_receipt_parser,  # ZMIANA: Import funkcji zamiast instancji
+        AdaptiveReceiptParser, # Nowy import
     )
     from .services.receipt_service import get_receipt_service
     from .services.vision_service import VisionService
@@ -93,23 +94,24 @@ def orchestrate_receipt_processing(self, receipt_id: int):
         logger.info(f"Paragon {receipt_id}: Wynik jakości OCR to {quality_score}")
 
         # --- KROK 3: GŁÓWNY PRZEŁĄCZNIK ---
-        parsed_data = None
-        receipt_parser = get_receipt_parser() # ZMIANA: Pobranie instancji przez funkcję
+        vision_result = None
+        try:
+            vision_service = VisionService()
+            vision_result = vision_service.analyze_receipt(receipt.receipt_file.path) # Use receipt.receipt_file.path
+            
+            if vision_result is None:
+                logger.warning(f"Vision service failed for receipt {receipt_id}, continuing without vision analysis")
+                
+        except Exception as e:
+            logger.error(f"Vision service error for receipt {receipt_id}: {e}")
+            logger.info("Continuing processing without vision analysis")
+        
+        parser_service = AdaptiveReceiptParser()
+        parser_result = parser_service.parse_receipt(ocr_result.text, vision_result)
 
-        if quality_score >= settings.OCR_QUALITY_THRESHOLD:
-            logger.info(f"Paragon {receipt_id}: Jakość wysoka. Uruchamiam standardowy parser.")
-            receipt.mark_as_processing(step="parsing_in_progress")
-            raw_text = ocr_result.text
-            parsed_data = receipt_parser.parse(raw_text)
-        else:
-            logger.warning(f"Paragon {receipt_id}: Jakość niska. Przełączam na VisionService.")
-            receipt.mark_as_processing(step="vision_parsing")
-            vision_service_instance = VisionService()
-            parsed_data = asyncio.run(vision_service_instance.extract_data_from_image(receipt.receipt_file.path))
-
-        if parsed_data:
-            # Upewnij się, że parsed_data jest słownikiem, a nie obiektem Pydantic
-            extracted_dict = parsed_data if isinstance(parsed_data, dict) else parsed_data.dict()
+        if parser_result:
+            # Upewnij się, że parser_result jest słownikiem, a nie obiektem Pydantic
+            extracted_dict = parser_result if isinstance(parser_result, dict) else parser_result.dict()
             receipt.extracted_data = extracted_dict
             receipt.mark_llm_done(extracted_dict)
         else:
