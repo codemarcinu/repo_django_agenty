@@ -23,6 +23,6 @@ for log_file in "${LOG_FILES[@]}"; do
 done
 
 # Wyczyść wszystkie .log w całym projekcie
-find . -name "*.log" -type f -not -path "./venv/*" -not -path "./.venv/*" -exec truncate -s 0 {} ;
+find . -name "*.log" -type f -not -path "./venv/*" -not -path "./.venv/*" -exec truncate -s 0 {} + 2>/dev/null
 
 echo "🎯 All logs cleared!"
