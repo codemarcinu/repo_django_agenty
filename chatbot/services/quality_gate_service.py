@@ -56,7 +56,7 @@ class QualityGateService:
         """
         Sprawdza, czy pewność wyniku OCR jest powyżej progu.
         """
-        confidence = self.result.confidence or 0.0
+        confidence = self.ocr_result.confidence or 0.0
         if confidence >= self.MIN_CONFIDENCE_SCORE:
             self.score += 50
         else:
