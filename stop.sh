@@ -21,3 +21,9 @@ sudo systemctl stop valkey 2>/dev/null || true
 
 echo "
 ✅ Wszystkie usługi zostały zatrzymane."
+
+# Na końcu dodaj:
+echo "Stopping services completed. Clearing logs..."
+./clear_logs.sh
+
+echo "🛑 All services stopped and logs cleared"
