@@ -53,31 +53,74 @@ class AdaptiveReceiptParser:
     na podstawie słów kluczowych znalezionych w tekście paragonu.
     """
 
-    def __init__(self, default_parser: ReceiptParser):
-        self._parsers: dict[str, ReceiptParser] = {}
-        self._default_parser: ReceiptParser = default_parser
-        self.register_parser("default", default_parser)
-        logger.info(f"Initialized AdaptiveReceiptParser with default: {default_parser.__class__.__name__}")
-
-    def register_parser(self, keyword: str, parser: ReceiptParser):
-        """Rejestruje nowy parser dla danego słowa kluczowego."""
-        self._parsers[keyword.lower()] = parser
-        logger.info(f"Registered parser {parser.__class__.__name__} for keyword '{keyword}'")
-
-    def select_parser(self, raw_text: str) -> ReceiptParser:
-        """Wybiera najlepszy parser na podstawie treści paragonu."""
-        lower_text = raw_text.lower()
-        for keyword, parser in self._parsers.items():
-            if keyword != "default" and keyword in lower_text:
-                logger.info(f"Keyword '{keyword}' found. Selecting {parser.__class__.__name__}.")
-                return parser
-        logger.info("No specific keyword found. Using default parser.")
-        return self._default_parser
-
-    def parse(self, raw_text: str) -> list[ParsedProduct]: # Changed return type
-        """Używa wybranego parsera do przetworzenia tekstu."""
-        selected_parser = self.select_parser(raw_text)
-        return selected_parser.parse(raw_text)
+    def __init__(self, default_parser=None):
+        self.parsers = {}
+        self.default_parser = default_parser or BasicReceiptParser()
+        
+    def parse(self, text: str, vision_result: dict = None) -> dict:
+        """
+        Parse receipt text with optional vision result.
+        """
+        # NOWA FUNKCJA: Jeśli mamy vision result, użyj go
+        if vision_result and vision_result.get('success'):
+            try:
+                return self._parse_vision_result(vision_result)
+            except Exception as e:
+                logger.warning(f"Vision parsing failed: {e}, falling back to text")
+        
+        # Fallback do tekstowego parsowania
+        return self.default_parser.parse(text)
+    
+    def _parse_vision_result(self, vision_result: dict) -> dict:
+        """Parse vision model JSON response."""
+        import json
+        
+        vision_text = vision_result.get('extracted_text', '')
+        
+        # Znajdź JSON
+        json_start = vision_text.find('{')
+        json_end = vision_text.rfind('}') + 1
+        
+        if json_start < 0 or json_end <= json_start:
+            raise ValueError("No valid JSON in vision result")
+        
+        vision_json_str = vision_text[json_start:json_end]
+        vision_data = json.loads(vision_json_str)
+        
+        # Konwertuj do standardowego formatu
+        products = []
+        for item in vision_data.get('items', []):
+            price_str = str(item.get('cena', '0')).replace(' PLN', '').replace(',', '.')
+            quantity_str = str(item.get('ilość', '1')).replace(',', '.')
+            
+            try:
+                product = {
+                    "product": str(item.get('nazwa', '')).strip(),
+                    "quantity": float(quantity_str) if quantity_str else 1.0,
+                    "unit": "szt.",
+                    "price": float(price_str) if price_str else 0.0
+                }
+                
+                if product['product'] and len(product['product']) > 1:
+                    products.append(product)
+                    
+            except (ValueError, TypeError) as e:
+                logger.warning(f"Skipping invalid product: {item} ({e})")
+                continue
+        
+        total_str = str(vision_data.get('total', '0')).replace(' PLN', '').replace(',', '.')
+        
+        result = {
+            "store_name": str(vision_data.get('sklep', '')).strip(),
+            "total_amount": float(total_str) if total_str else 0.0,
+            "date": str(vision_data.get('data', '')).strip(),
+            "products": products,
+            "parser_used": "vision_parser", 
+            "confidence": 0.9
+        }
+        
+        logger.info(f"Vision parser extracted {len(products)} products")
+        return result
 
 # --- FUNKCJA TWORZĄCA INSTANCJĘ (Singleton Pattern) ---
 

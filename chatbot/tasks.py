@@ -113,7 +113,7 @@ def orchestrate_receipt_processing(self, receipt_id: int):
         logger.info(f"OCR Text length: {len(ocr_result.text)} chars")
         logger.info(f"First 300 chars: {ocr_result.text[:300]}...")
 
-        parser_result = parser_service.parse(ocr_result.text)
+        parser_result = parser_service.parse(ocr_result.text, vision_result)
 
         # 🔍 DEBUGGING: Sprawdź wynik parsera
         logger.info(f"🔍 PARSER OUTPUT for Receipt {receipt_id}:")
