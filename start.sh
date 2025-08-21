@@ -140,10 +140,12 @@ nohup .venv/bin/celery -A core.celery_app worker -l info > logs/celery.log 2>&1 
 sleep 2 # Give celery time to start
 echo "✅ Worker Celery uruchomiony. Logi w: logs/celery.log"
 
-echo "🌟 Uruchamianie serwera Django w tle..."
-export DJANGO_SETTINGS_MODULE=core.settings_dev
-nohup .venv/bin/python manage.py runserver > logs/django.log 2>&1 &
-sleep 2 # Give django time to start
+echo "🌐 Uruchamianie serwera WebSocket (Daphne) w tle..."
+nohup .venv/bin/daphne core.asgi:application -b 0.0.0.0 -p 8000 > logs/daphne.log 2>&1 &
+sleep 2 # Give daphne time to start
+echo "✅ Serwer WebSocket uruchomiony. Logi w: logs/daphne.log"
+
+
 
 echo ""
 echo "🎉 Wszystkie usługi zostały uruchomione w tle! 🎉"

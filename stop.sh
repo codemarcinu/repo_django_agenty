@@ -5,6 +5,7 @@ echo "🔴 Zatrzymywanie wszystkich usług Asystenta AI..."
 # Stop Django development server
 echo "- Zatrzymywanie serwera Django..."
 pkill -f 'manage.py runserver' 2>/dev/null || true
+pkill -f 'daphne' 2>/dev/null || true
 
 # Stop Celery workers
 echo "- Zatrzymywanie workerów Celery..."
