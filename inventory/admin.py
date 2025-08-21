@@ -14,6 +14,8 @@ from .models import (
     Receipt,
     ReceiptLineItem,
     Rule, # Import the new Rule model
+    OcrTrainingSample, # New import
+    OcrCorrectionPattern, # New import
 )
 
 
@@ -374,3 +376,23 @@ admin.site.index_title = "Receipt Processing Pipeline Administration"
 class RuleAdmin(admin.ModelAdmin):
     list_display = ('name', 'priority', 'is_active')
     list_filter = ('is_active',)
+
+
+@admin.register(OcrTrainingSample)
+class OcrTrainingSampleAdmin(admin.ModelAdmin):
+    list_display = ['receipt', 'created_at']
+
+
+@admin.register(OcrCorrectionPattern)
+class OcrCorrectionPatternAdmin(admin.ModelAdmin):
+    list_display = ['error_pattern', 'correct_pattern', 'times_applied', 'is_active']
+    list_filter = ['is_active']
+    search_fields = ['error_pattern', 'correct_pattern']
+
+    actions = ['deactivate_patterns']
+
+    def deactivate_patterns(self, request, queryset):
+        queryset.update(is_active=False)
+        self.message_user(request, f"{queryset.count()} patterns successfully deactivated.", level='success')
+
+    deactivate_patterns.short_description = "Deactivate selected patterns"
