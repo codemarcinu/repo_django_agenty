@@ -110,7 +110,7 @@ def orchestrate_receipt_processing(self, receipt_id: int):
         parser_service = AdaptiveReceiptParser(
             default_parser=BasicReceiptParser()
         )
-        parser_result = parser_service.parse_receipt(ocr_result.text, vision_result)
+        parser_result = parser_service.parse(ocr_result.text, vision_result)
 
         if parser_result:
             # Upewnij się, że parser_result jest słownikiem, a nie obiektem Pydantic
