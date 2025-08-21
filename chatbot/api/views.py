@@ -18,8 +18,39 @@ from ..models import Agent, Document # Import Document model
 from ..services.agent_factory import agent_factory
 from ..services.product_matcher import get_product_matcher
 from ..services.exceptions import AgentNotFoundError # Corrected import # Corrected import
+from rest_framework.decorators import api_view, authentication_classes, permission_classes
+from rest_framework.authentication import TokenAuthentication
+from rest_framework.permissions import IsAuthenticated
+from rest_framework import status
 
 logger = logging.getLogger(__name__)
+
+
+@api_view(['GET', 'POST'])
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def agent_endpoint(request):
+    try:
+        if request.method == 'GET':
+            # Logika GET
+            data = {'message': 'Success', 'data': []}
+            return JsonResponse(data, status=200)
+
+        elif request.method == 'POST':
+            # Logika POST
+            data = {'message': 'Created', 'id': 1}
+            return JsonResponse(data, status=201)
+
+    except AgentNotFoundError as e:
+        return JsonResponse(
+            {'error': str(e)},
+            status=status.HTTP_404_NOT_FOUND
+        )
+    except Exception as e:
+        return JsonResponse(
+            {'error': 'Internal server error'},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
 
 
 class ReceiptStatusAPIView(View):
