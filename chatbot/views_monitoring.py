@@ -3,22 +3,22 @@ Monitoring dashboard views for receipt processing system.
 Implements monitoring dashboards from FAZA 4 of the plan.
 """
 
-import json
 import subprocess
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 import redis
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
+from django.db.models import Q  # Import Q for complex lookups
 from django.http import JsonResponse
 from django.shortcuts import render
 from django.utils import timezone
 from django.views.decorators.http import require_http_methods
-from django.db.models import Q # Import Q for complex lookups
 
-from inventory.models import Receipt, InventoryItem
 from chatbot.models import Agent
-from .services.monitoring import get_receipt_monitor, get_alerting_system, check_system_health
+from inventory.models import InventoryItem, Receipt
+
+from .services.monitoring import check_system_health, get_receipt_monitor
 from .services.optimized_queries import get_receipts_for_listing
 
 
@@ -69,13 +69,13 @@ def monitoring_dashboard(request):
     try:
         # Get current system health
         health_summary = check_system_health()
-        
+
         # Get detailed metrics for different time periods
         monitor = get_receipt_monitor()
         metrics_24h = monitor.get_processing_metrics(days=1)
         metrics_7d = monitor.get_processing_metrics(days=7)
         metrics_30d = monitor.get_processing_metrics(days=30)
-        
+
         # Get recent alerts
         recent_alerts = monitor.get_recent_alerts(hours=24)
 
@@ -87,7 +87,7 @@ def monitoring_dashboard(request):
         # Check external service statuses
         redis_status = check_redis_status()
         ollama_status = check_ollama_status()
-        
+
         context = {
             'health_summary': health_summary,
             'metrics_24h': metrics_24h,
@@ -101,9 +101,9 @@ def monitoring_dashboard(request):
             'ollama_status': ollama_status,
             'page_title': 'System Monitoring Dashboard',
         }
-        
+
         return render(request, 'chatbot/monitoring_dashboard.html', context)
-        
+
     except Exception as e:
         return render(request, 'chatbot/monitoring_dashboard.html', {
             'error': f'Error loading monitoring data: {str(e)}',
@@ -174,10 +174,10 @@ def api_metrics(request):
         days = int(request.GET.get('days', 7))
         if days < 1 or days > 365:
             days = 7
-        
+
         monitor = get_receipt_monitor()
         metrics = monitor.get_processing_metrics(days=days)
-        
+
         # Convert to JSON-serializable format
         metrics_dict = {
             'total_receipts': metrics.total_receipts,
@@ -191,9 +191,9 @@ def api_metrics(request):
             'period_days': days,
             'timestamp': timezone.now().isoformat()
         }
-        
+
         return JsonResponse(metrics_dict)
-        
+
     except ValueError:
         return JsonResponse({'error': 'Invalid days parameter'}, status=400)
     except Exception as e:
@@ -211,10 +211,10 @@ def api_alerts(request):
         hours = int(request.GET.get('hours', 24))
         if hours < 1 or hours > 168:  # Max 1 week
             hours = 24
-        
+
         monitor = get_receipt_monitor()
         alerts = monitor.get_recent_alerts(hours=hours)
-        
+
         # Convert alerts to JSON-serializable format
         alerts_data = []
         for alert in alerts:
@@ -227,13 +227,13 @@ def api_alerts(request):
                 'current_value': alert.current_value,
                 'threshold_value': alert.threshold_value
             })
-        
+
         return JsonResponse({
             'alerts': alerts_data,
             'count': len(alerts_data),
             'period_hours': hours
         })
-        
+
     except ValueError:
         return JsonResponse({'error': 'Invalid hours parameter'}, status=400)
     except Exception as e:
@@ -251,13 +251,11 @@ def api_processing_timeline(request):
         days = int(request.GET.get('days', 7))
         if days < 1 or days > 30:
             days = 7
-        
-        from inventory.models import Receipt
+
         from django.db.models import Count
-        from django.db.models.functions import TruncDate
-        
+
         cutoff_date = timezone.now() - timedelta(days=days)
-        
+
         # Get daily receipt counts using optimized query
         daily_data = get_receipts_for_listing().filter(
             created_at__gte=cutoff_date
@@ -268,7 +266,7 @@ def api_processing_timeline(request):
             completed=Count('id', filter=Q(status='completed')),
             errors=Count('id', filter=Q(status='error'))
         ).order_by('day')
-        
+
         timeline_data = []
         for item in daily_data:
             timeline_data.append({
@@ -278,12 +276,12 @@ def api_processing_timeline(request):
                 'errors': item['errors'],
                 'success_rate': (item['completed'] / item['total'] * 100) if item['total'] > 0 else 0
             })
-        
+
         return JsonResponse({
             'timeline': timeline_data,
             'period_days': days
         })
-        
+
     except ValueError:
         return JsonResponse({'error': 'Invalid days parameter'}, status=400)
     except Exception as e:

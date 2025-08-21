@@ -143,8 +143,9 @@ class ReceiptProcessor:
 
         # Dynamically find and configure the agent for receipt processing
         try:
-            from .models import Agent
             from asgiref.sync import sync_to_async
+
+            from .models import Agent
 
             # Get all active agents and filter by capability
             def get_receipt_agent():
@@ -153,7 +154,7 @@ class ReceiptProcessor:
                     if agent.has_capability("receipt_extraction"):
                         return agent
                 raise Agent.DoesNotExist("No agent with receipt_extraction capability found")
-                        
+
             receipt_agent_model = await sync_to_async(get_receipt_agent)()
             agent_config = receipt_agent_model.config
             logger.info(
@@ -172,13 +173,13 @@ class ReceiptProcessor:
         try:
             # For receipt processing, call Ollama directly to avoid fallbacks
             logger.info("Calling LLM to process receipt text...")
-            
+
             # First check if Ollama is available
             if not await ollama_agent.health_check_ollama():
                 logger.error("Ollama service is not available for receipt processing")
                 # This will trigger a retry in Celery
                 raise ConnectionError("Ollama service is not available.")
-            
+
             # Call Ollama directly, bypassing the fallback system
             response = await ollama_agent.process_with_ollama({"message": prompt, "history": []})
 
@@ -191,28 +192,29 @@ class ReceiptProcessor:
 
                 # Attempt to parse JSON from markdown code block
                 logger.info("Parsing JSON from LLM response's markdown block...")
-                
+
                 import re
                 json_match = re.search(r"```json\n(.*?)\n```", llm_response_text, re.DOTALL)
-                
+
                 if json_match:
                     json_string = json_match.group(1).strip()
                     logger.debug(f"Extracted JSON string: {json_string}")
 
                     # Validate the data structure using Pydantic
                     from pydantic import ValidationError
-                    from .schemas import ReceiptDataSchema, ProductSchema
+
+                    from .schemas import ProductSchema
 
                     try:
                         products_data = json.loads(json_string)
                         validated_data = [ProductSchema(**item) for item in products_data]
-                        
+
                         logger.info(
                             f"✅ Successfully parsed and validated {len(validated_data)} products from LLM response"
                         )
                         # Convert Pydantic models back to dicts for JSON serialization
                         return [item.dict() for item in validated_data]
-                    
+
                     except (ValidationError, json.JSONDecodeError) as e:
                         logger.error(f"❌ Data validation failed for LLM response: {e}")
                         logger.debug(f"Problematic JSON string: {json_string}")
@@ -390,11 +392,11 @@ class ReceiptProcessor:
 
                     # TODO: Replace with PantryServiceV2 for consistency
                     logger.info(f"Processing product: {product_name}, quantity: {quantity}, unit: {unit}")
-                    
+
                     # Use the new PantryServiceV2 instead of direct PantryItem access
                     from .services.pantry_service_v2 import PantryServiceV2
                     pantry_service = PantryServiceV2()
-                    
+
                     try:
                         inventory_item = pantry_service.add_or_update_item(
                             name=product_name,
@@ -436,7 +438,7 @@ async def process_receipt_with_migration_support(receipt_id: int) -> bool:
         except Exception as e:
             logger.error(f"ReceiptProcessorV2 failed for receipt {receipt_id}: {e}")
             logger.info("Falling back to legacy ReceiptProcessor")
-    
+
     # Use legacy processor
     logger.info(f"Using legacy ReceiptProcessor for receipt {receipt_id}")
     return await receipt_processor.process_receipt(receipt_id)

@@ -1,9 +1,10 @@
 # W pliku repo_django_agenty/chatbot/services/unified_receipt_processor.py
 
 import logging
-from .ocr_service import ocr_service
-from .receipt_parser import get_receipt_parser # ZMIANA: Import funkcji
+
 from ..schemas import ExtractedReceipt, OCRResult
+from .ocr_service import ocr_service
+from .receipt_parser import get_receipt_parser  # ZMIANA: Import funkcji
 
 logger = logging.getLogger(__name__)
 

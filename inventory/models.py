@@ -238,7 +238,7 @@ class Receipt(models.Model):
         help_text="Total amount from receipt",
     )
     currency = models.CharField(max_length=3, choices=CURRENCY_CHOICES, default="PLN")
-    
+
     # UNIFIED FIELDS - combining ReceiptProcessing functionality
     receipt_file = models.FileField(
         upload_to="receipt_files/",
@@ -317,7 +317,7 @@ class Receipt(models.Model):
         if step:
             self.processing_step = step
             update_fields_list.append('processing_step')
-        
+
         self.save(update_fields=update_fields_list)
 
     def mark_ocr_done(self, raw_text: str):
@@ -387,7 +387,7 @@ class Receipt(models.Model):
         """Get status display with error message if applicable"""
         base_display = self.get_status_display()
         step_display = self.get_processing_step_display()
-        
+
         if self.has_error() and self.error_message:
             return f"{base_display} ({step_display}): {self.error_message}"
         elif self.status == "processing":
@@ -404,20 +404,20 @@ class Receipt(models.Model):
         """Update inventory with extracted receipt data"""
         try:
             from chatbot.services.inventory_service import get_inventory_service
-            
+
             inventory_service = get_inventory_service()
-            
+
             for product in products_data:
                 name = product.get("name", "").strip()
                 quantity = float(product.get("quantity", 1.0))
                 unit = product.get("unit", "szt.").strip()
-                
+
                 if name:
                     inventory_service.add_or_update_item(name, quantity, unit)
-            
+
             self.mark_as_completed()
             return True
-            
+
         except Exception as e:
             self.mark_as_error(f"Błąd podczas aktualizacji inwentarza: {str(e)}")
             return False
@@ -642,7 +642,7 @@ class InventoryItem(models.Model):
         today = timezone.now().date()
         future_date = today + timezone.timedelta(days=days)
         return cls.objects.filter(
-            expiry_date__gte=today, 
+            expiry_date__gte=today,
             expiry_date__lte=future_date,
             quantity_remaining__gt=0
         )
@@ -651,7 +651,7 @@ class InventoryItem(models.Model):
     def get_low_stock_items(cls, threshold=None):
         """Get items with low stock"""
         from django.db.models import F
-        
+
         if threshold is not None:
             return cls.objects.filter(
                 quantity_remaining__lte=Decimal(str(threshold)),
@@ -667,10 +667,10 @@ class InventoryItem(models.Model):
     @classmethod
     def get_statistics(cls):
         """Get inventory statistics"""
-        from django.db.models import Count, Avg, Sum
-        
+        from django.db.models import Avg, Sum
+
         today = timezone.now().date()
-        
+
         return {
             "total_items": cls.objects.filter(quantity_remaining__gt=0).count(),
             "expired_count": cls.get_expired_items().count(),

@@ -59,7 +59,7 @@ def manage_alias_reputation():
                         continue # Skip adding this alias to updated_aliases
                 except (ValueError, TypeError):
                     logger.warning(f"Invalid date format for alias '{alias_name}' in product '{product.name}'. Skipping pruning.")
-            
+
             updated_aliases.append(alias_entry) # Keep alias if not pruned
 
         if product_changed:
@@ -76,8 +76,8 @@ def run_mistral_ocr_and_save_sample_task(receipt_id: int):
     Celery task to run Mistral OCR on a receipt and save the result as an OcrTrainingSample.
     This is triggered when local OCR confidence is low.
     """
-    from inventory.models import Receipt, OcrTrainingSample
     from chatbot.services.ocr_backends import MistralOCRBackend
+    from inventory.models import OcrTrainingSample, Receipt
 
     logger.info(f"Running Mistral OCR for receipt ID: {receipt_id}")
 

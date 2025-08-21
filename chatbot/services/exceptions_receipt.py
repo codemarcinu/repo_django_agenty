@@ -2,20 +2,21 @@
 Custom exceptions for receipt processing module.
 """
 
-from typing import Optional, Dict, Any
-from .exceptions import ResourceNotFoundError, ValidationError, ProcessingError
+from typing import Any
+
+from .exceptions import ProcessingError, ResourceNotFoundError, ValidationError
 
 
 class ReceiptError(Exception):
     """Base exception for receipt errors."""
-    
-    def __init__(self, message: str, error_code: Optional[str] = None, details: Optional[Dict[str, Any]] = None):
+
+    def __init__(self, message: str, error_code: str | None = None, details: dict[str, Any] | None = None):
         self.message = message
         self.error_code = error_code
         self.details = details or {}
         super().__init__(self.message)
-    
-    def to_dict(self) -> Dict[str, Any]:
+
+    def to_dict(self) -> dict[str, Any]:
         """Convert exception to dictionary for API responses."""
         return {
             "error": self.message,
@@ -26,8 +27,8 @@ class ReceiptError(Exception):
 
 class OCRError(ReceiptError):
     """Exception raised during OCR text extraction."""
-    
-    def __init__(self, message: str, file_path: Optional[str] = None, **kwargs):
+
+    def __init__(self, message: str, file_path: str | None = None, **kwargs):
         details = kwargs.get("details", {})
         if file_path:
             details["file_path"] = file_path
@@ -36,8 +37,8 @@ class OCRError(ReceiptError):
 
 class LLMError(ReceiptError):
     """Exception raised during LLM product extraction."""
-    
-    def __init__(self, message: str, model_name: Optional[str] = None, **kwargs):
+
+    def __init__(self, message: str, model_name: str | None = None, **kwargs):
         details = kwargs.get("details", {})
         if model_name:
             details["model_name"] = model_name
@@ -46,8 +47,8 @@ class LLMError(ReceiptError):
 
 class FileValidationError(ReceiptError):
     """Exception raised during file validation."""
-    
-    def __init__(self, message: str, file_path: Optional[str] = None, **kwargs):
+
+    def __init__(self, message: str, file_path: str | None = None, **kwargs):
         details = kwargs.get("details", {})
         if file_path:
             details["file_path"] = file_path
@@ -56,8 +57,8 @@ class FileValidationError(ReceiptError):
 
 class CacheError(ReceiptError):
     """Exception raised during cache operations."""
-    
-    def __init__(self, message: str, cache_key: Optional[str] = None, **kwargs):
+
+    def __init__(self, message: str, cache_key: str | None = None, **kwargs):
         details = kwargs.get("details", {})
         if cache_key:
             details["cache_key"] = cache_key
@@ -66,8 +67,8 @@ class CacheError(ReceiptError):
 
 class DatabaseError(ReceiptError):
     """Exception raised during database operations."""
-    
-    def __init__(self, message: str, model_name: Optional[str] = None, **kwargs):
+
+    def __init__(self, message: str, model_name: str | None = None, **kwargs):
         details = kwargs.get("details", {})
         if model_name:
             details["model_name"] = model_name

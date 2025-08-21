@@ -6,12 +6,15 @@ Provides async-first database operations and business logic.
 import logging
 from typing import Any
 
+from inventory.models import (
+    InventoryItem,
+    Receipt,  # Added new import
+)
+
 from ..models import Agent, Conversation, Message
-from inventory.models import Receipt # Added new import
 from .exceptions import (
     AgentNotFoundError,
 )
-from inventory.models import InventoryItem
 
 logger = logging.getLogger(__name__)
 

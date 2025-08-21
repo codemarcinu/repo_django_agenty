@@ -4,9 +4,7 @@ URL configuration for chatbot app.
 
 from django.urls import path
 
-from . import views
-from . import views_logs
-from . import views_monitoring
+from . import views, views_logs, views_monitoring
 from .api import views as api_views
 
 app_name = "chatbot"
@@ -56,12 +54,12 @@ urlpatterns = [
         views.ReceiptReviewView.as_view(),
         name="receipt_review",
     ),
-    
+
     # Log Viewer
     path("logs/", views_logs.LogViewerView.as_view(), name="logs_viewer"),
     path("logs/stream/", views_logs.LogStreamView.as_view(), name="logs_stream"),
     path("logs/search/", views_logs.LogSearchView.as_view(), name="logs_search"),
-    
+
     # Monitoring Dashboard
     path("monitoring/", views_monitoring.monitoring_dashboard, name="monitoring_dashboard"),
     path("monitoring/api/health/", views_monitoring.api_health_status, name="monitoring_api_health"),

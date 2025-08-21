@@ -4,16 +4,14 @@ Implements comprehensive monitoring from FAZA 4 of the plan.
 """
 
 import logging
-import time
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Any, Tuple
-from decimal import Decimal
+from typing import Any
 
-from django.db.models import Count, Avg, Q, F
-from django.utils import timezone
-from django.core.mail import send_mail
 from django.conf import settings
+from django.core.mail import send_mail
+from django.db.models import F
+from django.utils import timezone
 
 logger = logging.getLogger(__name__)
 
@@ -23,7 +21,7 @@ class ProcessingMetrics:
     """Data class for receipt processing metrics."""
     total_receipts: int
     success_rate: float
-    avg_processing_time: Optional[float]  # in seconds
+    avg_processing_time: float | None  # in seconds
     error_rate: float
     ocr_accuracy: float
     current_processing: int
@@ -50,8 +48,8 @@ class ReceiptProcessingMonitor:
     """
 
     def __init__(self):
-        self.metrics_history: List[Dict[str, Any]] = []
-        self.alerts: List[Alert] = []
+        self.metrics_history: list[dict[str, Any]] = []
+        self.alerts: list[Alert] = []
 
     def track_processing_time(self, receipt_id: int, stage: str, duration: float):
         """
@@ -73,13 +71,13 @@ class ReceiptProcessingMonitor:
                 'tags': {'stage': stage, 'receipt_id': str(receipt_id)}
             }
             self.metrics_history.append(metric)
-            
+
             # Log the metric
             logger.info(f"Processing time for receipt {receipt_id} stage {stage}: {duration:.2f}s")
-            
+
             # Check for performance issues
             self._check_processing_time_threshold(stage, duration)
-            
+
         except Exception as e:
             logger.error(f"Error tracking processing time: {e}")
 
@@ -100,9 +98,9 @@ class ReceiptProcessingMonitor:
                 'tags': {'receipt_id': str(receipt_id)}
             }
             self.metrics_history.append(metric)
-            
+
             logger.debug(f"OCR confidence for receipt {receipt_id}: {confidence_score:.3f}")
-            
+
             # Check for low confidence
             if confidence_score < 0.7:  # Threshold for low confidence
                 self._create_alert(
@@ -136,9 +134,9 @@ class ReceiptProcessingMonitor:
                 'tags': {'stage': stage, 'receipt_id': str(receipt_id)}
             }
             self.metrics_history.append(metric)
-            
+
             logger.error(f"Processing error for receipt {receipt_id} in stage {stage}: {error_message}")
-            
+
             # Create alert for errors
             self._create_alert(
                 severity='high',
@@ -163,13 +161,13 @@ class ReceiptProcessingMonitor:
         """
         try:
             from inventory.models import Receipt
-            
+
             cutoff_date = timezone.now() - timedelta(days=days)
-            
+
             # Basic counts
             all_receipts = Receipt.objects.filter(created_at__gte=cutoff_date)
             total_receipts = all_receipts.count()
-            
+
             if total_receipts == 0:
                 return ProcessingMetrics(
                     total_receipts=0,
@@ -181,13 +179,13 @@ class ReceiptProcessingMonitor:
                     pending_count=0,
                     error_count=0
                 )
-            
+
             # Success rate calculation
             completed_receipts = all_receipts.filter(status='completed').count()
             error_receipts = all_receipts.filter(status='error').count()
             success_rate = (completed_receipts / total_receipts) * 100 if total_receipts > 0 else 0.0
             error_rate = (error_receipts / total_receipts) * 100 if total_receipts > 0 else 0.0
-            
+
             # Average processing time for completed receipts
             completed_with_times = all_receipts.filter(
                 status='completed',
@@ -195,7 +193,7 @@ class ReceiptProcessingMonitor:
             ).annotate(
                 processing_duration=F('processed_at') - F('created_at')
             )
-            
+
             avg_processing_time = None
             if completed_with_times.exists():
                 # Convert to seconds
@@ -206,19 +204,19 @@ class ReceiptProcessingMonitor:
                 ]
                 if durations:
                     avg_processing_time = sum(durations) / len(durations)
-            
+
             # Current status counts
             current_processing = Receipt.objects.filter(
                 status__in=['processing_ocr', 'ocr_in_progress', 'processing_parsing', 'llm_in_progress']
             ).count()
-            
+
             pending_count = Receipt.objects.filter(
                 status__in=['uploaded', 'pending_ocr']
             ).count()
-            
+
             # OCR accuracy from recent metrics
             ocr_accuracy = self._calculate_avg_ocr_accuracy(days)
-            
+
             return ProcessingMetrics(
                 total_receipts=total_receipts,
                 success_rate=success_rate,
@@ -229,7 +227,7 @@ class ReceiptProcessingMonitor:
                 pending_count=pending_count,
                 error_count=error_receipts
             )
-            
+
         except Exception as e:
             logger.error(f"Error getting processing metrics: {e}")
             return ProcessingMetrics(
@@ -250,9 +248,9 @@ class ReceiptProcessingMonitor:
             'parsing': 30.0,   # 30 seconds for parsing
             'matching': 10.0   # 10 seconds for matching
         }
-        
+
         threshold = thresholds.get(stage, 120.0)  # Default 2 minutes
-        
+
         if duration > threshold:
             self._create_alert(
                 severity='medium' if duration < threshold * 2 else 'high',
@@ -266,18 +264,18 @@ class ReceiptProcessingMonitor:
     def _calculate_avg_ocr_accuracy(self, days: int) -> float:
         """Calculate average OCR accuracy from recent metrics."""
         cutoff = timezone.now() - timedelta(days=days)
-        
+
         ocr_metrics = [
             m for m in self.metrics_history
             if m['metric_type'] == 'ocr_confidence' and m['timestamp'] >= cutoff
         ]
-        
+
         if not ocr_metrics:
             return 0.0
-        
+
         return sum(m['value'] for m in ocr_metrics) / len(ocr_metrics)
 
-    def _create_alert(self, severity: str, title: str, message: str, 
+    def _create_alert(self, severity: str, title: str, message: str,
                      metric_name: str, current_value: float, threshold_value: float):
         """Create and store an alert."""
         alert = Alert(
@@ -289,30 +287,30 @@ class ReceiptProcessingMonitor:
             current_value=current_value,
             threshold_value=threshold_value
         )
-        
+
         self.alerts.append(alert)
         logger.warning(f"Alert created [{severity.upper()}]: {title} - {message}")
 
-    def get_recent_alerts(self, hours: int = 24) -> List[Alert]:
+    def get_recent_alerts(self, hours: int = 24) -> list[Alert]:
         """Get alerts from the last N hours."""
         cutoff = timezone.now() - timedelta(hours=hours)
         return [alert for alert in self.alerts if alert.timestamp >= cutoff]
 
-    def get_system_health_summary(self) -> Dict[str, Any]:
+    def get_system_health_summary(self) -> dict[str, Any]:
         """Get overall system health summary."""
         metrics = self.get_processing_metrics(days=1)  # Last 24 hours
         recent_alerts = self.get_recent_alerts(hours=24)
-        
+
         # Determine overall health status
         health_status = 'healthy'
-        
+
         if metrics.error_rate > 10:  # More than 10% error rate
             health_status = 'critical'
         elif metrics.error_rate > 5 or any(a.severity == 'high' for a in recent_alerts):
             health_status = 'warning'
         elif len(recent_alerts) > 5:  # Too many alerts
             health_status = 'degraded'
-        
+
         return {
             'status': health_status,
             'metrics': metrics,
@@ -336,7 +334,7 @@ class AlertingSystem:
             'ocr_accuracy': 0.8,  # 80% minimum OCR accuracy
             'pending_queue_size': 10,  # 10 receipts pending
         }
-        
+
     def setup_alerts(self, metrics: ProcessingMetrics):
         """
         Check metrics against thresholds and send alerts if needed.
@@ -345,7 +343,7 @@ class AlertingSystem:
             metrics: Current system metrics
         """
         alerts_to_send = []
-        
+
         # Check error rate
         if metrics.error_rate > self.alert_thresholds['error_rate']:
             alerts_to_send.append({
@@ -355,7 +353,7 @@ class AlertingSystem:
                 'metric': 'error_rate',
                 'value': metrics.error_rate
             })
-        
+
         # Check processing time
         if metrics.avg_processing_time and metrics.avg_processing_time > self.alert_thresholds['avg_processing_time']:
             alerts_to_send.append({
@@ -365,7 +363,7 @@ class AlertingSystem:
                 'metric': 'avg_processing_time',
                 'value': metrics.avg_processing_time
             })
-        
+
         # Check OCR accuracy
         if metrics.ocr_accuracy < self.alert_thresholds['ocr_accuracy']:
             alerts_to_send.append({
@@ -375,7 +373,7 @@ class AlertingSystem:
                 'metric': 'ocr_accuracy',
                 'value': metrics.ocr_accuracy
             })
-        
+
         # Check pending queue
         if metrics.pending_count > self.alert_thresholds['pending_queue_size']:
             alerts_to_send.append({
@@ -385,12 +383,12 @@ class AlertingSystem:
                 'metric': 'pending_queue_size',
                 'value': metrics.pending_count
             })
-        
+
         # Send alerts
         for alert in alerts_to_send:
             self.send_alert(alert)
-    
-    def send_alert(self, alert: Dict[str, Any]):
+
+    def send_alert(self, alert: dict[str, Any]):
         """
         Send alert notification via email and logging.
         
@@ -405,9 +403,9 @@ class AlertingSystem:
                 'high': logging.ERROR,
                 'critical': logging.CRITICAL
             }.get(alert['severity'], logging.WARNING)
-            
+
             logger.log(log_level, f"ALERT [{alert['severity'].upper()}]: {alert['title']} - {alert['message']}")
-            
+
             # Send email for high/critical alerts
             if alert['severity'] in ['high', 'critical'] and hasattr(settings, 'INVENTORY_ALERTS_EMAIL'):
                 try:
@@ -422,7 +420,7 @@ Alert Details:
 
 Please check the receipt processing system.
                     """
-                    
+
                     send_mail(
                         subject=subject,
                         message=message,
@@ -430,11 +428,11 @@ Please check the receipt processing system.
                         recipient_list=[settings.INVENTORY_ALERTS_EMAIL],
                         fail_silently=True
                     )
-                    
+
                     logger.info(f"Email alert sent for: {alert['title']}")
                 except Exception as e:
                     logger.error(f"Failed to send email alert: {e}")
-                    
+
         except Exception as e:
             logger.error(f"Error sending alert: {e}")
 
@@ -466,7 +464,7 @@ def track_processing_time(receipt_id: int, stage: str, start_time: float = None,
     if start_time is None or end_time is None:
         logger.warning("Invalid time parameters for tracking processing time")
         return
-    
+
     duration = end_time - start_time
     monitor = get_receipt_monitor()
     monitor.track_processing_time(receipt_id, stage, duration)
@@ -489,10 +487,10 @@ def check_system_health():
     try:
         monitor = get_receipt_monitor()
         alerting = get_alerting_system()
-        
+
         metrics = monitor.get_processing_metrics(days=1)
         alerting.setup_alerts(metrics)
-        
+
         return monitor.get_system_health_summary()
     except Exception as e:
         logger.error(f"Error checking system health: {e}")

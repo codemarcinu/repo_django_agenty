@@ -2,10 +2,11 @@ import pytest
 from django.contrib.auth.models import User
 from django.test import Client, TestCase
 from django.urls import reverse
-from django.utils import timezone # Added for purchase_date
+from django.utils import timezone  # Added for purchase_date
 
-from chatbot.models import Agent # Explicitly imported
-from inventory.models import InventoryItem, Product, Receipt # Explicitly imported
+from chatbot.models import Agent  # Explicitly imported
+from inventory.models import InventoryItem, Product, Receipt  # Explicitly imported
+
 
 @pytest.mark.unit
 class DashboardViewTest(TestCase):

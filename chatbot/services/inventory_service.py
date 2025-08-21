@@ -17,7 +17,9 @@ from inventory.models import (
     Receipt,
     ReceiptLineItem,
 )
-from inventory.services.rule_engine_service import RuleEngineService # Import RuleEngineService
+from inventory.services.rule_engine_service import (
+    RuleEngineService,  # Import RuleEngineService
+)
 
 logger = logging.getLogger(__name__)
 

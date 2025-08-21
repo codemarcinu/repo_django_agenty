@@ -7,20 +7,20 @@ import json
 import logging
 from decimal import Decimal
 
+from django.core.serializers.json import DjangoJSONEncoder
+from django.db import transaction
 from django.forms import ModelForm
-from django.http import HttpRequest, HttpResponseRedirect, JsonResponse, Http404
-from django.shortcuts import render, get_object_or_404
+from django.http import Http404, HttpRequest, HttpResponseRedirect, JsonResponse
+from django.shortcuts import render
 from django.urls import reverse_lazy
 from django.views import View
 from django.views.generic import FormView, ListView
-from django.db import transaction
-from django.core.serializers.json import DjangoJSONEncoder
 
-from inventory.models import Receipt, Product, ReceiptLineItem
-from .models import ProductCorrection
-from .models import Agent, Document
+from inventory.models import Product, Receipt, ReceiptLineItem
+
+from .models import Agent, Document, ProductCorrection
 from .services.agent_factory import agent_factory
-from .services.receipt_service import ReceiptService, get_receipt_service
+from .services.receipt_service import get_receipt_service
 from .utils.cache_utils import CachedViewMixin
 
 logger = logging.getLogger(__name__)
@@ -111,7 +111,7 @@ class ReceiptUploadView(FormView):
 
             # Importuj zadanie Celery lokalnie, aby uniknąć cyklicznych zależności
             from .tasks import orchestrate_receipt_processing
-            
+
             # Uruchom zadanie Celery w tle
             orchestrate_receipt_processing.delay(new_receipt.id)
             logger.info(f"✅ Orchestration task queued for receipt {new_receipt.id}")
@@ -192,7 +192,7 @@ class ReceiptReviewView(View):
 
                 for item_data in reviewed_items:
                     line_item = ReceiptLineItem.objects.get(id=item_data['id'], receipt=receipt)
-                    
+
                     # Update line item with reviewed data
                     line_item.quantity = Decimal(item_data.get('quantity', line_item.quantity))
                     line_item.unit_price = Decimal(item_data.get('unit_price', line_item.unit_price))
@@ -205,14 +205,14 @@ class ReceiptReviewView(View):
                     else:
                         # Handle creation of a new product if necessary (or link to a ghost product)
                         # For now, we just detach it if no ID is provided
-                        line_item.matched_product = None 
+                        line_item.matched_product = None
 
                     # Get the original product name before updating
                     original_product_name = line_item.product_name
 
                     # Update the original product name if user corrected it
                     line_item.product_name = item_data.get('product_name', line_item.product_name)
-                    
+
                     # If the product name was corrected by the user, record it
                     if original_product_name != line_item.product_name:
                         ProductCorrection.objects.create(
@@ -222,7 +222,7 @@ class ReceiptReviewView(View):
                             matched_product=line_item.matched_product, # This will be None if no product was matched
                             user=request.user if request.user.is_authenticated else None,
                         )
-                    
+
                     line_item.save()
 
                 # Dispatch the finalization task
@@ -234,7 +234,7 @@ class ReceiptReviewView(View):
                 receipt.save()
 
                 return JsonResponse({
-                    "success": True, 
+                    "success": True,
                     "message": "Paragon został zapisany i jest finalizowany w tle.",
                     "redirect_url": reverse_lazy("inventory:inventory_list") # Or some other appropriate page
                 })
@@ -266,7 +266,7 @@ class ChatView(View):
         # Get default agent (Asystent Ogólny)
         default_agent = agents.filter(name="Asystent Ogólny").first()
         context = {
-            "agents": agents, 
+            "agents": agents,
             "default_agent": default_agent,
             "title": "Django Agent - Chat Interface"
         }

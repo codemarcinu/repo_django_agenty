@@ -1,10 +1,9 @@
 import pytest
-from django.core.files.uploadedfile import SimpleUploadedFile
+from django.core.files.base import ContentFile  # Added import
 from django.test import TestCase
-from django.core.files.base import ContentFile # Added import
 
-from inventory.models import Receipt # Added new import
 from chatbot.models import Agent, Document
+from inventory.models import Receipt  # Added new import
 
 
 @pytest.mark.unit

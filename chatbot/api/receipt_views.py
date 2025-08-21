@@ -7,7 +7,6 @@ import os
 import uuid
 from datetime import datetime
 
-from django.utils import timezone
 from drf_spectacular.utils import OpenApiResponse, extend_schema
 from rest_framework import status
 from rest_framework.decorators import api_view, parser_classes
@@ -15,8 +14,9 @@ from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.response import Response
 
 from inventory.models import Receipt
-from ..services.receipt_service import ReceiptService
+
 from ..services.exceptions_receipt import ReceiptError
+from ..services.receipt_service import ReceiptService
 from .serializers import ReceiptUploadResponseSerializer, ReceiptUploadSerializer
 
 logger = logging.getLogger(__name__)

@@ -5,7 +5,7 @@ Implements the real-time WebSocket feedback from the plan.
 
 import json
 import logging
-from typing import Any, Dict
+from typing import Any
 
 from channels.db import database_sync_to_async
 from channels.generic.websocket import AsyncWebsocketConsumer
@@ -52,7 +52,7 @@ class ReceiptStatusConsumer(AsyncWebsocketConsumer):
         await self.send(text_data=json.dumps({"type": "error", **event}))
 
     @database_sync_to_async
-    def get_receipt_status(self, receipt_id: str) -> Dict[str, Any]:
+    def get_receipt_status(self, receipt_id: str) -> dict[str, Any]:
         """Get current receipt status from database."""
         from inventory.models import Receipt
 

@@ -245,7 +245,7 @@ class DocumentListAPIView(ListAPIView):
 # TODO: Replace with InventoryItem-based API view
 # class PantryItemListAPIView(ListAPIView):
 #     """API view for listing pantry items"""
-#     
+#
 #     queryset = InventoryItem.objects.filter(storage_location='pantry').order_by("-updated_at")
 #     serializer_class = InventoryItemSerializer
 #     permission_classes = [IsAuthenticated]

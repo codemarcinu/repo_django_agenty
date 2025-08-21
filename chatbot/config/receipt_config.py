@@ -2,10 +2,11 @@
 Configuration management for receipt processing system.
 """
 
-from typing import Dict, Any, Optional
-from dataclasses import dataclass, field
-from django.conf import settings
 import os
+from dataclasses import dataclass, field
+from typing import Any
+
+from django.conf import settings
 
 
 @dataclass
@@ -15,7 +16,7 @@ class OCRConfig:
     languages: list = field(default_factory=lambda: ['pl', 'en'])
     max_file_size: int = 10 * 1024 * 1024  # 10MB
     timeout: int = 120  # seconds
-    
+
     @classmethod
     def from_settings(cls) -> 'OCRConfig':
         return cls(
@@ -34,7 +35,7 @@ class LLMConfig:
     max_retry_attempts: int = 2
     ollama_url: str = 'http://127.0.0.1:11434'
     health_check_timeout: int = 10
-    
+
     @classmethod
     def from_settings(cls) -> 'LLMConfig':
         return cls(
@@ -54,7 +55,7 @@ class CacheConfig:
     cache_timeout: int = 3600  # 1 hour
     ocr_cache_enabled: bool = True
     llm_cache_enabled: bool = True
-    
+
     @classmethod
     def from_settings(cls) -> 'CacheConfig':
         return cls(
@@ -74,7 +75,7 @@ class ProcessingConfig:
     auto_cleanup_completed_after_days: int = 30
     enable_performance_monitoring: bool = True
     log_level: str = 'INFO'
-    
+
     @classmethod
     def from_settings(cls) -> 'ProcessingConfig':
         return cls(
@@ -93,7 +94,7 @@ class FileConfig:
     max_file_size: int = 10 * 1024 * 1024  # 10MB
     upload_path: str = 'receipts/'
     temp_file_cleanup_enabled: bool = True
-    
+
     @classmethod
     def from_settings(cls) -> 'FileConfig':
         return cls(
@@ -112,7 +113,7 @@ class ReceiptConfig:
     cache: CacheConfig = field(default_factory=CacheConfig)
     processing: ProcessingConfig = field(default_factory=ProcessingConfig)
     file: FileConfig = field(default_factory=FileConfig)
-    
+
     @classmethod
     def from_settings(cls) -> 'ReceiptConfig':
         """Create configuration from Django settings."""
@@ -123,8 +124,8 @@ class ReceiptConfig:
             processing=ProcessingConfig.from_settings(),
             file=FileConfig.from_settings()
         )
-    
-    def to_dict(self) -> Dict[str, Any]:
+
+    def to_dict(self) -> dict[str, Any]:
         """Convert configuration to dictionary."""
         return {
             'ocr': {
@@ -161,91 +162,91 @@ class ReceiptConfig:
                 'temp_file_cleanup_enabled': self.file.temp_file_cleanup_enabled
             }
         }
-    
+
     def validate(self) -> tuple[bool, list[str]]:
         """Validate configuration settings."""
         errors = []
-        
+
         # Validate OCR config
         if self.ocr.max_file_size <= 0:
             errors.append("OCR max_file_size must be positive")
-        
+
         if not self.ocr.languages:
             errors.append("OCR languages list cannot be empty")
-        
+
         # Validate LLM config
         if self.llm.timeout <= 0:
             errors.append("LLM timeout must be positive")
-        
+
         if self.llm.max_retry_attempts < 1:
             errors.append("LLM max_retry_attempts must be at least 1")
-        
+
         # Validate cache config
         if self.cache.cache_timeout <= 0:
             errors.append("Cache timeout must be positive")
-        
+
         # Validate processing config
         if self.processing.max_concurrent_processes <= 0:
             errors.append("Max concurrent processes must be positive")
-        
+
         # Validate file config
         if not self.file.allowed_extensions:
             errors.append("File allowed_extensions list cannot be empty")
-        
+
         if self.file.max_file_size <= 0:
             errors.append("File max_file_size must be positive")
-        
+
         return len(errors) == 0, errors
 
 
 # Environment-specific configuration loaders
 class ConfigLoader:
     """Configuration loader with environment-specific overrides."""
-    
+
     @staticmethod
     def load_development_config() -> ReceiptConfig:
         """Load development configuration."""
         config = ReceiptConfig.from_settings()
-        
+
         # Development-specific overrides
         config.processing.enable_performance_monitoring = True
         config.processing.log_level = 'DEBUG'
         config.cache.use_redis = False  # Use Django cache in development
-        
+
         return config
-    
+
     @staticmethod
     def load_production_config() -> ReceiptConfig:
         """Load production configuration."""
         config = ReceiptConfig.from_settings()
-        
+
         # Production-specific overrides
         config.processing.enable_performance_monitoring = True
         config.processing.log_level = 'WARNING'
         config.cache.use_redis = True
         config.ocr.gpu_enabled = True
-        
+
         return config
-    
+
     @staticmethod
     def load_test_config() -> ReceiptConfig:
         """Load test configuration."""
         config = ReceiptConfig.from_settings()
-        
+
         # Test-specific overrides
         config.processing.enable_performance_monitoring = False
         config.processing.log_level = 'ERROR'
         config.cache.use_redis = False
         config.ocr.gpu_enabled = False
         config.llm.timeout = 30  # Shorter timeout for tests
-        
+
         return config
-    
+
     @staticmethod
     def load_config() -> ReceiptConfig:
         """Load configuration based on current environment."""
         env = os.getenv('DJANGO_ENV', 'development').lower()
-        
+
         if env == 'production':
             return ConfigLoader.load_production_config()
         elif env == 'test':
@@ -254,7 +255,7 @@ class ConfigLoader:
             return ConfigLoader.load_development_config()
 
 
-def get_parser_config() -> Dict[str, Dict[str, Any]]:
+def get_parser_config() -> dict[str, dict[str, Any]]:
     """
     Returns a dictionary of parser configurations.
     This function is a placeholder and should be expanded with actual parser configurations.

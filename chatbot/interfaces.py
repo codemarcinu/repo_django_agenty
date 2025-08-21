@@ -6,7 +6,7 @@ Inspired by FoodSave AI architecture.
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Dict
+from typing import Any
 
 
 class ErrorSeverity(Enum):
@@ -114,6 +114,6 @@ class ReceiptParser(ABC):
     """Base receipt parser interface."""
 
     @abstractmethod
-    def parse(self, raw_text: str) -> Dict:
+    def parse(self, raw_text: str) -> dict:
         """Parse raw text into structured receipt data."""
         pass

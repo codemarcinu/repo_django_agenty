@@ -4,11 +4,12 @@ This implements the unified Receipt model strategy from the improvement plan.
 DEPRECATED: ReceiptProcessing model no longer exists after FAZA 1 completion.
 """
 
+import logging
+from decimal import Decimal
+
 from django.core.management.base import BaseCommand
 from django.db import transaction
 from django.utils import timezone
-from decimal import Decimal
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -32,12 +33,12 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         dry_run = options['dry_run']
         batch_size = options['batch_size']
-        
+
         if dry_run:
             self.stdout.write(
                 self.style.WARNING('Running in DRY-RUN mode. No changes will be made.')
             )
-        
+
         try:
             from chatbot.models import ReceiptProcessing
             from inventory.models import Receipt as InventoryReceipt
@@ -50,7 +51,7 @@ class Command(BaseCommand):
         # Get total count
         total_receipts = ReceiptProcessing.objects.count()
         self.stdout.write(f'Found {total_receipts} ReceiptProcessing records to migrate')
-        
+
         if total_receipts == 0:
             self.stdout.write(self.style.SUCCESS('No records to migrate'))
             return
@@ -62,14 +63,14 @@ class Command(BaseCommand):
         # Process in batches
         for offset in range(0, total_receipts, batch_size):
             batch = ReceiptProcessing.objects.all()[offset:offset + batch_size]
-            
+
             for receipt_processing in batch:
                 try:
                     # Check if already migrated
                     existing = InventoryReceipt.objects.filter(
                         source_file_path=receipt_processing.receipt_file.name if receipt_processing.receipt_file else ''
                     ).first()
-                    
+
                     if existing:
                         self.stdout.write(f'Skipping already migrated receipt {receipt_processing.id}')
                         skipped_count += 1
@@ -87,7 +88,7 @@ class Command(BaseCommand):
                                 error_message=receipt_processing.error_message,
                                 uploaded_at=receipt_processing.uploaded_at,
                                 processed_at=receipt_processing.processed_at,
-                                
+
                                 # Set default values for new fields
                                 store_name=self._extract_store_name(receipt_processing),
                                 purchased_at=receipt_processing.uploaded_at,  # Fallback
@@ -95,18 +96,18 @@ class Command(BaseCommand):
                                 currency='PLN',
                                 source_file_path=receipt_processing.receipt_file.name if receipt_processing.receipt_file else '',
                                 processing_notes=f'Migrated from ReceiptProcessing ID: {receipt_processing.id}',
-                                
+
                                 # Preserve timestamps
                                 created_at=receipt_processing.uploaded_at,
                                 updated_at=timezone.now(),
                             )
-                            
+
                             self.stdout.write(f'Migrated ReceiptProcessing {receipt_processing.id} -> Receipt {unified_receipt.id}')
                     else:
                         self.stdout.write(f'[DRY-RUN] Would migrate ReceiptProcessing {receipt_processing.id}')
-                    
+
                     migrated_count += 1
-                    
+
                 except Exception as e:
                     self.stdout.write(
                         self.style.ERROR(f'Error migrating receipt {receipt_processing.id}: {e}')
@@ -138,7 +139,7 @@ class Command(BaseCommand):
         """Map ReceiptProcessing status to unified Receipt status"""
         status_mapping = {
             'uploaded': 'uploaded',
-            'ocr_in_progress': 'ocr_in_progress', 
+            'ocr_in_progress': 'ocr_in_progress',
             'ocr_done': 'ocr_done',
             'llm_in_progress': 'llm_in_progress',
             'llm_done': 'llm_done',

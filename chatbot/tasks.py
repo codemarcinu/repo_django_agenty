@@ -1,10 +1,11 @@
+import asyncio  # Potrzebne do wywołania asynchronicznego VisionService
 import logging
-import asyncio # Potrzebne do wywołania asynchronicznego VisionService
 
 from celery import shared_task
 from django.conf import settings
 
 from inventory.models import Receipt
+
 from .models import Document
 from .rag_processor import rag_processor
 from .services.exceptions_receipt import (
@@ -17,7 +18,7 @@ from .services.exceptions_receipt import (
 logger = logging.getLogger(__name__)
 
 
- @shared_task
+@shared_task
 def process_document_task(document_id):
     try:
         rag_processor.process_document(document_id)
@@ -30,7 +31,7 @@ def process_document_task(document_id):
         Document.objects.filter(id=document_id).update(status="error")
 
 
- @shared_task(
+@shared_task(
     bind=True,
     autoretry_for=(OCRError, ParsingError, MatchingError, DatabaseError),
     retry_kwargs={"max_retries": 3, "countdown": 60},
@@ -44,11 +45,14 @@ def orchestrate_receipt_processing(self, receipt_id: int):
     1. OCR -> 2. Quality Gate -> 3. Parsing (LLM or Vision) -> 4. Matching
     """
     # Importy wewnątrz funkcji, aby rozwiązać problem kolistego importu
-    from .services.receipt_service import get_receipt_service
-    from .services.quality_gate_service import QualityGateService
-    from .services.vision_service import VisionService
+    from .services.ocr_backends import OCRResult
     from .services.ocr_service import ocr_service
-    from .services.receipt_parser import get_receipt_parser # ZMIANA: Import funkcji zamiast instancji
+    from .services.quality_gate_service import QualityGateService
+    from .services.receipt_parser import (
+        get_receipt_parser,  # ZMIANA: Import funkcji zamiast instancji
+    )
+    from .services.receipt_service import get_receipt_service
+    from .services.vision_service import VisionService
 
     logger.info(f"▶️ STARTING ORCHESTRATION for Receipt ID: {receipt_id} (Attempt: {self.request.retries + 1})")
 
@@ -72,15 +76,19 @@ def orchestrate_receipt_processing(self, receipt_id: int):
         logger.info(f"  [2/4] QUALITY GATE | Receipt ID: {receipt_id}")
         receipt.mark_as_processing(step="quality_gate")
 
-        from chatbot.schemas import OCRResult as SchemaOCRResult
+        # WAŻNE: Upewnij się, że ocr_result to instancja OCRResult
+        # (OCRResult is imported from .services.ocr_service or .services.ocr_backends)
+        if not isinstance(ocr_result, OCRResult):
+            raise TypeError(
+                f"OCRService.process_document() must return OCRResult instance, "
+                f"got {type(ocr_result).__name__}"
+            )
 
-        quality_ocr_result = SchemaOCRResult(
-            full_text=ocr_result.text,
-            lines=ocr_result.metadata.get('lines', []) if ocr_result.metadata else [],
-            confidences=ocr_result.metadata.get('confidences', []) if ocr_result.metadata else []
-        )
+        # Krok 2: Quality Gate
+        logger.info(f"  [2/4] QUALITY GATE | Receipt ID: {receipt_id}")
+        receipt.mark_as_processing(step="quality_gate")
 
-        quality_gate = QualityGateService(quality_ocr_result)
+        quality_gate = QualityGateService(ocr_result)
         quality_score = quality_gate.calculate_quality_score()
         logger.info(f"Paragon {receipt_id}: Wynik jakości OCR to {quality_score}")
 
@@ -130,7 +138,7 @@ def orchestrate_receipt_processing(self, receipt_id: int):
             logger.error(f"Could not find receipt {receipt_id} to mark as error after critical failure.")
         raise
 
- @shared_task(
+@shared_task(
     bind=True,
     autoretry_for=(Exception,),
     retry_kwargs={"max_retries": 3, "countdown": 60},

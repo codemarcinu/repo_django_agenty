@@ -7,22 +7,19 @@ Part of Prompt 12: Rozbudowa testów end-to-end (upload → InventoryItem).
 
 import os
 import sys
-import django
-from pathlib import Path
 from decimal import Decimal
-from datetime import date
+
+import django
 from django.test import TestCase, TransactionTestCase
-from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test.client import Client
-from django.urls import reverse
 from django.utils import timezone
 
 # Setup Django
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'core.settings_dev')
 django.setup()
 
-from inventory.models import Product, Category, InventoryItem, Receipt, ReceiptLineItem
 from chatbot.services.receipt_service import get_receipt_service
+from inventory.models import Category, InventoryItem, Product, Receipt
 
 
 class ReceiptPipelineE2ETest(TransactionTestCase):
@@ -31,7 +28,7 @@ class ReceiptPipelineE2ETest(TransactionTestCase):
     def setUp(self):
         """Set up test data."""
         self.client = Client()
-        
+
         # Create test categories
         self.dairy_category = Category.objects.create(
             name="Nabiał",
@@ -41,7 +38,7 @@ class ReceiptPipelineE2ETest(TransactionTestCase):
             name="Mięso",
             meta={'default_expiry_days': 3}
         )
-        
+
         # Create test products that would match common receipt items
         self.milk_product = Product.objects.create(
             name="Mleko",
@@ -50,7 +47,7 @@ class ReceiptPipelineE2ETest(TransactionTestCase):
             aliases={'names': ['mleko laciate', 'mleko 3.2%', 'laciate mleko']},
             reorder_point=Decimal('2.0')
         )
-        
+
         self.chicken_product = Product.objects.create(
             name="Pierś z kurczaka",
             brand="Drób",
@@ -61,7 +58,7 @@ class ReceiptPipelineE2ETest(TransactionTestCase):
 
     def test_receipt_upload_and_processing_flow(self):
         """Test complete flow from receipt upload to inventory creation."""
-        
+
         # 1. Create a receipt manually (simulating the upload step)
         receipt = Receipt.objects.create(
             store_name="BIEDRONKA",
@@ -72,7 +69,7 @@ class ReceiptPipelineE2ETest(TransactionTestCase):
             source_file_path='test_receipt.txt'  # Mock file path
         )
         receipt_id = receipt.id
-        
+
         # 2. Mock OCR text data (simulating OCR processing)
         mock_ocr_text = """
 BIEDRONKA
@@ -91,7 +88,7 @@ RESZTA                    3,53
 
 Dziękujemy za zakupy!
         """.strip()
-        
+
         # Mock OCR result
         receipt.raw_text = {
             "text": mock_ocr_text,
@@ -101,38 +98,38 @@ Dziękujemy za zakupy!
         }
         receipt.status = 'ocr_completed'
         receipt.save()
-        
+
         # 3. Process receipt through the pipeline
         receipt_service = get_receipt_service()
-        
+
         # Step 3a: Parsing
         success = receipt_service.process_receipt_parsing(receipt_id)
         self.assertTrue(success, "Parsing should succeed")
-        
+
         receipt.refresh_from_db()
         self.assertEqual(receipt.status, 'parsing_completed')
-        
+
         # Step 3b: Product matching
         success = receipt_service.process_receipt_matching(receipt_id)
         self.assertTrue(success, "Product matching should succeed")
-        
+
         receipt.refresh_from_db()
         self.assertEqual(receipt.status, 'completed')
-        
+
         # Check line items were created
         line_items = receipt.line_items.all()
         self.assertGreaterEqual(line_items.count(), 2, "Should find at least 2 products")
-        
+
         # 4. Verify basic functionality worked
         self.assertTrue(
             line_items.count() > 0,
             "Line items should be created"
         )
-        
-        # Note: Inventory creation might fail due to status issues, 
+
+        # Note: Inventory creation might fail due to status issues,
         # but the main parsing and matching pipeline worked
         print(f"✅ Pipeline test passed: {line_items.count()} line items created")
-        
+
         # 5. Verify specific product matches and inventory
         milk_line_items = line_items.filter(
             product_name__icontains='mleko'
@@ -145,17 +142,17 @@ Dziękujemy za zakupy!
                     product=milk_line.matched_product,
                     purchase_date=timezone.now().date()
                 ).first()
-                
+
                 if milk_inventory:
                     self.assertGreater(
-                        milk_inventory.quantity_remaining, 
+                        milk_inventory.quantity_remaining,
                         0,
                         "Milk inventory should have quantity"
                     )
 
     def test_receipt_processing_with_unmatched_products(self):
         """Test that ghost products are created for unmatched items."""
-        
+
         # Create receipt with unknown products
         receipt = Receipt.objects.create(
             store_name="LIDL",
@@ -171,31 +168,31 @@ Dziękujemy za zakupy!
                 "success": True
             }
         )
-        
+
         # Process through pipeline
         receipt_service = get_receipt_service()
-        
+
         receipt_service.process_receipt_parsing(receipt.id)
         receipt_service.process_receipt_matching(receipt.id)
-        
+
         # Check that ghost products were created
         receipt.refresh_from_db()
         line_items = receipt.line_items.all()
-        
+
         ghost_products = Product.objects.filter(
             is_active=False,  # Ghost products are inactive
             receipt_items__receipt=receipt
         ).distinct()
-        
+
         self.assertGreater(
-            ghost_products.count(), 
-            0, 
+            ghost_products.count(),
+            0,
             "Ghost products should be created for unmatched items"
         )
 
     def test_receipt_processing_error_handling(self):
         """Test error handling in receipt processing pipeline."""
-        
+
         # Create receipt with invalid OCR data
         receipt = Receipt.objects.create(
             store_name="Test Store",
@@ -206,19 +203,19 @@ Dziękujemy za zakupy!
             source_file_path='invalid_receipt.txt',
             raw_text={}  # Invalid/empty OCR data
         )
-        
+
         receipt_service = get_receipt_service()
-        
+
         # Should fail parsing
         success = receipt_service.process_receipt_parsing(receipt.id)
         self.assertFalse(success, "Parsing should fail with invalid OCR data")
-        
+
         receipt.refresh_from_db()
         self.assertEqual(receipt.status, 'error')
 
     def test_inventory_aggregation(self):
         """Test that similar inventory items are properly aggregated."""
-        
+
         # Create receipt with duplicate items
         receipt = Receipt.objects.create(
             store_name="TESCO",
@@ -234,26 +231,26 @@ Dziękujemy za zakupy!
                 "success": True
             }
         )
-        
+
         receipt_service = get_receipt_service()
         receipt_service.process_receipt_parsing(receipt.id)
         receipt_service.process_receipt_matching(receipt.id)
-        
+
         # Check that inventory items were properly handled
         milk_inventory_items = InventoryItem.objects.filter(
             product=self.milk_product,
             purchase_date=timezone.now().date()
         )
-        
+
         if milk_inventory_items.exists():
             # Should have items with proper quantities
             total_milk_quantity = sum(
-                item.quantity_remaining 
+                item.quantity_remaining
                 for item in milk_inventory_items
             )
-            
+
             self.assertGreater(
-                total_milk_quantity, 
+                total_milk_quantity,
                 Decimal('1.0'),
                 "Should have multiple liters of milk in inventory"
             )
@@ -261,14 +258,14 @@ Dziękujemy za zakupy!
 
 class ReceiptServiceTest(TestCase):
     """Test receipt service methods directly."""
-    
+
     def setUp(self):
         # Create test category and product
         self.category = Category.objects.create(
             name="Test Category",
             meta={'default_expiry_days': 7}
         )
-        
+
         self.product = Product.objects.create(
             name="Test Product",
             category=self.category,
@@ -279,12 +276,12 @@ class ReceiptServiceTest(TestCase):
     def test_receipt_service_methods(self):
         """Test that receipt service methods work correctly."""
         receipt_service = get_receipt_service()
-        
+
         # Test that service exists and has methods
         self.assertIsNotNone(receipt_service)
         self.assertTrue(hasattr(receipt_service, 'process_receipt_parsing'))
         self.assertTrue(hasattr(receipt_service, 'process_receipt_matching'))
-        
+
         # Create test receipt
         receipt = Receipt.objects.create(
             store_name="Test Store",
@@ -293,7 +290,7 @@ class ReceiptServiceTest(TestCase):
             currency='PLN',
             status='completed'
         )
-        
+
         # Test basic functionality
         self.assertEqual(receipt.status, 'completed')
         self.assertEqual(receipt.store_name, 'Test Store')
@@ -302,18 +299,18 @@ class ReceiptServiceTest(TestCase):
 if __name__ == '__main__':
     # Run the tests
     import unittest
-    
+
     # Create test suite
     loader = unittest.TestLoader()
     suite = unittest.TestSuite()
-    
+
     # Add test cases
     suite.addTests(loader.loadTestsFromTestCase(ReceiptPipelineE2ETest))
     suite.addTests(loader.loadTestsFromTestCase(ReceiptServiceTest))
-    
+
     # Run tests
     runner = unittest.TextTestRunner(verbosity=2)
     result = runner.run(suite)
-    
+
     # Exit with appropriate code
     sys.exit(0 if result.wasSuccessful() else 1)

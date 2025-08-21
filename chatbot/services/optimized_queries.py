@@ -4,21 +4,28 @@ Implements query optimization from FAZA 5 of the plan.
 """
 
 import logging
-from datetime import datetime, timedelta
+from datetime import timedelta
 from decimal import Decimal
-from typing import List, Dict, Any, Optional
+from typing import Any
 
 from django.db.models import (
-    Count, Sum, Avg, Q, F, Value, Case, When,
-    Prefetch, OuterRef, Subquery, DecimalField, IntegerField
+    Avg,
+    Case,
+    Count,
+    DecimalField,
+    F,
+    OuterRef,
+    Prefetch,
+    Q,
+    Subquery,
+    Sum,
+    Value,
+    When,
 )
-from django.db.models.functions import TruncDate, Coalesce
+from django.db.models.functions import Coalesce
 from django.utils import timezone
 
-from inventory.models import (
-    Receipt, ReceiptLineItem, Product, Category, 
-    InventoryItem
-)
+from inventory.models import Category, ConsumptionEvent, InventoryItem, Product, Receipt, ReceiptLineItem
 
 logger = logging.getLogger(__name__)
 
@@ -82,7 +89,7 @@ class OptimizedReceiptService:
             QuerySet with processing time calculations
         """
         cutoff_date = timezone.now() - timedelta(days=days)
-        
+
         return Receipt.objects.filter(
             created_at__gte=cutoff_date
         ).annotate(
@@ -103,7 +110,7 @@ class OptimizedReceiptService:
             )
         ).order_by('-created_at')
 
-    def get_processing_analytics(self, days: int = 30) -> Dict[str, Any]:
+    def get_processing_analytics(self, days: int = 30) -> dict[str, Any]:
         """
         Get comprehensive processing analytics with optimized queries.
         
@@ -114,7 +121,7 @@ class OptimizedReceiptService:
             Dictionary with analytics data
         """
         cutoff_date = timezone.now() - timedelta(days=days)
-        
+
         # Single query for basic stats
         basic_stats = Receipt.objects.filter(
             created_at__gte=cutoff_date
@@ -128,7 +135,7 @@ class OptimizedReceiptService:
             ),
             total_items_processed=Sum('line_items__quantity')
         )
-        
+
         # Daily breakdown with single query
         daily_breakdown = Receipt.objects.filter(
             created_at__gte=cutoff_date
@@ -140,7 +147,7 @@ class OptimizedReceiptService:
             error_count=Count('id', filter=Q(status='error')),
             avg_items=Avg('line_items__quantity')
         ).order_by('day')
-        
+
         # Top categories by receipt frequency
         top_categories = Category.objects.annotate(
             receipt_count=Count(
@@ -152,12 +159,12 @@ class OptimizedReceiptService:
         ).filter(
             receipt_count__gt=0
         ).order_by('-receipt_count')[:10]
-        
+
         # Calculate success rate
         success_rate = 0
         if basic_stats['total_receipts'] > 0:
             success_rate = (basic_stats['completed_receipts'] / basic_stats['total_receipts']) * 100
-        
+
         return {
             'summary': {
                 'total_receipts': basic_stats['total_receipts'],
@@ -189,7 +196,7 @@ class OptimizedReceiptService:
             QuerySet of receipts with issues
         """
         cutoff_date = timezone.now() - timedelta(days=days)
-        
+
         return Receipt.objects.filter(
             Q(created_at__gte=cutoff_date) &
             (
@@ -254,11 +261,12 @@ class OptimizedInventoryService:
         Returns:
             QuerySet of items needing attention
         """
-        from django.utils import timezone
         from datetime import timedelta
-        
+
+        from django.utils import timezone
+
         threshold_date = timezone.now().date() + timedelta(days=threshold_days)
-        
+
         return InventoryItem.objects.filter(
             Q(quantity_remaining__lte=F('product__reorder_point')) |
             Q(expiry_date__lte=threshold_date, expiry_date__gt=timezone.now().date())
@@ -297,7 +305,7 @@ class OptimizedInventoryService:
             QuerySet with category consumption data
         """
         cutoff_date = timezone.now() - timedelta(days=days)
-        
+
         return Category.objects.annotate(
             total_consumed=Sum(
                 'products__inventoryitem__quantity_consumed',
@@ -370,30 +378,31 @@ def monitor_query_performance(func):
     """Decorator to monitor query performance."""
     def wrapper(*args, **kwargs):
         import time
+
         from django.db import connection
-        
+
         start_time = time.time()
         initial_queries = len(connection.queries)
-        
+
         result = func(*args, **kwargs)
-        
+
         end_time = time.time()
         final_queries = len(connection.queries)
-        
+
         duration = end_time - start_time
         query_count = final_queries - initial_queries
-        
+
         logger.info(
             f"Query performance - Function: {func.__name__}, "
             f"Duration: {duration:.3f}s, Queries: {query_count}"
         )
-        
+
         # Alert on slow queries
         if duration > 1.0 or query_count > 10:
             logger.warning(
                 f"Slow query detected - {func.__name__}: {duration:.3f}s, {query_count} queries"
             )
-        
+
         return result
     return wrapper
 
@@ -404,7 +413,7 @@ def get_dashboard_data():
     """Example of optimized dashboard data retrieval."""
     receipt_service = get_optimized_receipt_service()
     inventory_service = get_optimized_inventory_service()
-    
+
     return {
         'recent_receipts': list(receipt_service.get_recent_receipts_with_stats()),
         'inventory_summary': list(receipt_service.get_inventory_summary()),

@@ -352,7 +352,7 @@ if not DEBUG:
     SECURE_HSTS_SECONDS = env.int("SECURE_HSTS_SECONDS", default=0)
     SECURE_HSTS_INCLUDE_SUBDOMAINS = env.bool("SECURE_HSTS_INCLUDE_SUBDOMAINS", default=False)
     SECURE_HSTS_PRELOAD = env.bool("SECURE_HSTS_PRELOAD", default=False)
-    
+
     # Cookie security (only in production with HTTPS)
     SESSION_COOKIE_SECURE = env.bool("SESSION_COOKIE_SECURE", default=False)
     CSRF_COOKIE_SECURE = env.bool("CSRF_COOKIE_SECURE", default=False)

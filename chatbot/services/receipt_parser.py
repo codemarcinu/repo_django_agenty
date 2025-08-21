@@ -1,8 +1,8 @@
 # W pliku repo_django_agenty/chatbot/services/receipt_parser.py
 
 import logging
-from typing import Dict, Type, List
-from dataclasses import dataclass # Added import
+from dataclasses import dataclass  # Added import
+
 from ..config.receipt_config import get_parser_config
 from ..interfaces import ReceiptParser
 from .receipt_llm_service import ReceiptLLMService
@@ -25,7 +25,7 @@ class ParsedProduct:
 
 class RegexReceiptParser(ReceiptParser):
     """Prosty parser oparty na wyrażeniach regularnych."""
-    def parse(self, raw_text: str) -> List[ParsedProduct]: # Changed return type
+    def parse(self, raw_text: str) -> list[ParsedProduct]: # Changed return type
         logger.info("Using RegexReceiptParser")
         # Uproszczona logika dla przykładu
         # Return a list of ParsedProduct objects
@@ -36,7 +36,7 @@ class RegexReceiptParser(ReceiptParser):
 
 class LidlReceiptParser(ReceiptParser):
     """Dedykowany parser dla paragonów z Lidla."""
-    def parse(self, raw_text: str) -> List[ParsedProduct]: # Changed return type
+    def parse(self, raw_text: str) -> list[ParsedProduct]: # Changed return type
         logger.info("Using LidlReceiptParser")
         # Tutaj docelowo będzie zaawansowana logika parsowania dla Lidla
         # Return a list of ParsedProduct objects
@@ -54,7 +54,7 @@ class AdaptiveReceiptParser:
     """
 
     def __init__(self, default_parser: ReceiptParser):
-        self._parsers: Dict[str, ReceiptParser] = {}
+        self._parsers: dict[str, ReceiptParser] = {}
         self._default_parser: ReceiptParser = default_parser
         self.register_parser("default", default_parser)
         logger.info(f"Initialized AdaptiveReceiptParser with default: {default_parser.__class__.__name__}")
@@ -74,7 +74,7 @@ class AdaptiveReceiptParser:
         logger.info("No specific keyword found. Using default parser.")
         return self._default_parser
 
-    def parse(self, raw_text: str) -> List[ParsedProduct]: # Changed return type
+    def parse(self, raw_text: str) -> list[ParsedProduct]: # Changed return type
         """Używa wybranego parsera do przetworzenia tekstu."""
         selected_parser = self.select_parser(raw_text)
         return selected_parser.parse(raw_text)
@@ -93,7 +93,7 @@ def get_receipt_parser() -> AdaptiveReceiptParser:
         # 1. Stwórz domyślny parser (może to być LLM lub prosty Regex)
         # Na razie używamy Regex jako podstawy.
         default_parser = RegexReceiptParser()
-        
+
         # 2. Stwórz główny adapter z domyślnym parserem
         instance = AdaptiveReceiptParser(default_parser=default_parser)
 
@@ -114,7 +114,7 @@ def get_receipt_parser() -> AdaptiveReceiptParser:
                     instance.register_parser(keyword, known_parsers[parser_class]())
                 else:
                     logger.warning(f"Unknown parser class '{parser_class}' in config for keyword '{keyword}'.")
-        
+
         _receipt_parser_instance = instance
-        
+
     return _receipt_parser_instance

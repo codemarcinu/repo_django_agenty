@@ -26,10 +26,18 @@ class OCRResult:
     success: bool = True
     error_message: str | None = None
 
+    def __post_init__(self):
+        """Validation after initialization"""
+        if not isinstance(self.text, str):
+            raise TypeError("text must be a string")
+        if not isinstance(self.confidence, (int, float)):
+            raise TypeError("confidence must be a number")
+        if self.confidence < 0 or self.confidence > 1:
+            raise ValueError("confidence must be between 0 and 1")
+
     def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for storage."""
-        import json
-        
+
         def make_json_serializable(obj):
             """Convert numpy types and other non-serializable objects to JSON serializable types."""
             if hasattr(obj, 'item'):  # numpy scalars
@@ -42,7 +50,7 @@ class OCRResult:
                 return [make_json_serializable(v) for v in obj]
             else:
                 return obj
-        
+
         return {
             "text": self.text,
             "confidence": float(self.confidence),
@@ -496,7 +504,7 @@ class FallbackOCRBackend(OCRBackend):
                 last_error = str(e)
                 logger.warning(f"Backend {backend.name} failed: {str(e)}")
 
-        
+
         last_error = None
         attempted_backends = []
 
@@ -575,6 +583,7 @@ class GoogleVisionBackend(OCRBackend):
             )
 
         import time
+
         from google.cloud import vision
         from google.cloud.vision_v1 import types
 
@@ -635,9 +644,10 @@ class GoogleVisionBackend(OCRBackend):
             )
 
         import time
-        from google.cloud import vision
-        from google.cloud.vision_v1 import types
-        from google.cloud import storage # Required for GCS operations
+
+        from google.cloud import (
+            vision,
+        )
 
         start_time = time.time()
         client = vision.ImageAnnotatorClient()
@@ -690,8 +700,9 @@ class MistralOCRBackend(OCRBackend):
                 error_message="Mistral OCR API not available",
             )
 
-        import requests
         import time
+
+        import requests
 
         start_time = time.time()
 
@@ -748,10 +759,11 @@ class MistralOCRBackend(OCRBackend):
         """Extract text from PDF using Mistral OCR API by converting to image."""
         # This is a simplified approach. For multi-page PDFs, each page should be processed.
         # For now, convert the first page to an image and send it.
-        import fitz # PyMuPDF
-        import tempfile
         import os
+        import tempfile
         import time
+
+        import fitz  # PyMuPDF
 
         start_time = time.time()
 

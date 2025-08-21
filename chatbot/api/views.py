@@ -4,24 +4,30 @@ from decimal import Decimal, InvalidOperation
 
 from asgiref.sync import sync_to_async
 from django.http import HttpRequest, JsonResponse
-from django.shortcuts import get_object_or_404
 from django.urls import reverse_lazy
 from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.views import View
 from django.views.decorators.csrf import csrf_exempt
+from rest_framework import status
+from rest_framework.authentication import TokenAuthentication
+from rest_framework.decorators import (
+    api_view,
+    authentication_classes,
+    permission_classes,
+)
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.generics import ListAPIView
 
-from inventory.models import InventoryItem, Product, Receipt
+from inventory.models import InventoryItem, Receipt
 
 from ..conversation_manager import conversation_manager
-from ..models import Agent, Document # Import Document model
+from ..models import Agent, Document  # Import Document model
 from ..services.agent_factory import agent_factory
+from ..services.exceptions import (
+    AgentNotFoundError,  # Corrected import # Corrected import
+)
 from ..services.product_matcher import get_product_matcher
-from ..services.exceptions import AgentNotFoundError # Corrected import # Corrected import
-from rest_framework.decorators import api_view, authentication_classes, permission_classes
-from rest_framework.authentication import TokenAuthentication
-from rest_framework.permissions import IsAuthenticated
-from rest_framework import status
 
 logger = logging.getLogger(__name__)
 
@@ -46,7 +52,7 @@ def agent_endpoint(request):
             {'error': str(e)},
             status=status.HTTP_404_NOT_FOUND
         )
-    except Exception as e:
+    except Exception:
         return JsonResponse(
             {'error': 'Internal server error'},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
@@ -69,7 +75,7 @@ class ReceiptStatusAPIView(View):
             response_data["redirect_url"] = reverse_lazy("chatbot:receipt_review", kwargs={"receipt_id": receipt.id})
         elif receipt.status == 'completed':
             response_data["redirect_url"] = reverse_lazy("inventory:inventory_list") # Or wherever the final destination is
-        
+
         return JsonResponse(response_data)
 
 
@@ -89,7 +95,7 @@ class ProductSearchAPIView(View):
                 "name": product.name,
                 "category_name": product.category.name if product.category else None,
             })
-        
+
         logger.info(f"API search for '{query}' returned {len(results)} results.")
         return JsonResponse({"products": results})
 
@@ -339,3 +345,8 @@ class ConsumeInventoryView(View):
             return JsonResponse(
                 {"success": False, "error": "Internal server error"}, status=500
             )
+
+
+class DocumentListAPIView(ListAPIView):
+    queryset = Document.objects.all()
+    serializer_class = DocumentSerializer

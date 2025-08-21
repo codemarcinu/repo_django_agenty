@@ -1,4 +1,5 @@
 import logging
+
 from inventory.models import OcrCorrectionPattern
 
 logger = logging.getLogger(__name__)

@@ -443,10 +443,10 @@ class ProductMatcher:
             guessed_category = self._guess_category(normalized_name)
             if guessed_category:
                 category_counts[guessed_category.id] = category_counts.get(guessed_category.id, 0) + 1
-        
+
         if not category_counts:
             return None
-        
+
         dominant_category_id = max(category_counts, key=category_counts.get)
         return Category.objects.get(id=dominant_category_id)
 
@@ -571,7 +571,7 @@ class ProductMatcher:
 
         # Combine and limit results
         results = list(exact_matches) + list(partial_matches)
-        
+
         logger.debug(f"Found {len(results)} products for query '{query}'")
         return results[:limit]
 

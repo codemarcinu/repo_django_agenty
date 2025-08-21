@@ -1,11 +1,12 @@
 # /run_diagnostic_test.py
 
-import os
-import django
 import logging
+import os
 from pathlib import Path
-from django.core.files import File
+
+import django
 from django.contrib.auth import get_user_model
+from django.core.files import File
 
 # 1. Inicjalizacja Django (aby mieć dostęp do modeli i usług)
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'core.settings')
@@ -41,10 +42,10 @@ def run_pipeline_test(file_path: str, user_id: int):
     try:
         with receipt_file.open('rb') as f:
             django_file = File(f, name=receipt_file.name)
-            
+
             # Pobieramy instancję głównego serwisu
             receipt_service = ReceiptService(user=user)
-            
+
             # To jest serce testu - uruchamiamy cały proces
             diag_logger.info("Uruchamiam `receipt_service.process_receipt_file`...")
             receipt = receipt_service.process_receipt_file(django_file)
@@ -52,7 +53,7 @@ def run_pipeline_test(file_path: str, user_id: int):
             diag_logger.info(f"Status początkowy: {receipt.status}, Krok przetwarzania: {receipt.processing_step}")
             diag_logger.info("Zadanie asynchroniczne zostało przekazane do Celery. Sprawdź logi Celery oraz `pipeline_diagnostic.log`.")
 
-    except Exception as e:
+    except Exception:
         diag_logger.critical("Krytyczny błąd na etapie uruchamiania serwisu!", exc_info=True)
 
     diag_logger.info(f"--- ZAKOŃCZONO DIAGNOSTYCZNY TEST PIPELINE'U DLA PLIKU: {file_path} ---")

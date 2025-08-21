@@ -144,13 +144,13 @@ class OllamaAgent(BaseAgent):
 
         # Get timeout from config, with model-specific optimizations
         timeout = self.config.get("timeout", 180.0)
-        
+
         # Merge model-specific config with user config
         options = {**model_config, **self.config.get("options", {})}
-        
+
         payload = {
-            "model": selected_model, 
-            "messages": formatted_messages, 
+            "model": selected_model,
+            "messages": formatted_messages,
             "stream": self.config.get("stream", False),
             "options": options
         }

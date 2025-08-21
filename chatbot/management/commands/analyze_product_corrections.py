@@ -1,10 +1,12 @@
 # chatbot/management/commands/analyze_product_corrections.py
 
+import logging
+
 from django.core.management.base import BaseCommand
 from django.db.models import Count
+
 from chatbot.models import ProductCorrection
 from inventory.models import Product
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -56,7 +58,7 @@ class Command(BaseCommand):
 
             try:
                 product = Product.objects.get(id=matched_product_id)
-                
+
                 # Check if the original name is already an alias or the product's main name
                 if original_name == product.name or original_name in product.aliases:
                     self.stdout.write(

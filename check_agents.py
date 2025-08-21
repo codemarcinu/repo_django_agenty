@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import os
+
 import django
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'core.settings')
@@ -31,12 +32,12 @@ bielik = agents.filter(name='bielik').first()
 if bielik:
     print(f'Agent "bielik" - typ: {bielik.agent_type}')
     print(f'Możliwości: {bielik.capabilities}')
-    
+
     if bielik.agent_type == 'router':
         print('✅ Agent ma typ "router" - powinien mieć dostęp do weather_service')
     else:
         print('❌ Agent nie ma typu "router" - brak dostępu do narzędzi pogodowych')
-        
+
     # Sprawdź, czy RouterAgent ma implementację weather_service
     from chatbot.agents import RouterAgent
     router = RouterAgent()
@@ -44,7 +45,7 @@ if bielik:
         print('✅ RouterAgent ma metodę _execute_weather_service')
     else:
         print('❌ RouterAgent nie ma metody _execute_weather_service')
-        
+
     # Sprawdź weather_service
     try:
         from chatbot.weather_service import get_weather

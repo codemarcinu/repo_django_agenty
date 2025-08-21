@@ -1,13 +1,6 @@
 import uuid
 
 from django.db import models
-from django.urls import reverse
-from django.utils import timezone
-
-from .validators import validate_receipt_file
-
-
-
 
 
 class Agent(models.Model):

@@ -4,7 +4,8 @@ from unittest.mock import patch
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 
-from inventory.models import Receipt # Added new import
+from inventory.models import Receipt  # Added new import
+
 from .tasks import process_receipt_task
 
 

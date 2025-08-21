@@ -5,7 +5,7 @@ from rest_framework import status
 from rest_framework.test import APIClient, APITestCase
 
 from chatbot.models import Agent
-from inventory.models import Receipt # Added new import
+from inventory.models import Receipt  # Added new import
 
 
 @pytest.mark.integration

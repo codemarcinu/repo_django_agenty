@@ -3,28 +3,27 @@ Inventory app views implementing user interface for receipt processing pipeline.
 Part of Prompt 8: Dashboard i widoki użytkownika.
 """
 
+import json
 from datetime import date, timedelta
 
+from celery.result import AsyncResult
 from django.core.paginator import Paginator
-from django.db.models import Count, F, Q, Sum
-import json
 from django.db import transaction
+from django.db.models import Count, F, Q, Sum
+from django.http import JsonResponse
 from django.shortcuts import render
+from django.views.decorators.csrf import csrf_exempt  # For API endpoint
 from django.views.generic import DetailView, ListView
-from django.http import JsonResponse 
-from django.views.decorators.csrf import csrf_exempt # For API endpoint
-from celery.result import AsyncResult 
 
 from chatbot.services.inventory_service import get_inventory_service
 from chatbot.services.optimized_queries import (
-    get_receipts_for_listing,
     get_inventory_items_for_listing,
     get_product_details,
+    get_receipts_for_listing,
 )
 
 from .models import (
     Category,
-    ConsumptionEvent,
     InventoryItem,
     Product,
     Receipt,
@@ -70,7 +69,7 @@ def monitoring_dashboard(request):
     # Aggregate data
     receipt_status_counts = Receipt.objects.values('status').annotate(count=Count('id'))
     receipt_step_counts = Receipt.objects.values('processing_step').annotate(count=Count('id'))
-    
+
     # Convert querysets to dicts for easier JSON serialization
     status_data = {item['status']: item['count'] for item in receipt_status_counts}
     step_data = {item['processing_step']: item['count'] for item in receipt_step_counts}
@@ -97,7 +96,7 @@ def monitoring_dashboard(request):
         # This is a simplified average. A more accurate one would iterate through completed receipts
         # and sum (processed_at - uploaded_at) or (updated_at - created_at)
         # For now, we'll just indicate it's not directly calculated here.
-        average_processing_time = "N/A" 
+        average_processing_time = "N/A"
     else:
         average_processing_time = "N/A"
 
@@ -398,7 +397,7 @@ def receipt_processing_status(request, receipt_id):
         else:
             status = receipt.status
             result = receipt.processing_notes
-            
+
         return JsonResponse({
             "receipt_id": receipt_id,
             "status": status,
@@ -545,7 +544,7 @@ def get_monitoring_data(request):
     if request.method == 'GET':
         receipt_status_counts = Receipt.objects.values('status').annotate(count=Count('id'))
         receipt_step_counts = Receipt.objects.values('processing_step').annotate(count=Count('id'))
-        
+
         status_data = {item['status']: item['count'] for item in receipt_status_counts}
         step_data = {item['processing_step']: item['count'] for item in receipt_step_counts}
 
@@ -561,7 +560,7 @@ def get_monitoring_data(request):
             })
 
         total_completed = status_data.get('completed', 0)
-        average_processing_time = "N/A" 
+        average_processing_time = "N/A"
 
         response_data = {
             'status_counts': status_data,

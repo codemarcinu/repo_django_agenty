@@ -10,25 +10,21 @@ import logging
 diag_logger = logging.getLogger("receipt_pipeline_diag")
 
 from django.db import transaction
-from django.utils import timezone
 
 from inventory.models import Receipt
 
 from .exceptions_receipt import (
-    DatabaseError,
     MatchingError,
     OCRError,
     ParsingError,
-    ReceiptError,
     ReceiptNotFoundError,
 )
 from .image_processor import get_image_processor
 from .ocr_service import get_ocr_service
 from .pantry_service_v2 import PantryServiceV2
 from .receipt_cache import get_cache_manager
-
-from .websocket_notifier import get_websocket_notifier
 from .registry import get_receipt_parser
+from .websocket_notifier import get_websocket_notifier
 
 logger = logging.getLogger(__name__)
 
@@ -64,10 +60,10 @@ class ReceiptService:
                 status='pending',
                 processing_step='queued'
             )
-            
+
             # Krok 2: Zapisz plik. Django automatycznie przypisze go do obiektu.
             receipt.receipt_file.save(receipt_file.name, receipt_file, save=True)
-            
+
             logger.info(f"✅ New Receipt record created successfully with ID: {receipt.id}")
 
             # Krok 3: Wywołaj zadanie asynchroniczne Celery
@@ -76,15 +72,15 @@ class ReceiptService:
             logger.info(f"✅ Queued orchestration task for receipt {receipt.id}")
 
             return receipt
-        
+
         except Exception as e:
             # Ten blok jest OBOWIĄZKOWY i musi następować zaraz po bloku `try`
             logger.error(f"❌ Failed to create or queue receipt: {e}", exc_info=True)
-            
+
             # Jeśli paragon został już utworzony, oznacz go jako błędny
             if receipt and receipt.pk:
                 receipt.mark_as_error(f"Failed during initial creation/queuing: {e}")
-                
+
             return None
 
     def start_processing(self, receipt_id: int):
@@ -128,7 +124,7 @@ class ReceiptService:
         diag_logger.debug(f"Starting OCR processing for receipt ID: {receipt_id}")
         cache_manager = get_cache_manager()
         receipt = Receipt.objects.get(id=receipt_id)
-        
+
         self.notifier.send_status_update(receipt_id, "processing", "Przygotowanie obrazu...", 20)
         diag_logger.debug(f"Sent status update for receipt {receipt_id}: 'Przygotowanie obrazu...'")
 
@@ -139,7 +135,7 @@ class ReceiptService:
 
             image_path = receipt.receipt_file.path
             diag_logger.debug(f"Receipt {receipt_id} file path: {image_path}")
-            
+
             # --- Image Preprocessing ---
             diag_logger.debug(f"Starting image preprocessing for receipt {receipt_id}.")
             image_processor = get_image_processor()
@@ -322,12 +318,13 @@ class ReceiptService:
             receipt.save()
             diag_logger.debug(f"Receipt {receipt_id} status updated to 'matching_in_progress'. Number of products to match: {len(products_data)}")
 
-            from .product_matcher import get_product_matcher
-            from .receipt_parser import ParsedProduct
             from decimal import Decimal
 
+            from .product_matcher import get_product_matcher
+            from .receipt_parser import ParsedProduct
+
             parsed_products = [ParsedProduct(name=p.get("name", ""), quantity=p.get("quantity"), unit_price=Decimal(p["unit_price"]) if p.get("unit_price") else None, total_price=Decimal(p["total_price"]) if p.get("total_price") else None) for p in products_data]
-            
+
             matcher = get_product_matcher()
             diag_logger.debug(f"Calling product matcher for receipt {receipt_id}.")
             match_results = matcher.batch_match_products(parsed_products)
@@ -339,7 +336,7 @@ class ReceiptService:
 
             from inventory.models import ReceiptLineItem
             with transaction.atomic():
-                for parsed_product, match_result in zip(parsed_products, match_results):
+                for parsed_product, match_result in zip(parsed_products, match_results, strict=False):
                     ReceiptLineItem.objects.create(
                         receipt=receipt,
                         product_name=parsed_product.name,

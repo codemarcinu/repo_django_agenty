@@ -1,6 +1,7 @@
-from inventory.models import Rule, InventoryItem
-from datetime import timedelta, date
 import logging
+from datetime import date, timedelta
+
+from inventory.models import InventoryItem, Rule
 
 logger = logging.getLogger(__name__)
 

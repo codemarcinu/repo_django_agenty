@@ -5,10 +5,10 @@ from functools import wraps
 from django.core.cache import cache, caches
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
-from django.conf import settings
+
+from inventory.models import Category, Receipt
 
 from ..models import Agent, Document
-from inventory.models import Receipt, Category
 
 logger = logging.getLogger(__name__)
 
@@ -107,7 +107,7 @@ def get_agent_statistics():
     if stats is None:
         # Use inventory items count instead of removed PantryItem
         from inventory.models import InventoryItem
-        
+
         stats = {
             "agents_count": Agent.objects.filter(is_active=True).count(),
             "documents_count": Document.objects.count(),
@@ -151,51 +151,51 @@ def cache_result(timeout=300):
             if args or kwargs:
                 args_str = str(args) + str(sorted(kwargs.items()))
                 cache_key += "_" + hashlib.md5(args_str.encode()).hexdigest()[:12]
-            
+
             try:
                 # Try Redis cache first (primary cache)
                 primary_cache = caches['default']
                 result = primary_cache.get(cache_key)
-                
+
                 if result is not None:
                     logger.debug(f"Cache hit (Redis) for {func.__name__}")
                     return result
-                
+
                 # Execute function if not in cache
                 result = func(*args, **kwargs)
-                
+
                 # Store in Redis cache
                 primary_cache.set(cache_key, result, timeout)
                 logger.debug(f"Cached result (Redis) for {func.__name__}")
-                
+
                 return result
-                
+
             except Exception as redis_error:
                 logger.warning(f"Redis cache error for {func.__name__}: {redis_error}")
-                
+
                 try:
                     # Fallback to database cache
                     db_cache = caches.get('database_fallback', cache)
                     result = db_cache.get(cache_key)
-                    
+
                     if result is not None:
                         logger.debug(f"Cache hit (Database) for {func.__name__}")
                         return result
-                    
+
                     # Execute function
                     result = func(*args, **kwargs)
-                    
+
                     # Store in database cache
                     db_cache.set(cache_key, result, timeout)
                     logger.debug(f"Cached result (Database) for {func.__name__}")
-                    
+
                     return result
-                    
+
                 except Exception as db_error:
                     logger.error(f"Database cache error for {func.__name__}: {db_error}")
                     # If both caches fail, just execute the function
                     return func(*args, **kwargs)
-                    
+
         return wrapper
     return decorator
 
@@ -214,9 +214,10 @@ def get_receipt_processing_stats():
     """
     Get receipt processing statistics with caching.
     """
-    from inventory.models import Receipt
     from django.db.models import Count, Q
-    
+
+    from inventory.models import Receipt
+
     return Receipt.objects.aggregate(
         total=Count('id'),
         completed=Count('id', filter=Q(status='completed')),

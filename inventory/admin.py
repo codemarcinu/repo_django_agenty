@@ -10,12 +10,12 @@ from .models import (
     Category,
     ConsumptionEvent,
     InventoryItem,
+    OcrCorrectionPattern,  # New import
+    OcrTrainingSample,  # New import
     Product,
     Receipt,
     ReceiptLineItem,
-    Rule, # Import the new Rule model
-    OcrTrainingSample, # New import
-    OcrCorrectionPattern, # New import
+    Rule,  # Import the new Rule model
 )
 
 

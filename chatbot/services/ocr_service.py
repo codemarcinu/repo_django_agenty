@@ -197,6 +197,27 @@ class OCRService:
             "service_available": len(self._backends) > 0,
         }
 
+    def process_document(self, file_path: str) -> OCRResult:
+        """
+        Przetwarza dokument i zwraca wynik jako OCRResult.
+        """
+        try:
+            # Call the existing process_file method
+            ocr_result = self.process_file(file_path)
+            return ocr_result
+        except Exception as e:
+            # In case of an error, return an empty OCRResult instance
+            # using the OCRResult from ocr_backends.py
+            return OCRResult(
+                text="",
+                confidence=0.0,
+                backend="unknown", # Or self._primary_backend.name if available
+                processing_time=0.0,
+                metadata={"error": str(e)},
+                success=False,
+                error_message=str(e)
+            )
+
 
 # Global OCR service instance
 ocr_service = OCRService()

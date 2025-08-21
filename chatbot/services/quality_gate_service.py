@@ -1,5 +1,6 @@
-from .ocr_service import OCRResult
 import logging
+
+from .ocr_service import OCRResult
 
 logger = logging.getLogger(__name__)
 
@@ -12,9 +13,20 @@ class QualityGateService:
     MIN_CONFIDENCE_SCORE = 0.6  # Minimalny próg pewności OCR
 
     def __init__(self, result: OCRResult):
+        """
+        Inicjalizuje QualityGateService z wynikiem OCR.
+        """
         if not isinstance(result, OCRResult):
-            raise TypeError("result must be an instance of OCRResult")
-        self.result = result
+            # Dodaj więcej informacji diagnostycznych
+            result_type = type(result).__name__
+            result_value = str(result)[:100] if result else "None"
+
+            raise TypeError(
+                f"result must be an instance of OCRResult, "
+                f"but received {result_type}: {result_value}"
+            )
+
+        self.ocr_result = result
         self.score = 0
         self.reasons = []
 
