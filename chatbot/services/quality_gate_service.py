@@ -43,8 +43,8 @@ class QualityGateService:
         """
         Sprawdza, czy liczba linii w tekście OCR jest wystarczająca.
         """
-        # Poprawka: Dzielimy `self.result.text` na linie, aby policzyć ich liczbę.
-        lines = self.result.text.strip().split('n')
+        # Poprawka: Dzielimy `self.ocr_result.text` na linie, aby policzyć ich liczbę.
+        lines = self.ocr_result.text.strip().split('\n')
         line_count = len(lines)
 
         if line_count >= self.MIN_LINE_COUNT:
