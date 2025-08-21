@@ -27,6 +27,6 @@
 - [x] 5.3: Modyfikacja `HybridOCRService` w `chatbot/services/hybrid_ocr_service.py` w celu wstrzyknięcia i użycia `OcrCorrectionService`.
 
 ## Etap 6: Monitoring i Zarządzanie – Panel Kontrolny dla Człowieka
-- [ ] 6.1: Rejestracja modelu `OcrTrainingSample` w `inventory/admin.py`.
-- [ ] 6.2: Rejestracja modelu `OcrCorrectionPattern` w `inventory/admin.py` z odpowiednią konfiguracją `list_display`, `list_filter`, `search_fields`.
-- [ ] 6.3: Dodanie akcji administracyjnej `deactivate_patterns` dla `OcrCorrectionPatternAdmin`.
+- [x] 6.1: Rejestracja modelu `OcrTrainingSample` w `inventory/admin.py`.
+- [x] 6.2: Rejestracja modelu `OcrCorrectionPattern` w `inventory/admin.py` z odpowiednią konfiguracją `list_display`, `list_filter`, `search_fields`.
+- [x] 6.3: Dodanie akcji administracyjnej `deactivate_patterns` dla `OcrCorrectionPatternAdmin`.
