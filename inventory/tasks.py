@@ -114,5 +114,11 @@ def run_mistral_ocr_and_save_sample_task(receipt_id: int):
             }
         )
         logger.info(f"OcrTrainingSample saved for receipt {receipt_id}.")
+
+        # Generate correction patterns
+        from inventory.services.learning_service import LearningService
+        learning_service = LearningService()
+        learning_service.generate_correction_patterns(receipt.raw_ocr_text, ground_truth_text)
+        logger.info(f"Correction patterns generated for receipt {receipt_id}.")
     else:
         logger.error(f"Mistral OCR failed for receipt {receipt_id}: {mistral_ocr_result.error_message}")
