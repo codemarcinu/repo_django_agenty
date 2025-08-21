@@ -5,7 +5,10 @@ API views for receipt processing.
 import logging
 import os
 import uuid
+import traceback
 from datetime import datetime
+
+from django.conf import settings
 
 from drf_spectacular.utils import OpenApiResponse, extend_schema
 from rest_framework import status
@@ -87,6 +90,32 @@ def upload_receipt(request):
     receipt_service = ReceiptService()
 
     try:
+        logger.info("=== STARTING FILE UPLOAD DEBUG ===")
+        logger.info(f"Content-Type: {request.content_type}")
+        logger.info(f"Content-Length: {request.META.get('CONTENT_LENGTH', 'Unknown')}")
+        logger.info(f"Files in request: {list(request.FILES.keys())}")
+        
+        # Sprawdź czy plik jest w request
+        if 'file' not in request.FILES: # Changed from 'receipt_file' to 'file' to match serializer.validated_data["file"]
+            logger.error("❌ No file in request.FILES")
+            return Response({'error': 'Brak pliku w żądaniu'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        file = request.FILES['file'] # Changed from 'receipt_file' to 'file'
+        logger.info(f"File name: {file.name}")
+        logger.info(f"File size: {file.size}")
+        logger.info(f"File content-type: {file.content_type}")
+        
+        # Walidacja pliku
+        if file.size > 50 * 1024 * 1024:  # 50MB limit (matching existing schema)
+            logger.error(f"❌ File too large: {file.size} bytes")
+            return Response({'error': 'Plik za duży (max 50MB)'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Sprawdź czy katalog istnieje
+        upload_dir = os.path.join(settings.MEDIA_ROOT, 'receipt_files')
+        if not os.path.exists(upload_dir):
+            os.makedirs(upload_dir)
+            logger.info(f"Created upload directory: {upload_dir}")
+
         # Create the database record for the receipt
         receipt = receipt_service.create_receipt_record(uploaded_file)
 
@@ -114,11 +143,16 @@ def upload_receipt(request):
             status=status.HTTP_503_SERVICE_UNAVAILABLE,
         )
     except Exception as e:
-        logger.error(f"An unexpected error occurred during receipt upload: {e}", exc_info=True)
-        return Response(
-            {"error": "An unexpected server error occurred.", "details": str(e)},
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        )
+        # KRYTYCZNE: Loguj pełny stack trace
+        logger.error("❌ CRITICAL UPLOAD ERROR:")
+        logger.error(f"Exception type: {type(e).__name__}")
+        logger.error(f"Exception message: {str(e)}")
+        logger.error(f"Full traceback:\n{traceback.format_exc()}")
+        
+        return Response({
+            'error': f'Szczegółowy błąd: {str(e)}',
+            'debug': str(traceback.format_exc()) if settings.DEBUG else None
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @extend_schema(
