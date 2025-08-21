@@ -10,6 +10,7 @@ from .ocr_backends import OCRResult, GoogleVisionBackend
 from abc import ABC, abstractmethod
 import time
 from pathlib import Path
+from inventory.services.correction_service import OcrCorrectionService # New import
 
 logger = logging.getLogger(__name__)
 
@@ -300,6 +301,8 @@ class HybridOCRService:
         else:
             backend_names = [b.name for b in self.available_backends]
             logger.info(f"Available OCR backends: {backend_names}")
+        
+        self.correction_service = OcrCorrectionService() # New line
     
     async def extract_text_from_file(self, image_path: str) -> str:
         """
@@ -395,7 +398,8 @@ class HybridOCRService:
         
         logger.info(f"Selected result from {best_result.method} with confidence {best_result.confidence:.2f}")
         
-        return best_result.text
+        corrected_text = self.correction_service.apply(best_result.text) # New line
+        return corrected_text
     
     def _select_best_result(self, results: List[OCRResult]) -> OCRResult:
         """
