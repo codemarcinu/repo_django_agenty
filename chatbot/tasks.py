@@ -54,6 +54,7 @@ def orchestrate_receipt_processing(self, receipt_id: int):
     )
     from .services.receipt_service import get_receipt_service
     from .services.vision_service import VisionService
+    from .services.basic_parser import BasicReceiptParser
 
     logger.info(f"▶️ STARTING ORCHESTRATION for Receipt ID: {receipt_id} (Attempt: {self.request.retries + 1})")
 
@@ -106,7 +107,9 @@ def orchestrate_receipt_processing(self, receipt_id: int):
             logger.error(f"Vision service error for receipt {receipt_id}: {e}")
             logger.info("Continuing processing without vision analysis")
         
-        parser_service = AdaptiveReceiptParser()
+        parser_service = AdaptiveReceiptParser(
+            default_parser=BasicReceiptParser()
+        )
         parser_result = parser_service.parse_receipt(ocr_result.text, vision_result)
 
         if parser_result:

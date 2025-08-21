@@ -11,64 +11,60 @@ class VisionService:
         self.model = "qwen2.5-vl:7b"
     
     def analyze_receipt(self, image_path: str) -> dict:
-        """Analizuje paragon używając Ollama vision model."""
+        """Analizuje paragon używając Qwen2.5VL przez Ollama."""
         import requests
         import base64
         
-        # Wczytaj obraz jako base64
+        # Konwertuj obraz na base64
         with open(image_path, 'rb') as img_file:
             img_base64 = base64.b64encode(img_file.read()).decode('utf-8')
         
         payload = {
-            "model": self.model,
-            "prompt": "Przeanalizuj ten paragon i wyciągnij: nazwę sklepu, datę, kwotę całkowitą, pozycje zakupów z cenami. Odpowiedz w formacie JSON.",
+            "model": "qwen2.5vl:7b",
+            "prompt": "Analyze this receipt and extract: store name, date, total amount, items with prices. Respond in JSON format in Polish.",
             "images": [img_base64],
-            "stream": False
+            "stream": False,
+            "options": {
+                "temperature": 0.1
+            }
         }
         
         try:
-            # Użyj poprawnego endpoint'u /api/generate zamiast /api/chat
-            response = requests.post(
-                f"{self.base_url}/api/generate",
-                json=payload,
-                timeout=60
-            )
-            response.raise_for_status()
+            # Test różnych endpoint'ów
+            endpoints_to_try = [
+                "/api/generate",
+                "/v1/chat/completions", 
+                "/api/chat"
+            ]
             
-            result = response.json()
-            return {
-                'success': True,
-                'extracted_text': result.get('response', ''),
-                'model_used': self.model
-            }
-            
-        except requests.exceptions.RequestException as e:
-            logger.error(f"Vision analysis failed: {e}")
+            for endpoint in endpoints_to_try:
+                try:
+                    response = requests.post(
+                        f"http://127.0.0.1:11434{endpoint}",
+                        json=payload,
+                        timeout=60
+                    )
+                    
+                    if response.status_code == 200:
+                        result = response.json()
+                        return {
+                            'success': True,
+                            'extracted_text': result.get('response', result.get('message', {}).get('content', '')),
+                            'endpoint_used': endpoint
+                        }
+                        
+                except requests.exceptions.RequestException:
+                    continue
+                    
+            # Jeśli żaden endpoint nie działa
             return {
                 'success': False,
-                'error': str(e)
+                'error': 'All Ollama endpoints failed'
             }
-    
-    def _prepare_image_data(self, file_path):
-        """Przygotowuje dane obrazu do wysłania do API"""
-        with open(file_path, 'rb') as f:
-            return base64.b64encode(f.read()).decode('utf-8')
-    
-    def _check_model_availability(self):
-        """Sprawdza czy model jest dostępny"""
-        try:
-            response = requests.get(f"{self.base_url}/api/tags")
-            if response.status_code == 200:
-                models = response.json().get('models', [])
-                available_models = [model['name'] for model in models]
-                logger.info(f"Available models: {available_models}")
-                
-                if self.model not in available_models:
-                    logger.error(f"Model {self.model} not available. Try: ollama pull {self.model}")
-            else:
-                logger.error(f"Cannot check available models: {response.status_code}")
+            
         except Exception as e:
-            logger.error(f"Error checking model availability: {e}")
+            logger.error(f"Vision analysis failed: {e}")
+            return {'success': False, 'error': str(e)}
 
 # Test połączenia
 def test_vision_service():
