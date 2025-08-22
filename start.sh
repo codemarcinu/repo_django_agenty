@@ -132,6 +132,74 @@ echo "🗄️  Stosowanie migracji bazy danych..."
 .venv/bin/python manage.py migrate
 
 echo "---"
+
+# Function to setup frontend assets
+setup_frontend_assets() {
+    echo "🎨 Konfiguracja zasobów frontendowych..."
+
+    # Check if Node.js and npm are available
+    if command -v node &> /dev/null && command -v npm &> /dev/null; then
+        echo "📦 Sprawdzanie zależności Node.js..."
+
+        # Check if package.json exists
+        if [ -f "package.json" ]; then
+            # Install npm dependencies if node_modules doesn't exist
+            if [ ! -d "node_modules" ]; then
+                echo "⬇️  Instalowanie zależności npm..."
+                npm install
+                if [ $? -eq 0 ]; then
+                    echo "✅ Zależności npm zainstalowane pomyślnie"
+                else
+                    echo "❌ Błąd podczas instalacji zależności npm"
+                    exit 1
+                fi
+            else
+                echo "✅ Zależności npm już zainstalowane"
+            fi
+
+            # Build frontend assets if build script exists
+            if npm run build 2>/dev/null; then
+                echo "🔨 Kompilowanie zasobów frontendowych..."
+                npm run build
+                if [ $? -eq 0 ]; then
+                    echo "✅ Zasoby frontendowe skompilowane pomyślnie"
+                else
+                    echo "❌ Błąd podczas kompilacji zasobów frontendowych"
+                    exit 1
+                fi
+            else
+                echo "ℹ️  Brak skryptu build - pomijam kompilację"
+            fi
+        else
+            echo "ℹ️  Brak pliku package.json - pomijam instalację npm"
+        fi
+    else
+        echo "ℹ️  Node.js nie jest dostępny - pomijam konfigurację frontend"
+    fi
+}
+
+# Function to collect Django static files
+collect_static_files() {
+    echo "📁 Zbieranie plików statycznych Django..."
+
+    # Create static directory if it doesn't exist
+    mkdir -p chatbot/static
+    mkdir -p inventory/static
+
+    # Collect static files
+    .venv/bin/python manage.py collectstatic --noinput --clear
+    if [ $? -eq 0 ]; then
+        echo "✅ Pliki statyczne Django zebrane pomyślnie"
+    else
+        echo "❌ Błąd podczas zbierania plików statycznych"
+        exit 1
+    fi
+}
+
+setup_frontend_assets
+echo "---"
+collect_static_files
+echo "---"
 verify_models
 echo "---"
 
@@ -157,4 +225,3 @@ echo ""
 echo "🔴 Aby zatrzymać wszystkie usługi, uruchom:"
 echo "   pkill -f 'manage.py runserver' && pkill -f 'celery.*worker' && sudo systemctl stop valkey"
 echo ""
-
