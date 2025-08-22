@@ -116,19 +116,38 @@ class ReceiptUploadView(FormView):
             orchestrate_receipt_processing.delay(new_receipt.id)
             logger.info(f"✅ Orchestration task queued for receipt {new_receipt.id}")
 
-            # Przekieruj użytkownika na stronę statusu
-            self.success_url = reverse_lazy('chatbot:receipt_status', kwargs={'receipt_id': new_receipt.id})
-            return super().form_valid(form)
+            # Check if it's an AJAX request
+            if self.request.headers.get('x-requested-with') == 'XMLHttpRequest' or self.request.accepts('application/json'):
+                return JsonResponse({
+                    'success': True,
+                    'receipt_id': new_receipt.id,
+                    'message': 'Upload successful, processing started.'
+                }, status=200)
+            else:
+                # Przekieruj użytkownika na stronę statusu
+                self.success_url = reverse_lazy('chatbot:receipt_status', kwargs={'receipt_id': new_receipt.id})
+                return super().form_valid(form)
         except Exception as e:
-            logger.error(f"❌ Failed to queue orchestration task for receipt {new_receipt.id}: {e}", exc_info=True)
+            logger.error(f"❌ Failed to queue orchestration task for receipt: {e}", exc_info=True)
             # If an error occurs before saving, new_receipt might not exist.
             # If it exists, update its status to failed.
+            new_receipt_id = None
             if 'new_receipt' in locals() and new_receipt.id:
                 new_receipt.status = 'failed'
                 new_receipt.processing_notes = f"Failed to start processing: {e}"
                 new_receipt.save()
-            # Re-raise the exception or handle it gracefully
-            raise
+                new_receipt_id = new_receipt.id
+
+            # Always return JSON for AJAX requests, even on error
+            if self.request.headers.get('x-requested-with') == 'XMLHttpRequest' or self.request.accepts('application/json'):
+                return JsonResponse({
+                    'success': False,
+                    'receipt_id': new_receipt_id, # Include ID if available
+                    'error': f'Server error: {str(e)}'
+                }, status=500)
+            else:
+                # For non-AJAX requests, re-raise the exception or handle it gracefully
+                raise
         finally:
             logger.info("=== NEW RECEIPT UPLOAD PROCESS COMPLETED ===")
 
