@@ -305,10 +305,27 @@ class ReceiptService:
                 diag_logger.error(f"Receipt {receipt_id} not ready for matching. Current step: {receipt.processing_step}")
                 raise MatchingError(f"Receipt {receipt_id} not ready for matching", details={'current_step': receipt.processing_step})
 
-            products_data = receipt.parsed_data.get("products", [])
+            # 🔍 DEBUG - sprawdź gdzie są produkty
+            diag_logger.info(f"🔍 MATCHING DEBUG for Receipt {receipt_id}:")
+            diag_logger.info(f"extracted_data keys: {list(receipt.extracted_data.keys()) if receipt.extracted_data else 'None'}")
+            diag_logger.info(f"parsed_data keys: {list(receipt.parsed_data.keys()) if receipt.parsed_data else 'None'}")
+
+            # Spróbuj najpierw z parsed_data (standard)
+            products_data = receipt.parsed_data.get("products", []) if receipt.parsed_data else []
+
+            # Jeśli nie ma w parsed_data, sprawdź extracted_data
+            if not products_data and receipt.extracted_data:
+                products_data = receipt.extracted_data.get("products", [])
+                diag_logger.info(f"🔄 Using products from extracted_data: {len(products_data)} products")
+
+            # Jeśli nadal nie ma, sprawdź czy to bezpośrednia lista
+            if not products_data and receipt.parsed_data and isinstance(receipt.parsed_data, list):
+                products_data = receipt.parsed_data
+                diag_logger.info(f"🔄 Using parsed_data as direct list: {len(products_data)} products")
+
             if not products_data:
                 logger.info(f"Matching skipped for receipt {receipt_id}: no products.")
-                diag_logger.info(f"Matching skipped for receipt {receipt_id}: no products found in parsed data.")
+                diag_logger.info(f"Matching skipped for receipt {receipt_id}: no products found.")
                 receipt.mark_as_ready_for_review()
                 self.notifier.send_status_update(receipt_id, "review_pending", "Gotowy do weryfikacji (brak produktów)", 98)
                 diag_logger.debug(f"Receipt {receipt_id} marked as ready for review (no products).")
@@ -323,7 +340,7 @@ class ReceiptService:
             from .product_matcher import get_product_matcher
             from .receipt_parser import ParsedProduct
 
-            parsed_products = [ParsedProduct(name=p.get("name", ""), quantity=p.get("quantity"), unit_price=Decimal(p["unit_price"]) if p.get("unit_price") else None, total_price=Decimal(p["total_price"]) if p.get("total_price") else None) for p in products_data]
+            parsed_products = [ParsedProduct(name=p.get("product", ""), quantity=p.get("quantity"), price=Decimal(p.get("price", 0)), total_price=Decimal(p.get("price", 0)) * Decimal(p.get("quantity", 1))) for p in products_data]
 
             matcher = get_product_matcher()
             diag_logger.debug(f"Calling product matcher for receipt {receipt_id}.")
@@ -341,7 +358,7 @@ class ReceiptService:
                         receipt=receipt,
                         product_name=parsed_product.name,
                         quantity=Decimal(str(parsed_product.quantity or 1.0)),
-                        unit_price=parsed_product.unit_price or Decimal("0.00"),
+                        unit_price=parsed_product.price or Decimal("0.00"),
                         line_total=parsed_product.total_price or Decimal("0.00"),
                         matched_product=match_result.product,
                         meta={'match_confidence': match_result.confidence, 'match_type': match_result.match_type}
