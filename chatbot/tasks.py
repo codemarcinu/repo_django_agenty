@@ -13,6 +13,7 @@ from asgiref.sync import async_to_sync
 
 from .models import Document
 from .rag_processor import rag_processor
+from .schemas import ParsedReceipt
 from .services.exceptions_receipt import (
     DatabaseError,
     MatchingError,
@@ -57,13 +58,23 @@ def orchestrate_receipt_processing(self, receipt_id: int):
     from .services.vision_service import VisionService
     from .services.basic_parser import BasicReceiptParser
     from .services.mistral_ocr_service import MistralOcrService
-    from .schemas import ParsedReceipt
+    from .services.websocket_notifier import get_websocket_notifier
 
     logger.info(f"🚀 STARTING HYBRID ORCHESTRATION for Receipt ID: {receipt_id} (Attempt: {self.request.retries + 1})")
 
     try:
         receipt = Receipt.objects.get(id=receipt_id)
         parsed_data = None
+        notifier = get_websocket_notifier()
+
+        # Send immediate status update that processing has started
+        notifier.send_status_update(
+            receipt_id=receipt_id,
+            status="processing",
+            message="Rozpoczęto przetwarzanie paragonu",
+            progress=30,
+            processing_step="processing_started"
+        )
 
         try:
             # --- STRATEGIA 1: Użyj Premium Backend (Mistral OCR) ---
@@ -104,12 +115,31 @@ def orchestrate_receipt_processing(self, receipt_id: int):
         except Exception as mistral_error:
             logger.warning(f"💥 [Premium] Mistral OCR failed ({mistral_error}). Switching to local pipeline.")
 
+            # Send notification about fallback to local pipeline
+            notifier.send_status_update(
+                receipt_id=receipt_id,
+                status="processing",
+                message="Mistral OCR niedostępny, używam lokalnego przetwarzania...",
+                progress=35,
+                processing_step="fallback_to_local"
+            )
+
             # --- STRATEGIA 2: Fallback na Lokalny Hybrydowy Pipeline ---
             logger.info(f"🔄 [Fallback] Starting Local Pipeline for Receipt {receipt_id}")
 
             # --- KROK 1: OCR ---
             logger.info(f" [1/4] OCR | Receipt ID: {receipt_id}")
             receipt.mark_as_processing(step="ocr_in_progress")
+
+            # Send OCR start notification
+            notifier.send_status_update(
+                receipt_id=receipt_id,
+                status="processing",
+                message="Rozpoznawanie tekstu z paragonu...",
+                progress=40,
+                processing_step="ocr_in_progress"
+            )
+
             ocr_result = ocr_service.process_file(receipt.receipt_file.path)
 
             if not ocr_result.success:
@@ -137,9 +167,31 @@ def orchestrate_receipt_processing(self, receipt_id: int):
             quality_score = quality_gate.calculate_quality_score()
             logger.info(f"Paragon {receipt_id}: Wynik jakości OCR to {quality_score}")
 
+            # Send OCR completion notification and pause for user review
+            receipt.mark_as_processing(step="ocr_completed")
+            notifier.send_status_update(
+                receipt_id=receipt_id,
+                status="pending_review",
+                message="Tekst został rozpoznany. Sprawdź i potwierdź przed kontynuacją.",
+                progress=60,
+                processing_step="ocr_completed"
+            )
+
+            logger.info(f"✅ OCR COMPLETED for Receipt ID: {receipt_id} - WAITING FOR USER REVIEW")
+            return  # Pause processing here for user review
+
             # --- KROK 3: PARSING ---
             logger.info(f" [3/4] PARSING | Receipt ID: {receipt_id}")
             receipt.mark_as_processing(step="parsing_in_progress")
+
+            # Send parsing start notification
+            notifier.send_status_update(
+                receipt_id=receipt_id,
+                status="processing",
+                message="Analizuję produkty na paragonie...",
+                progress=70,
+                processing_step="parsing_in_progress"
+            )
 
             # Spróbuj Vision Service (jeśli działa)
             vision_result = None
@@ -199,15 +251,213 @@ def orchestrate_receipt_processing(self, receipt_id: int):
         receipt.extracted_data = parsed_data
         receipt.mark_llm_done(parsed_data)
 
+        # Send parsing completion notification
+        notifier.send_status_update(
+            receipt_id=receipt_id,
+            status="processing",
+            message="Produkty zostały rozpoznane, dopasowuję do bazy...",
+            progress=85,
+            processing_step="parsing_completed"
+        )
+
         # --- KROK 4: MATCHING ---
         logger.info(f" [4/4] MATCHING | Receipt ID: {receipt_id}")
+
+        # Send matching start notification
+        notifier.send_status_update(
+            receipt_id=receipt_id,
+            status="processing",
+            message="Dopasowuję produkty do bazy danych...",
+            progress=90,
+            processing_step="matching_in_progress"
+        )
+
         receipt_service = get_receipt_service()
         receipt_service.process_receipt_matching(receipt_id)
+
+        # Send final completion notification
+        notifier.send_status_update(
+            receipt_id=receipt_id,
+            status="completed",
+            message="Paragon został pomyślnie przetworzony!",
+            progress=100,
+            processing_step="done"
+        )
 
         logger.info(f"✅ HYBRID ORCHESTRATION COMPLETED for Receipt ID: {receipt_id}.")
 
     except Exception as e:
         logger.error(f"❌ HYBRID ORCHESTRATION ERROR for Receipt ID: {receipt_id}: {e}", exc_info=True)
+        try:
+            receipt_to_update = Receipt.objects.get(id=receipt_id)
+            receipt_to_update.mark_as_error(f"Critical error: {e}")
+        except Receipt.DoesNotExist:
+            logger.error(f"Could not find receipt {receipt_id} to mark as error.")
+        raise
+
+
+@shared_task
+def continue_receipt_processing_after_ocr_review(receipt_id: int):
+    """
+    Continue receipt processing after OCR text has been reviewed and potentially edited by user.
+    This picks up from where OCR completed and continues with quality gate and parsing.
+    """
+    from .services.ocr_backends import OCRResult
+    from .services.ocr_service import ocr_service
+    from .services.quality_gate_service import QualityGateService
+    from .services.receipt_parser import get_receipt_parser, AdaptiveReceiptParser
+    from .services.receipt_service import get_receipt_service
+    from .services.vision_service import VisionService
+    from .services.basic_parser import BasicReceiptParser
+    from .services.websocket_notifier import get_websocket_notifier
+
+    logger.info(f"🔄 CONTINUING PROCESSING AFTER OCR REVIEW for Receipt ID: {receipt_id}")
+
+    try:
+        receipt = Receipt.objects.get(id=receipt_id)
+        notifier = get_websocket_notifier()
+
+        # Use the updated OCR text (if user edited it)
+        ocr_text = receipt.raw_ocr_text
+
+        # Create a mock OCRResult with the updated text
+        class MockOCRResult:
+            def __init__(self, text):
+                self.text = text
+                self.success = True
+
+        ocr_result = MockOCRResult(ocr_text)
+
+        # --- KROK 2: QUALITY GATE ---
+        logger.info(f" [2/4] QUALITY GATE | Receipt ID: {receipt_id}")
+        receipt.mark_as_processing(step="quality_gate")
+
+        if not isinstance(ocr_result, OCRResult):
+            # Convert mock result to proper OCRResult
+            ocr_result = OCRResult(
+                full_text=ocr_text,
+                lines=ocr_text.split('\n'),
+                confidences=[0.8] * len(ocr_text.split('\n'))  # Default confidence
+            )
+
+        quality_gate = QualityGateService(ocr_result)
+        quality_score = quality_gate.calculate_quality_score()
+        logger.info(f"Paragon {receipt_id}: Wynik jakości OCR to {quality_score}")
+
+        # Send quality gate completion notification
+        notifier.send_status_update(
+            receipt_id=receipt_id,
+            status="processing",
+            message="Jakość tekstu została sprawdzona, analizuję produkty...",
+            progress=75,
+            processing_step="quality_gate"
+        )
+
+        # --- KROK 3: PARSING ---
+        logger.info(f" [3/4] PARSING | Receipt ID: {receipt_id}")
+        receipt.mark_as_processing(step="parsing_in_progress")
+
+        # Send parsing start notification
+        notifier.send_status_update(
+            receipt_id=receipt_id,
+            status="processing",
+            message="Analizuję produkty na paragonie...",
+            progress=80,
+            processing_step="parsing_in_progress"
+        )
+
+        # Spróbuj Vision Service (jeśli działa)
+        vision_result = None
+        try:
+            vision_service = VisionService()
+            vision_result = vision_service.analyze_receipt(receipt.receipt_file.path)
+
+            if vision_result and vision_result.get('success'):
+                logger.info(f"✅ Vision analysis successful for receipt {receipt_id}")
+                logger.info(f"Vision result: {vision_result.get('extracted_text', '')[:200]}...")
+            else:
+                logger.warning(f"Vision service failed for receipt {receipt_id}, using text parsing")
+        except Exception as e:
+            logger.error(f"Vision service error for receipt {receipt_id}: {e}")
+
+        # Główny parser
+        parser_service = AdaptiveReceiptParser(default_parser=BasicReceiptParser())
+
+        # 🔍 DEBUGGING: Sprawdź co parser otrzymuje
+        logger.info(f"🔍 PARSER INPUT for Receipt {receipt_id}:")
+        logger.info(f"OCR Text length: {len(ocr_result.text)} chars")
+        logger.info(f"First 300 chars: {ocr_result.text[:300]}...")
+
+        parser_result = parser_service.parse(ocr_result.text, vision_result)
+
+        # 🔍 DEBUGGING: Sprawdź wynik parsera
+        logger.info(f"🔍 PARSER OUTPUT for Receipt {receipt_id}:")
+        logger.info(f"Parser result: {parser_result}")
+        logger.info(f"Parser result type: {type(parser_result)}")
+
+        if parser_result:
+            # Konwersja do słownika jeśli potrzebna
+            extracted_dict = parser_result if isinstance(parser_result, dict) else parser_result.dict()
+
+            # 🔍 DEBUGGING: Sprawdź wyodrębnione produkty
+            products = extracted_dict.get('products', [])
+            logger.info(f"🔍 EXTRACTED PRODUCTS for Receipt {receipt_id}: {len(products)} products")
+            for i, product in enumerate(products[:3]):  # Pokaż pierwsze 3
+                logger.info(f"  Product {i+1}: {product}")
+
+            parsed_data = extracted_dict
+        else:
+            logger.error(f"❌ Parser returned empty result for receipt {receipt_id}")
+            # FALLBACK: Spróbuj prostego parsowania regex
+            fallback_products = simple_text_parser(ocr_result.text)
+            if fallback_products:
+                logger.info(f"🔄 Fallback parser found {len(fallback_products)} products")
+                parsed_data = {"products": fallback_products, "store_name": "", "total": 0}
+            else:
+                receipt.mark_as_error("Parsing failed: No data extracted from OCR.")
+                raise ParsingError(f"No data extracted for receipt {receipt_id}")
+
+        # --- Dalsze kroki są już wspólne ---
+        receipt.extracted_data = parsed_data
+        receipt.mark_llm_done(parsed_data)
+
+        # Send parsing completion notification
+        notifier.send_status_update(
+            receipt_id=receipt_id,
+            status="processing",
+            message="Produkty zostały rozpoznane, dopasowuję do bazy...",
+            progress=90,
+            processing_step="parsing_completed"
+        )
+
+        # --- KROK 4: MATCHING ---
+        logger.info(f" [4/4] MATCHING | Receipt ID: {receipt_id}")
+
+        # Send matching start notification
+        notifier.send_status_update(
+            receipt_id=receipt_id,
+            status="processing",
+            message="Dopasowuję produkty do bazy danych...",
+            progress=95,
+            processing_step="matching_in_progress"
+        )
+
+        receipt_service = get_receipt_service()
+        receipt_service.process_receipt_matching(receipt_id)
+
+        # Send final completion notification
+        notifier.send_status_update(
+            receipt_id=receipt_id,
+            status="completed",
+            message="Paragon został pomyślnie przetworzony!",
+            progress=100,
+            processing_step="done"
+        )
+
+        logger.info(f"✅ OCR REVIEW PROCESSING COMPLETED for Receipt ID: {receipt_id}")
+
+    except Exception as e:
+        logger.error(f"❌ OCR REVIEW PROCESSING ERROR for Receipt ID: {receipt_id}: {e}", exc_info=True)
         try:
             receipt_to_update = Receipt.objects.get(id=receipt_id)
             receipt_to_update.mark_as_error(f"Critical error: {e}")

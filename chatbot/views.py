@@ -172,6 +172,55 @@ class ReceiptStatusView(View):
         return render(request, "chatbot/receipt_processing_status.html", context)
 
 
+class OCRReviewView(View):
+    """View for reviewing and editing OCR text before processing"""
+
+    def get(self, request, receipt_id):
+        try:
+            receipt = Receipt.objects.get(id=receipt_id)
+        except Receipt.DoesNotExist:
+            raise Http404("Paragon nie został znaleziony")
+
+        # Only allow review if OCR is completed but parsing hasn't started
+        if receipt.processing_step not in ['ocr_completed', 'quality_gate']:
+            if receipt.processing_step in ['parsing_in_progress', 'parsing_completed']:
+                return HttpResponseRedirect(reverse_lazy("chatbot:receipt_review", kwargs={"receipt_id": receipt.id}))
+            else:
+                return HttpResponseRedirect(reverse_lazy("chatbot:receipt_status", kwargs={"receipt_id": receipt.id}))
+
+        context = {
+            "receipt": receipt,
+            "ocr_text": receipt.raw_ocr_text or "",
+            "title": f"Przegląd OCR - Paragon #{receipt.id}"
+        }
+        return render(request, "chatbot/receipt_ocr_review.html", context)
+
+    def post(self, request, receipt_id):
+        try:
+            receipt = Receipt.objects.get(id=receipt_id)
+        except Receipt.DoesNotExist:
+            raise Http404("Paragon nie został znaleziony")
+
+        # Get the edited OCR text
+        edited_ocr_text = request.POST.get('ocr_text', '').strip()
+
+        if not edited_ocr_text:
+            return JsonResponse({"success": False, "error": "Tekst OCR nie może być pusty"})
+
+        # Update the OCR text
+        receipt.raw_ocr_text = edited_ocr_text
+        receipt.save(update_fields=['raw_ocr_text'])
+
+        # Continue with parsing
+        from .tasks import continue_receipt_processing_after_ocr_review
+        continue_receipt_processing_after_ocr_review.delay(receipt_id)
+
+        return JsonResponse({
+            "success": True,
+            "message": "Tekst OCR został zaktualizowany. Kontynuuję przetwarzanie..."
+        })
+
+
 class ReceiptReviewView(View):
     def get(self, request, receipt_id):
         try:

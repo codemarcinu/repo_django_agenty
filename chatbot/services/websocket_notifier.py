@@ -35,7 +35,7 @@ class WebSocketNotifier:
             logger.error(f"Failed to send WebSocket message to group {group_name}: {e}")
 
     def send_status_update(
-        self, receipt_id: int, status: str, message: str, progress: int
+        self, receipt_id: int, status: str, message: str, progress: int, processing_step: str = None
     ):
         """
         Send a status update for a specific receipt.
@@ -44,6 +44,7 @@ class WebSocketNotifier:
         payload = {
             "receipt_id": receipt_id,
             "status": status,
+            "processing_step": processing_step or status,
             "message": message,
             "progress": progress,
             "timestamp": datetime.utcnow().isoformat(),

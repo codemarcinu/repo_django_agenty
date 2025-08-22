@@ -54,6 +54,11 @@ urlpatterns = [
         views.ReceiptReviewView.as_view(),
         name="receipt_review",
     ),
+    path(
+        "receipts/<int:receipt_id>/ocr-review/",
+        views.OCRReviewView.as_view(),
+        name="receipt_ocr_review",
+    ),
 
     # Log Viewer
     path("logs/", views_logs.LogViewerView.as_view(), name="logs_viewer"),

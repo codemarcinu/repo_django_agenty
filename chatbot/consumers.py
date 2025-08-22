@@ -61,15 +61,18 @@ class ReceiptStatusConsumer(AsyncWebsocketConsumer):
 
             progress_map = {
                 "uploaded": 10,
-                "ocr_in_progress": 25,
-                "ocr_completed": 50,
-                "parsing_in_progress": 65,
-                "parsing_completed": 80,
-                "matching_in_progress": 90,
-                "matching_completed": 95,
+                "processing_started": 30,
+                "fallback_to_local": 35,
+                "ocr_in_progress": 40,
+                "ocr_completed": 60,
+                "quality_gate": 75,
+                "parsing_in_progress": 80,
+                "parsing_completed": 90,
+                "matching_in_progress": 95,
+                "matching_completed": 98,
                 "review_pending": 98,
                 "done": 100,
-                "failed": 100, # Or 0, depending on desired UX for error state
+                "failed": 100,
             }
 
             return {

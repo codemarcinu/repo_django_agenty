@@ -184,6 +184,11 @@ class ReceiptService:
                 raise OCRError("No OCR backends available", receipt_id=receipt_id)
             diag_logger.debug(f"OCR service is available for receipt {receipt_id}. Processing file with OCR.")
 
+            # Set processing context for status updates
+            if hasattr(ocr_service, 'set_processing_context'):
+                ocr_service.set_processing_context(receipt_id, self.notifier)
+                diag_logger.debug(f"Set processing context for OCR service (receipt {receipt_id})")
+
             ocr_result = ocr_service.process_file(image_path, use_fallback)
             diag_logger.debug(f"OCR service returned result for receipt {receipt_id}. Success: {ocr_result.success}")
 

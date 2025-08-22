@@ -21,6 +21,11 @@ class ProductSchema(BaseModel):
         description="The unit of measurement for the quantity (e.g., 'szt.', 'kg').",
         examples=["szt.", "kg"],
     )
+    price: float = Field(
+        ...,
+        description="The unit price of the product.",
+        examples=[4.99, 12.50]
+    )
 
 
 # The root model for the entire JSON structure expected from the LLM.
