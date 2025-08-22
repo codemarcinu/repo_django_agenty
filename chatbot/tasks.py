@@ -4,8 +4,12 @@ from celery import shared_task
 import logging
 import re
 import os
+import shutil
+from pathlib import Path
 
 from inventory.models import Receipt
+from django.conf import settings
+from asgiref.sync import async_to_sync
 
 from .models import Document
 from .rag_processor import rag_processor
@@ -42,7 +46,8 @@ def process_document_task(document_id):
 )
 def orchestrate_receipt_processing(self, receipt_id: int):
     """
-    Orchestrates the full, multi-step receipt processing pipeline.
+    Orchestrates the full, multi-step receipt processing pipeline with Mistral OCR integration.
+    Implements hybrid strategy: Mistral OCR (golden standard) → Local Pipeline (fallback)
     """
     from .services.ocr_backends import OCRResult
     from .services.ocr_service import ocr_service
@@ -51,115 +56,209 @@ def orchestrate_receipt_processing(self, receipt_id: int):
     from .services.receipt_service import get_receipt_service
     from .services.vision_service import VisionService
     from .services.basic_parser import BasicReceiptParser
+    from .services.mistral_ocr_service import MistralOcrService
+    from .schemas import ParsedReceipt
 
-    logger.info(f"▶️ STARTING ORCHESTRATION for Receipt ID: {receipt_id} (Attempt: {self.request.retries + 1})")
+    logger.info(f"🚀 STARTING HYBRID ORCHESTRATION for Receipt ID: {receipt_id} (Attempt: {self.request.retries + 1})")
 
     try:
         receipt = Receipt.objects.get(id=receipt_id)
+        parsed_data = None
 
-        # --- KROK 1: OCR ---
-        logger.info(f" [1/4] OCR | Receipt ID: {receipt_id}")
-        receipt.mark_as_processing(step="ocr_in_progress")
-        ocr_result = ocr_service.process_file(receipt.receipt_file.path)
-
-        if not ocr_result.success:
-            receipt.mark_as_error(f"OCR failed: {ocr_result.error_message}")
-            raise OCRError(f"OCR failed for receipt {receipt_id}")
-
-        receipt.raw_ocr_text = ocr_result.text
-        receipt.raw_text = ocr_result.to_dict()
-        receipt.save()
-
-        # 🔍 DEBUGGING: Pokaż surowy tekst OCR
-        logger.info(f"🔍 OCR RAW TEXT for Receipt {receipt_id}:")
-        logger.info(f"--- START OCR TEXT ---")
-        logger.info(ocr_result.text)
-        logger.info(f"--- END OCR TEXT ---")
-
-        # --- KROK 2: QUALITY GATE ---
-        logger.info(f" [2/4] QUALITY GATE | Receipt ID: {receipt_id}")
-        receipt.mark_as_processing(step="quality_gate")
-
-        if not isinstance(ocr_result, OCRResult):
-            raise TypeError(f"OCRService.process_document() must return OCRResult instance")
-
-        quality_gate = QualityGateService(ocr_result)
-        quality_score = quality_gate.calculate_quality_score()
-        logger.info(f"Paragon {receipt_id}: Wynik jakości OCR to {quality_score}")
-
-        # --- KROK 3: PARSING ---
-        logger.info(f" [3/4] PARSING | Receipt ID: {receipt_id}")
-        receipt.mark_as_processing(step="parsing_in_progress")
-
-        # Spróbuj Vision Service (jeśli działa)
-        vision_result = None
         try:
-            vision_service = VisionService()
-            vision_result = vision_service.analyze_receipt(receipt.receipt_file.path)
-            
-            if vision_result and vision_result.get('success'):
-                logger.info(f"✅ Vision analysis successful for receipt {receipt_id}")
-                logger.info(f"Vision result: {vision_result.get('extracted_text', '')[:200]}...")
+            # --- STRATEGIA 1: Użyj Premium Backend (Mistral OCR) ---
+            logger.info(f"🤖 [Premium] Trying Mistral OCR for Receipt {receipt_id}")
+            mistral_service = MistralOcrService()
+
+            if mistral_service.is_available():
+                mistral_result = async_to_sync(mistral_service.extract_data_from_file)(receipt.receipt_file.path)
+
+                if mistral_result and len(mistral_result.items) > 0:
+                    logger.info(f"✅ [Premium] Mistral OCR SUCCESS: {len(mistral_result.items)} items extracted")
+
+                    # 🔥 PĘTLA ZWROTNA - ZAPISYWANIE DANYCH DO UCZENIA 🔥
+                    save_for_fine_tuning(receipt.receipt_file.path, mistral_result)
+
+                    # Konwertuj na format oczekiwany przez dalszy pipeline
+                    parsed_data = {
+                        "products": [
+                            {
+                                "product": item.product_name,
+                                "name": item.product_name,
+                                "quantity": item.quantity,
+                                "unit": item.unit,
+                                "price": item.price
+                            }
+                            for item in mistral_result.items
+                        ],
+                        "store_name": getattr(mistral_result, 'store_name', ''),
+                        "total_amount": getattr(mistral_result, 'total_amount', 0)
+                    }
+                else:
+                    logger.warning(f"⚠️ [Premium] Mistral OCR returned no items")
+                    raise Exception("Mistral OCR returned no items")
             else:
-                logger.warning(f"Vision service failed for receipt {receipt_id}, using text parsing")
-        except Exception as e:
-            logger.error(f"Vision service error for receipt {receipt_id}: {e}")
+                logger.warning(f"🚫 [Premium] Mistral OCR not available (API key missing)")
+                raise Exception("Mistral OCR not available")
 
-        # Główny parser
-        parser_service = AdaptiveReceiptParser(default_parser=BasicReceiptParser())
-        
-        # 🔍 DEBUGGING: Sprawdź co parser otrzymuje
-        logger.info(f"🔍 PARSER INPUT for Receipt {receipt_id}:")
-        logger.info(f"OCR Text length: {len(ocr_result.text)} chars")
-        logger.info(f"First 300 chars: {ocr_result.text[:300]}...")
+        except Exception as mistral_error:
+            logger.warning(f"💥 [Premium] Mistral OCR failed ({mistral_error}). Switching to local pipeline.")
 
-        parser_result = parser_service.parse(ocr_result.text, vision_result)
+            # --- STRATEGIA 2: Fallback na Lokalny Hybrydowy Pipeline ---
+            logger.info(f"🔄 [Fallback] Starting Local Pipeline for Receipt {receipt_id}")
 
-        # 🔍 DEBUGGING: Sprawdź wynik parsera
-        logger.info(f"🔍 PARSER OUTPUT for Receipt {receipt_id}:")
-        logger.info(f"Parser result: {parser_result}")
-        logger.info(f"Parser result type: {type(parser_result)}")
+            # --- KROK 1: OCR ---
+            logger.info(f" [1/4] OCR | Receipt ID: {receipt_id}")
+            receipt.mark_as_processing(step="ocr_in_progress")
+            ocr_result = ocr_service.process_file(receipt.receipt_file.path)
 
-        if parser_result:
-            # Konwersja do słownika jeśli potrzebna
-            extracted_dict = parser_result if isinstance(parser_result, dict) else parser_result.dict()
-            
-            # 🔍 DEBUGGING: Sprawdź wyodrębnione produkty  
-            products = extracted_dict.get('products', [])
-            logger.info(f"🔍 EXTRACTED PRODUCTS for Receipt {receipt_id}: {len(products)} products")
-            for i, product in enumerate(products[:3]):  # Pokaż pierwsze 3
-                logger.info(f"  Product {i+1}: {product}")
+            if not ocr_result.success:
+                receipt.mark_as_error(f"OCR failed: {ocr_result.error_message}")
+                raise OCRError(f"OCR failed for receipt {receipt_id}")
 
-            receipt.extracted_data = extracted_dict
-            receipt.mark_llm_done(extracted_dict)
-        else:
-            logger.error(f"❌ Parser returned empty result for receipt {receipt_id}")
-            # FALLBACK: Spróbuj prostego parsowania regex
-            fallback_products = simple_text_parser(ocr_result.text)
-            if fallback_products:
-                logger.info(f"🔄 Fallback parser found {len(fallback_products)} products")
-                fallback_dict = {"products": fallback_products, "store_name": "", "total": 0}
-                receipt.extracted_data = fallback_dict
-                receipt.mark_llm_done(fallback_dict)
+            receipt.raw_ocr_text = ocr_result.text
+            receipt.raw_text = ocr_result.to_dict()
+            receipt.save()
+
+            # 🔍 DEBUGGING: Pokaż surowy tekst OCR
+            logger.info(f"🔍 OCR RAW TEXT for Receipt {receipt_id}:")
+            logger.info(f"--- START OCR TEXT ---")
+            logger.info(ocr_result.text)
+            logger.info(f"--- END OCR TEXT ---")
+
+            # --- KROK 2: QUALITY GATE ---
+            logger.info(f" [2/4] QUALITY GATE | Receipt ID: {receipt_id}")
+            receipt.mark_as_processing(step="quality_gate")
+
+            if not isinstance(ocr_result, OCRResult):
+                raise TypeError("OCRService.process_document() must return OCRResult instance")
+
+            quality_gate = QualityGateService(ocr_result)
+            quality_score = quality_gate.calculate_quality_score()
+            logger.info(f"Paragon {receipt_id}: Wynik jakości OCR to {quality_score}")
+
+            # --- KROK 3: PARSING ---
+            logger.info(f" [3/4] PARSING | Receipt ID: {receipt_id}")
+            receipt.mark_as_processing(step="parsing_in_progress")
+
+            # Spróbuj Vision Service (jeśli działa)
+            vision_result = None
+            try:
+                vision_service = VisionService()
+                vision_result = vision_service.analyze_receipt(receipt.receipt_file.path)
+
+                if vision_result and vision_result.get('success'):
+                    logger.info(f"✅ Vision analysis successful for receipt {receipt_id}")
+                    logger.info(f"Vision result: {vision_result.get('extracted_text', '')[:200]}...")
+                else:
+                    logger.warning(f"Vision service failed for receipt {receipt_id}, using text parsing")
+            except Exception as e:
+                logger.error(f"Vision service error for receipt {receipt_id}: {e}")
+
+            # Główny parser
+            parser_service = AdaptiveReceiptParser(default_parser=BasicReceiptParser())
+
+            # 🔍 DEBUGGING: Sprawdź co parser otrzymuje
+            logger.info(f"🔍 PARSER INPUT for Receipt {receipt_id}:")
+            logger.info(f"OCR Text length: {len(ocr_result.text)} chars")
+            logger.info(f"First 300 chars: {ocr_result.text[:300]}...")
+
+            parser_result = parser_service.parse(ocr_result.text, vision_result)
+
+            # 🔍 DEBUGGING: Sprawdź wynik parsera
+            logger.info(f"🔍 PARSER OUTPUT for Receipt {receipt_id}:")
+            logger.info(f"Parser result: {parser_result}")
+            logger.info(f"Parser result type: {type(parser_result)}")
+
+            if parser_result:
+                # Konwersja do słownika jeśli potrzebna
+                extracted_dict = parser_result if isinstance(parser_result, dict) else parser_result.dict()
+
+                # 🔍 DEBUGGING: Sprawdź wyodrębnione produkty
+                products = extracted_dict.get('products', [])
+                logger.info(f"🔍 EXTRACTED PRODUCTS for Receipt {receipt_id}: {len(products)} products")
+                for i, product in enumerate(products[:3]):  # Pokaż pierwsze 3
+                    logger.info(f"  Product {i+1}: {product}")
+
+                parsed_data = extracted_dict
             else:
-                receipt.mark_as_error("Parsing failed: No data extracted from OCR.")
-                raise ParsingError(f"No data extracted for receipt {receipt_id}")
+                logger.error(f"❌ Parser returned empty result for receipt {receipt_id}")
+                # FALLBACK: Spróbuj prostego parsowania regex
+                fallback_products = simple_text_parser(ocr_result.text)
+                if fallback_products:
+                    logger.info(f"🔄 Fallback parser found {len(fallback_products)} products")
+                    parsed_data = {"products": fallback_products, "store_name": "", "total": 0}
+                else:
+                    receipt.mark_as_error("Parsing failed: No data extracted from OCR.")
+                    raise ParsingError(f"No data extracted for receipt {receipt_id}")
+
+        if not parsed_data:
+             raise ValueError("Both Mistral OCR and local pipeline failed to parse receipt data.")
+
+        # --- Dalsze kroki są już wspólne ---
+        receipt.extracted_data = parsed_data
+        receipt.mark_llm_done(parsed_data)
 
         # --- KROK 4: MATCHING ---
         logger.info(f" [4/4] MATCHING | Receipt ID: {receipt_id}")
         receipt_service = get_receipt_service()
         receipt_service.process_receipt_matching(receipt_id)
 
-        logger.info(f"✅ ORCHESTRATION COMPLETED for Receipt ID: {receipt_id}.")
+        logger.info(f"✅ HYBRID ORCHESTRATION COMPLETED for Receipt ID: {receipt_id}.")
 
     except Exception as e:
-        logger.error(f"❌ ORCHESTRATION ERROR for Receipt ID: {receipt_id}: {e}", exc_info=True)
+        logger.error(f"❌ HYBRID ORCHESTRATION ERROR for Receipt ID: {receipt_id}: {e}", exc_info=True)
         try:
             receipt_to_update = Receipt.objects.get(id=receipt_id)
             receipt_to_update.mark_as_error(f"Critical error: {e}")
         except Receipt.DoesNotExist:
             logger.error(f"Could not find receipt {receipt_id} to mark as error.")
         raise
+
+
+def save_for_fine_tuning(image_path: str, parsed_data: ParsedReceipt):
+    """
+    Save receipt image and corresponding parsed data for fine-tuning local models.
+
+    Args:
+        image_path: Path to the receipt image file
+        parsed_data: ParsedReceipt object with golden standard annotations
+    """
+    try:
+        # Create fine-tuning dataset directory
+        dataset_dir = settings.BASE_DIR / "fine_tuning_dataset"
+        dataset_dir.mkdir(exist_ok=True)
+
+        # Generate filenames
+        image_filename = Path(image_path).name
+        json_filename = Path(image_path).stem + ".json"
+
+        # Copy image to dataset
+        shutil.copy(image_path, dataset_dir / image_filename)
+
+        # Save JSON annotations
+        with open(dataset_dir / json_filename, 'w', encoding='utf-8') as f:
+            # Convert to JSON-serializable format
+            json_data = {
+                "store_name": getattr(parsed_data, 'store_name', ''),
+                "total_amount": getattr(parsed_data, 'total_amount', 0),
+                "items": [
+                    {
+                        "product_name": item.product_name,
+                        "quantity": item.quantity,
+                        "unit": item.unit,
+                        "price": item.price
+                    }
+                    for item in parsed_data.items
+                ]
+            }
+            import json
+            f.write(json.dumps(json_data, indent=2, ensure_ascii=False))
+
+        logger.info(f"💾 Saved training pair for fine-tuning: {image_filename} + {json_filename}")
+
+    except Exception as e:
+        logger.error(f"❌ Failed to save data for fine-tuning: {e}")
 
 def simple_text_parser(text: str) -> list:
     """

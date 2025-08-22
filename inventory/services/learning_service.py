@@ -27,6 +27,7 @@ class LearningService:
                         defaults={
                             'correct_pattern': correct_segment,
                             'confidence_score': 0.9, # Default confidence
+                            'times_applied': 1,  # Initialize times_applied
                             'is_active': True,
                         }
                     )

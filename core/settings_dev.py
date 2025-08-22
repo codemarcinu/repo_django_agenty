@@ -340,6 +340,9 @@ RECEIPT_OLLAMA_CONFIG = {
     }
 }
 
+# Mistral OCR Configuration
+MISTRAL_API_KEY = env("MISTRAL_API_KEY", default="")
+
 # Settings for the standalone VisionService, used in the receipt processing pipeline
 OLLAMA_API_BASE_URL = "http://127.0.0.1:11434"
 OLLAMA_VISION_MODEL = "qwen2.5-vl:7b"
@@ -424,5 +427,4 @@ CHANNEL_LAYERS = {
     },
 }
 
-MISTRAL_API_KEY = env("MISTRAL_API_KEY")
-
+# MISTRAL_API_KEY is already defined above in the Mistral OCR Configuration section

@@ -227,8 +227,10 @@ class ProductDetailView(DetailView):
     template_name = "inventory/product_detail.html"
     context_object_name = "product"
 
-    def get_queryset(self):
-        """Use optimized query to prefetch all related data."""
+    def get_object(self, queryset=None):
+        """Use optimized query to get the product with all related data."""
+        if queryset is None:
+            queryset = self.get_queryset()
         return get_product_details(self.kwargs['pk'])
 
 
@@ -449,9 +451,9 @@ def receipt_review(request, receipt_id):
 
         context = {
             'receipt': receipt, # For Django template rendering (e.g., receipt ID in title)
-            'receipt_json': JsonResponse(receipt_data).content.decode('utf-8'),
-            'line_items_json': JsonResponse(line_items_data).content.decode('utf-8'),
-            'all_products_json': JsonResponse(products_data).content.decode('utf-8'),
+            'receipt_json': JsonResponse(receipt_data, safe=False).content.decode('utf-8'),
+            'line_items_json': JsonResponse(line_items_data, safe=False).content.decode('utf-8'),
+            'all_products_json': JsonResponse(products_data, safe=False).content.decode('utf-8'),
         }
 
         return render(request, "inventory/receipt_review.html", context)

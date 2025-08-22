@@ -28,7 +28,10 @@
 - Zaawansowane indeksowanie i kategoryzacja treści
 
 ### 🛒 Complete Receipt Processing Pipeline
-- **Advanced OCR System**: EasyOCR (GPU-accelerated) + Tesseract fallback with confidence scoring
+- **🧠 Hybrid AI OCR System**: Mistral OCR (Golden Standard) + EasyOCR (GPU-accelerated) + Tesseract fallback
+- **🔄 Intelligent Fallback Architecture**: Premium Mistral → Local Pipeline → Comprehensive error handling
+- **📊 Fine-tuning Dataset Generation**: Automatic data collection for model training (future-proof)
+- **🔥 Real-time Learning Loop**: Every processed receipt improves future accuracy
 - **Unified Receipt Model**: Single Receipt model consolidating all processing stages
 - **AI-Powered Parsing**: LLM-based structured data extraction using Qwen models
 - **Intelligent Product Matching**: Fuzzy matching with product catalog and automatic alias creation
@@ -267,8 +270,9 @@ Otwórz przeglądarkę i wejdź na:
 
 **Primary Models (Manual download required):**
 - **qwen2:7b** (~4.5GB) - Main conversational AI model
-- **qwen2.5vl:7b** (~4.9GB) - Vision-language model for receipt and document analysis  
+- **qwen2.5vl:7b** (~4.9GB) - Vision-language model for receipt and document analysis
 - **mistral:7b** (~4.1GB) - Alternative model for specialized tasks
+- **jobautomation/OpenEuroLLM-Polish** - Polish-optimized model for local conversations
 - **mxbai-embed-large** (~670MB) - RAG embeddings for semantic document search
 
 **Download Commands:**
@@ -276,8 +280,31 @@ Otwórz przeglądarkę i wejdź na:
 ollama pull qwen2:7b
 ollama pull qwen2.5vl:7b
 ollama pull mistral:7b
+ollama pull jobautomation/OpenEuroLLM-Polish
 ollama pull mxbai-embed-large
 ```
+
+### 🧪 AI Model Benchmarking & Performance
+
+**Automated Benchmarking System:**
+System zawiera wbudowany system benchmarkingu dla testowania wydajności modeli AI zoptymalizowany pod kątem kart graficznych NVIDIA RTX.
+
+**Uruchomienie benchmarkingu:**
+```bash
+python benchmark_models.py
+```
+
+**Wyniki wydajności (RTX 3060/4060):**
+| Model | Średnia prędkość | Czas odpowiedzi | Stabilność |
+|-------|------------------|-----------------|------------|
+| **qwen2:7b** | ~3.0 tokens/sek | 13-16 sek | Wysoka |
+| **mistral:7b** | ~2.7 tokens/sek | 14-15 sek | Wysoka |
+| **qwen2.5vl:7b** | ~2.8 tokens/sek | 15-18 sek | Średnia |
+
+**💡 Rekomendacje:**
+- **Dla rozmów po polsku:** `jobautomation/OpenEuroLLM-Polish`
+- **Dla analiz dokumentów:** `qwen2:7b` (najlepszy balans)
+- **Dla paragonów:** `qwen2.5vl:7b` (optymalny dla OCR + AI)
 
 ### 🚀 GPU Optimization & Performance
 
@@ -520,8 +547,9 @@ chatbot/services/
 
 ---
 
-## 🧪 Testing
+## 🧪 Testing & Development Tools
 
+### 🧪 Testing Framework
 ```bash
 # Uruchom wszystkie testy
 python manage.py test
@@ -532,6 +560,11 @@ pytest
 # Testy specyficzne
 python manage.py test chatbot.tests.test_models
 python manage.py test chatbot.tests.test_api
+
+# Testy z coverage
+coverage run -m pytest
+coverage report
+coverage html  # Generuje raport HTML
 ```
 
 **Test Coverage:**
@@ -540,6 +573,79 @@ python manage.py test chatbot.tests.test_api
 - Services layer
 - OCR processing
 - Agent functionality
+
+### ⚙️ Code Quality Tools
+
+**Ruff (Linting + Formatting):**
+```bash
+# Lint code
+ruff check .
+
+# Fix auto-fixable issues
+ruff check . --fix
+
+# Format code
+ruff format .
+```
+
+**Black (Code Formatting):**
+```bash
+# Format all Python files
+black .
+
+# Check what would be changed
+black --check .
+```
+
+**MyPy (Type Checking):**
+```bash
+# Type check
+mypy .
+
+# With Django support
+mypy --config-file pyproject.toml
+```
+
+**Pre-commit Hooks:**
+```bash
+# Install pre-commit hooks
+pip install pre-commit
+pre-commit install
+
+# Run all hooks manually
+pre-commit run --all-files
+```
+
+### 📋 Code Quality Standards
+- **Linting**: Ruff with custom rules (E, W, F, I, B, C4, UP, DJ)
+- **Formatting**: Black with 88-character line length
+- **Type Checking**: MyPy with Django plugin support
+- **Testing**: pytest-django with factory-boy for fixtures
+- **Coverage**: Minimum 80% coverage target
+
+### 🔧 Development Workflow
+```bash
+# 1. Install dependencies
+pip install -r requirements.txt
+
+# 2. Install development tools
+pip install black ruff mypy pytest-django coverage
+
+# 3. Setup pre-commit hooks
+pre-commit install
+
+# 4. Run quality checks
+ruff check . --fix
+black .
+mypy .
+
+# 5. Run tests with coverage
+coverage run -m pytest
+coverage report
+
+# 6. Start development server
+DJANGO_SETTINGS_MODULE=core.settings_dev python manage.py runserver
+```
 
 ---
 
@@ -750,10 +856,52 @@ pytest
 ### 📋 Contributing Guidelines
 - **Code Style**: Follow PEP 8, use Black for formatting, Ruff for linting
 - **Architecture**: Maintain Fat Model, Thin View pattern with service layer
-- **Testing**: Add unit and integration tests for new features
+- **Testing**: Add unit and integration tests for new features with pytest-django
 - **Documentation**: Update README and docstrings for public APIs
 - **Commits**: Use conventional commit messages with semantic prefixes
 - **Security**: Never commit sensitive data, validate all inputs
+- **Coverage**: Maintain minimum 80% test coverage across all modules
+
+### 🧪 Testing Infrastructure
+
+**Available Test Suites:**
+- **Unit Tests**: Individual component testing with factory-boy fixtures
+- **Integration Tests**: End-to-end pipeline testing (receipt processing, inventory)
+- **Performance Tests**: Benchmarking and optimization validation
+- **E2E Tests**: Complete user workflow testing
+
+**Test Categories:**
+```bash
+# Receipt Processing Pipeline Tests
+pytest chatbot/tests/test_receipt_pipeline.py
+
+# Inventory Management Tests
+pytest inventory/tests/
+
+# API Endpoint Tests
+pytest chatbot/tests/test_api.py
+
+# Performance Benchmarks
+pytest inventory/tests_performance.py
+```
+
+**Test Data:**
+- **Receipt Images**: `./paragony_do testów/` - Real receipt images for testing
+- **Fixtures**: Factory-boy generated test data
+- **Mock Services**: Simulated external API responses
+
+**Benchmarking & Performance:**
+```bash
+# Run AI model benchmarks
+python benchmark_models.py
+
+# Generate performance reports
+coverage run -m pytest
+coverage html --directory=htmlcov
+
+# Run specific performance tests
+pytest inventory/tests_performance.py::ReceiptPerformanceTests
+```
 
 ---
 

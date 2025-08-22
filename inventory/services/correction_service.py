@@ -25,6 +25,9 @@ class OcrCorrectionService:
         """
         Applies all loaded correction patterns to the given text.
         """
+        if text is None:
+            return None
+
         corrected_text = text
         for error, correct in self.correction_patterns:
             corrected_text = corrected_text.replace(error, correct)

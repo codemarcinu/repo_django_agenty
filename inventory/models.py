@@ -271,6 +271,9 @@ class Receipt(models.Model):
     )
     processing_notes = models.TextField(blank=True, default="")
     error_message = models.TextField(blank=True, verbose_name="Komunikat błędu")
+    task_id = models.CharField(
+        max_length=255, blank=True, default="", help_text="Celery task ID for async processing"
+    )
     uploaded_at = models.DateTimeField(
         default=timezone.now, verbose_name="Data przesłania"
     )
