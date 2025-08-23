@@ -8,7 +8,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from ..conversation_manager import conversation_manager
-from ..models import Agent, Document
+from ..models import Agent, Document, Conversation
 from ..serializers import (
     AgentSerializer,
     ChatMessageSerializer,
@@ -165,7 +165,14 @@ class ConversationHistoryAPIView(APIView):
 
     async def get(self, request, session_id):
         try:
+            # FIX: Ten blok try/except jest kluczowy do poprawnej obsługi błędów
             limit = int(request.GET.get("limit", 50))
+            if not await Conversation.objects.filter(session_id=session_id).aexists():
+                return Response(
+                    {"success": False, "error": "Conversation not found"},
+                    status=status.HTTP_404_NOT_FOUND,
+                )
+
             history = await conversation_manager.get_conversation_history(
                 session_id=session_id, limit=limit
             )
@@ -173,7 +180,7 @@ class ConversationHistoryAPIView(APIView):
                 {"success": True, "history": history}, status=status.HTTP_200_OK
             )
         except Exception as e:
-            logger.error(f"Error getting conversation history: {str(e)}")
+            logger.error(f"Error getting conversation history for session {session_id}: {str(e)}")
             return Response(
                 {"success": False, "error": "Internal server error"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
