@@ -84,9 +84,6 @@ const App = {
 
         // Setup logout button
         this.initLogout();
-
-        // Setup live logs button (NEW LINE)
-        this.initLiveLogsButton();
         
         // Listen for hash changes
         window.addEventListener('hashchange', this.handleHashChange.bind(this));
@@ -104,27 +101,22 @@ const App = {
     initLogout: function() {
         console.log("Initializing logout...");
         const logoutBtn = document.getElementById('logout-btn');
+        const userMenu = document.getElementById('user-menu');
 
-        // FIX: Sprawdź, czy przycisk wylogowania istnieje na stronie
+        // FIX: Ten warunek jest niezbędny, aby uniknąć błędu na stronach bez przycisku wylogowania.
         if (logoutBtn) {
             logoutBtn.style.display = 'block';
             logoutBtn.addEventListener('click', (e) => {
                 e.preventDefault();
-                // Implementacja wylogowania
                 console.log("Logout clicked");
                 window.location.href = '/admin/logout/';
             });
         } else {
             console.warn("Logout button not found on this page.");
-        },
-    
-    // Setup live logs button
-    initLiveLogsButton: function() {
-        const liveLogsBtn = document.getElementById('live-logs-btn');
-        if (liveLogsBtn) {
-            liveLogsBtn.addEventListener('click', () => {
-                window.open('/chatbot/logs/', '_blank');
-            });
+        }
+
+        if (userMenu) {
+            // ... reszta kodu
         }
     },
     
