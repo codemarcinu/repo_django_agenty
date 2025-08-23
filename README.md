@@ -1,6 +1,6 @@
 # Agenty - Inteligentny System Zarządzania Domem (Backend API) 🤖
 
-**Agenty** to zaawansowany system sztucznej inteligencji działający lokalnie na Twoim komputerze. Po refaktoryzacji funkcjonuje jako czysty backend API do zarządzania gospodarstwem domowym.
+**Agenty** to zaawansowany system sztucznej inteligencji działający lokalnie na Twoim komputerze. Kompletny ekosystem z nowoczesnym interfejsem webowym i potężnym backend API do zarządzania gospodarstwem domowym.
 
 ✨ **Prywatność przede wszystkim** - Wszystkie dane pozostają na Twoim komputerze  
 🚀 **GPU Acceleration** - Wykorzystuje karty graficzne NVIDIA dla maksymalnej wydajności  
@@ -924,14 +924,23 @@ This project is licensed under the MIT License - see the LICENSE file for detail
    - **🛒 Receipt API**: `/api/receipts/upload/` - Automatic receipt processing 
    - **📊 Analytics API**: `/api/dashboard/` - Household consumption data
 
-### ⚠️ IMPORTANT: Frontend Layer Removed
-As of the latest update, the frontend layer has been completely removed. The system now functions as a pure backend API. This means:
-- No HTML templates or user interface
-- All functionality accessible only through API endpoints
-- Perfect for integration with custom frontends or mobile apps
-- RESTful API design with JSON responses
+### 🎨 Modern Frontend Interface
+System includes a comprehensive web interface with modern design and real-time capabilities:
 
-If you need a user interface, you'll need to create your own frontend application that connects to these API endpoints.
+**Key Features:**
+- **📱 Responsive Design**: Works perfectly on desktop, tablet, and mobile devices
+- **⚡ Real-time Updates**: WebSocket integration for live status updates
+- **🎨 Glass Morphism UI**: Modern, elegant interface with smooth animations
+- **🧭 Multi-Page Application**: Dashboard, Chat, Receipts, Inventory, and Analytics pages
+- **📊 Interactive Charts**: Chart.js integration for data visualization
+- **🔄 Live Status Monitoring**: Real-time receipt processing status updates
+
+**Available Pages:**
+- **🏠 Dashboard**: Quick stats, expiring items, recent receipts overview
+- **💬 Chat Interface**: AI conversation with file upload support
+- **🛒 Receipt Processing**: Upload and monitor receipt analysis
+- **📦 Inventory Management**: Complete product management with search and filters
+- **📈 Analytics Dashboard**: Spending patterns, consumption heatmaps, waste tracking
 
 ### 🗣️ Try These Sample Conversations:
 - "Cześć! Pokaż mi możliwości systemu" *(Show me system capabilities)*

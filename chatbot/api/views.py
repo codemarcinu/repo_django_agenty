@@ -130,7 +130,7 @@ class AgentListView(View):
 class ConversationCreateView(View):
     """API view for creating new conversations"""
 
-    async def post(self, request: HttpRequest):
+    def post(self, request: HttpRequest):
         try:
             data = json.loads(request.body.decode("utf-8"))
             agent_name = data.get("agent_name")
@@ -140,7 +140,8 @@ class ConversationCreateView(View):
                 return JsonResponse(
                     {"success": False, "error": "Agent name is required"}, status=400
                 )
-            session_id = await conversation_manager.create_conversation(
+            from asgiref.sync import async_to_sync
+            session_id = async_to_sync(conversation_manager.create_conversation)(
                 agent_name=agent_name, user_id=user_id, title=title
             )
             return JsonResponse({"success": True, "session_id": session_id}, status=201)
@@ -159,8 +160,10 @@ class ConversationCreateView(View):
 class ChatMessageView(View):
     """API view for sending messages to agents"""
 
-    async def post(self, request: HttpRequest):
+    def post(self, request: HttpRequest):
         try:
+            from asgiref.sync import async_to_sync
+            
             data = json.loads(request.body.decode("utf-8"))
             session_id = data.get("session_id")
             message = data.get("message")
@@ -169,23 +172,23 @@ class ChatMessageView(View):
                     {"success": False, "error": "Session ID and message are required"},
                     status=400,
                 )
-            await conversation_manager.add_message(
+            async_to_sync(conversation_manager.add_message)(
                 session_id=session_id,
                 role="user",
                 content=message,
                 metadata={"timestamp": "auto"},
             )
-            context = await conversation_manager.get_conversation_context(session_id)
+            context = async_to_sync(conversation_manager.get_conversation_context)(session_id)
             if not context:
                 return JsonResponse(
                     {"success": False, "error": "Conversation not found"}, status=404
                 )
             # Get the main router agent instead of the agent from the conversation
             try:
-                router_agent_model = await sync_to_async(Agent.objects.get)(
+                router_agent_model = Agent.objects.get(
                     agent_type="router", is_active=True
                 )
-                agent = await agent_factory.create_agent_from_db(router_agent_model.name)
+                agent = async_to_sync(agent_factory.create_agent_from_db)(router_agent_model.name)
             except Agent.DoesNotExist:
                 return JsonResponse(
                     {"success": False, "error": "No active router agent found."},
@@ -206,10 +209,10 @@ class ChatMessageView(View):
                 "user_id": context["conversation"]["user_id"],
                 "current_datetime": current_datetime_str,
             }
-            response = await agent.safe_process(agent_input)
+            response = async_to_sync(agent.safe_process)(agent_input)
             if response.success:
                 agent_message = response.data.get("response", "No response generated")
-                await conversation_manager.add_message(
+                async_to_sync(conversation_manager.add_message)(
                     session_id=session_id,
                     role="assistant",
                     content=agent_message,
@@ -237,12 +240,13 @@ class ChatMessageView(View):
 class ConversationHistoryView(View):
     """API view for getting conversation history"""
 
-    async def get(self, request: HttpRequest, session_id: str):
+    def get(self, request: HttpRequest, session_id: str):
         try:
-            history = await conversation_manager.get_conversation_history(
+            from asgiref.sync import async_to_sync
+            history = async_to_sync(conversation_manager.get_conversation_history)(
                 session_id=session_id, limit=int(request.GET.get("limit", 50))
             )
-            return JsonResponse({"success": True, "history": history})
+            return JsonResponse({"success": True, "history": history or []})
         except Exception as e:
             logger.error(f"Error getting conversation history: {str(e)}")
             return JsonResponse(
@@ -253,9 +257,10 @@ class ConversationHistoryView(View):
 class ConversationInfoView(View):
     """API view for getting conversation information"""
 
-    async def get(self, request: HttpRequest, session_id: str):
+    def get(self, request: HttpRequest, session_id: str):
         try:
-            info = await conversation_manager.get_conversation_info(session_id)
+            from asgiref.sync import async_to_sync
+            info = async_to_sync(conversation_manager.get_conversation_info)(session_id)
             if info:
                 return JsonResponse({"success": True, "conversation": info})
             else:
@@ -272,24 +277,26 @@ class ConversationInfoView(View):
 class ConversationListView(View):
     """API view for listing conversations"""
 
-    async def get(self, request: HttpRequest):
+    def get(self, request: HttpRequest):
         try:
             # Get user_id from request (for now, use anonymous)
             user_id = request.GET.get("user_id", "anonymous")
 
-            # Get conversations from conversation manager
-            conversations_data = await conversation_manager.get_user_conversations(user_id)
+            # Get conversations from conversation manager synchronously
+            from asgiref.sync import async_to_sync
+            conversations_data = async_to_sync(conversation_manager.get_user_conversations)(user_id)
 
             # Format conversations for frontend
             conversations = []
-            for conv in conversations_data:
-                conversations.append({
-                    "id": conv.get("session_id"),
-                    "title": conv.get("title", "Nowa rozmowa"),
-                    "timestamp": conv.get("created_at"),
-                    "last_message": conv.get("last_message", ""),
-                    "message_count": conv.get("message_count", 0)
-                })
+            if conversations_data:
+                for conv in conversations_data:
+                    conversations.append({
+                        "id": conv.get("session_id"),
+                        "title": conv.get("title", "Nowa rozmowa"),
+                        "timestamp": conv.get("created_at"),
+                        "last_message": conv.get("last_message", ""),
+                        "message_count": conv.get("message_count", 0)
+                    })
 
             return JsonResponse({"success": True, "conversations": conversations})
         except Exception as e:
@@ -386,6 +393,10 @@ class DocumentListAPIView(ListAPIView):
 class InventoryItemsView(View):
     """API view for listing inventory items"""
 
+    @method_decorator(csrf_exempt, name="dispatch")
+    def dispatch(self, *args, **kwargs):
+        return super().dispatch(*args, **kwargs)
+
     def get(self, request: HttpRequest):
         try:
             # Get query parameters
@@ -408,7 +419,9 @@ class InventoryItemsView(View):
                     'unit': item.unit,
                     'expiry_date': item.expiry_date.isoformat() if item.expiry_date else None,
                     'created_at': item.created_at.isoformat(),
-                    'notes': item.notes
+                    'purchase_date': item.purchase_date.isoformat(),
+                    'storage_location': item.storage_location,
+                    'batch_id': item.batch_id
                 })
 
             return JsonResponse({
@@ -435,13 +448,29 @@ class InventoryItemsView(View):
                         status=400
                     )
 
+            from django.utils.dateparse import parse_date
+            
+            # Parse purchase_date if provided, otherwise use today
+            purchase_date = timezone.now().date()
+            if 'purchase_date' in data:
+                parsed_date = parse_date(data['purchase_date'])
+                if parsed_date:
+                    purchase_date = parsed_date
+
+            # Parse expiry_date if provided
+            expiry_date = None
+            if 'expiry_date' in data and data['expiry_date']:
+                expiry_date = parse_date(data['expiry_date'])
+
             # Create inventory item
             inventory_item = InventoryItem.objects.create(
                 product_id=data['product_id'],
                 quantity_remaining=data['quantity'],
                 unit=data['unit'],
-                expiry_date=data.get('expiry_date'),
-                notes=data.get('notes', '')
+                purchase_date=purchase_date,
+                expiry_date=expiry_date,
+                storage_location=data.get('storage_location', 'pantry'),
+                batch_id=data.get('batch_id', '')
             )
 
             return JsonResponse({
@@ -621,14 +650,14 @@ class AnalyticsView(View):
 
             # Calculate analytics
             total_consumed = consumption_events.aggregate(
-                total=Sum('consumed_quantity')
+                total=Sum('consumed_qty')
             )['total'] or 0
 
             # Get top consumed products
             top_products_data = consumption_events.values(
                 'inventory_item__product__name'
             ).annotate(
-                total_consumed=Sum('consumed_quantity')
+                total_consumed=Sum('consumed_qty')
             ).order_by('-total_consumed')[:10]
 
             top_products = [

@@ -244,6 +244,17 @@ const API = {
         const response = await this.fetch(`${this.BASE_URL}/receipts/?limit=${limit}`);
         return response.success ? response.receipts : [];
     },
+
+    /**
+     * Delete receipt
+     * @param {number} receiptId - Receipt ID to delete
+     * @returns {Promise} Promise resolving to deletion result
+     */
+    async deleteReceipt(receiptId) {
+        return this.fetch(`${this.BASE_URL}/receipts/${receiptId}/`, {
+            method: 'DELETE'
+        });
+    },
     
     /**
      * Consume inventory item
@@ -318,8 +329,14 @@ const API = {
      * @returns {Promise} Promise resolving to analytics data
      */
     async getAnalyticsData(timeRange = '30days') {
-        const response = await this.fetch(`${this.BASE_URL}/analytics/?time_range=${timeRange}`);
-        return response.success ? response.analytics : {};
+        try {
+            const response = await this.fetch(`${this.BASE_URL}/analytics/?time_range=${timeRange}`);
+            return response.success ? response.analytics : {};
+        } catch (error) {
+            console.error('Analytics API error:', error);
+            // Return empty data instead of throwing to prevent UI crashes
+            return {};
+        }
     },
 
     /**
