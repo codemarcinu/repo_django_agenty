@@ -45,7 +45,7 @@ const AnalyticsModule = {
             const topProducts = await API.getTopProducts(10);
             const wasteData = await API.getWasteData();
             
-            // Render charts and data with data existence checks
+            // Render charts and data
             if (analyticsData) {
                 this.renderCharts(analyticsData);
             } else {
