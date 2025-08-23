@@ -23,7 +23,7 @@ from rest_framework.generics import ListAPIView
 from inventory.models import InventoryItem, Receipt, ConsumptionEvent
 
 from ..conversation_manager import conversation_manager
-from chatbot.models import Agent, Document  # Import Document model
+from chatbot.models import Agent, Document, Conversation  # Import Document and Conversation models
 from ..services.agent_factory import agent_factory
 from ..services.exceptions import (
     AgentNotFoundError,  # Corrected import # Corrected import
@@ -243,14 +243,30 @@ class ConversationHistoryView(View):
     def get(self, request: HttpRequest, session_id: str):
         try:
             from asgiref.sync import async_to_sync
+            limit = int(request.GET.get("limit", 50))
+            # FIX: Sprawdź, czy konwersacja istnieje, zanim pobierzesz historię
+            if not async_to_sync(Conversation.objects.filter(session_id=session_id).aexists)():
+                return JsonResponse(
+                    {"success": False, "error": "Conversation not found"},
+                    status=404,
+                )
+
             history = async_to_sync(conversation_manager.get_conversation_history)(
-                session_id=session_id, limit=int(request.GET.get("limit", 50))
+                session_id=session_id, limit=limit
             )
-            return JsonResponse({"success": True, "history": history or []})
+            return JsonResponse(
+                {"success": True, "history": history}, status=200
+            )
+        except ValueError:
+            return JsonResponse(
+                {"success": False, "error": "Invalid limit parameter"},
+                status=400,
+            )
         except Exception as e:
             logger.error(f"Error getting conversation history: {str(e)}")
             return JsonResponse(
-                {"success": False, "error": "Internal server error"}, status=500
+                {"success": False, "error": "Internal server error"},
+                status=500,
             )
 
 
