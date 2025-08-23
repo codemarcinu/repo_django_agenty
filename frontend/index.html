@@ -402,6 +402,31 @@
         </main>
     </div>
 
+    <!-- Login Modal -->
+    <div class="modal" id="login-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Logowanie</h3>
+            </div>
+            <div class="modal-body">
+                <form id="login-form">
+                    <div class="form-group">
+                        <label for="username">Nazwa użytkownika</label>
+                        <input type="text" id="username" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="password">Hasło</label>
+                        <input type="password" id="password" required>
+                    </div>
+                    <div id="login-error" class="error-message" style="display: none;"></div>
+                    <div class="form-actions">
+                        <button type="submit" class="primary-btn">Zaloguj</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <!-- Toast Notifications -->
     <div class="toast-container" id="toast-container"></div>
 
