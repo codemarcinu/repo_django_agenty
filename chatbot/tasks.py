@@ -7,8 +7,9 @@ import os
 import shutil
 from pathlib import Path
 
-from inventory.models import Receipt
+from inventory.models import Receipt, ReceiptLineItem
 from django.conf import settings
+from django.db import transaction
 from asgiref.sync import async_to_sync
 
 from .models import Document
@@ -20,6 +21,7 @@ from .services.exceptions_receipt import (
     OCRError,
     ParsingError,
 )
+from .services.pantry_service_v2 import PantryServiceV2
 
 logger = logging.getLogger(__name__)
 
@@ -544,3 +546,62 @@ def simple_text_parser(text: str) -> list:
                 continue
     
     return products
+
+@shared_task(bind=True)
+def finalize_receipt_inventory(self, receipt_id: int):
+    """
+    Finalizes a receipt after user review, adding its line items to the pantry.
+    """
+    logger.info(f"[Finalize Task] Starting finalization for Receipt ID: {receipt_id}. Task ID: {self.request.id}")
+    try:
+        with transaction.atomic():
+            receipt = Receipt.objects.select_related('user').prefetch_related('line_items__matched_product').get(id=receipt_id)
+            logger.info(f"[Finalize Task] Processing {receipt.line_items.count()} line items for Receipt ID: {receipt.id}.")
+
+            if receipt.status == 'completed':
+                logger.warning(f"[Finalize Task] Receipt {receipt.id} is already marked as completed. Skipping.")
+                return
+
+            pantry_service = PantryServiceV2()
+            
+            for item in receipt.line_items.all():
+                product_name = item.product_name
+                quantity = item.quantity
+                # Get unit from matched product or default to 'szt.' if no product is matched
+                unit = getattr(item.matched_product, 'unit', 'szt.') if item.matched_product else 'szt.' 
+                
+                logger.info(f"[Finalize Task] Adding to inventory: '{product_name}' (Quantity: {quantity}, Unit: {unit})")
+                
+                pantry_service.add_or_update_item(
+                    name=product_name,
+                    quantity=float(quantity),
+                    unit=unit,
+                    # expiry_date is not available in ReceiptLineItem, so we pass None
+                    expiry_date=None 
+                )
+                logger.debug(f"[Finalize Task] Successfully processed item '{product_name}' for Receipt ID: {receipt.id}.")
+
+            # Mark the receipt as completed
+            receipt.status = 'completed'
+            receipt.processing_step = 'done'
+            receipt.error_message = '' # Clear any previous errors
+            receipt.save()
+            
+            logger.info(f"✅ [Finalize Task] Successfully finalized Receipt ID: {receipt.id}. All items added to inventory.")
+
+    except Receipt.DoesNotExist:
+        logger.error(f"[Finalize Task] CRITICAL: Receipt with ID {receipt_id} not found.")
+    except Exception as e:
+        logger.error(f"[Finalize Task] CRITICAL: An unexpected error occurred while finalizing Receipt ID: {receipt_id}. Error: {e}", exc_info=True)
+        try:
+            # Attempt to mark the receipt as failed
+            receipt_to_fail = Receipt.objects.get(id=receipt_id)
+            receipt_to_fail.status = 'error'
+            receipt_to_fail.processing_step = 'finalization_failed'
+            receipt_to_fail.error_message = f"Finalization failed: {e}"
+            receipt_to_fail.save()
+            logger.warning(f"[Finalize Task] Marked Receipt ID: {receipt_id} as 'error' due to finalization failure.")
+        except Receipt.DoesNotExist:
+            logger.error(f"[Finalize Task] Could not even find Receipt {receipt_id} to mark as failed. Data may be inconsistent.")
+        # Re-raise the exception to let Celery know the task failed
+        raise

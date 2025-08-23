@@ -109,6 +109,7 @@ class OCRReviewAPI(View):
             return JsonResponse({'success': False, 'error': str(e)}, status=500)
     
     def post(self, request, receipt_id):
+        logger.info(f"[OCR Review] Received user confirmation for OCR text of Receipt ID: {receipt_id}.")
         try:
             receipt = Receipt.objects.get(id=receipt_id)
             data = json.loads(request.body.decode("utf-8"))
@@ -123,6 +124,7 @@ class OCRReviewAPI(View):
 
             # Continue with parsing
             from .tasks import continue_receipt_processing_after_ocr_review
+            logger.info(f"[OCR Review] Triggering 'continue_receipt_processing_after_ocr_review' task for Receipt ID: {receipt_id}.")
             continue_receipt_processing_after_ocr_review.delay(receipt_id)
 
             return JsonResponse({
@@ -181,6 +183,7 @@ class ReceiptReviewAPI(View):
             return JsonResponse({"success": False, "error": str(e)}, status=500)
     
     def post(self, request, receipt_id):
+        logger.info(f"[Receipt Review] Received user confirmation for final products of Receipt ID: {receipt_id}.")
         try:
             with transaction.atomic():
                 receipt = Receipt.objects.get(id=receipt_id)

@@ -83,7 +83,9 @@ def upload_receipt(request):
     """
     serializer = ReceiptUploadSerializer(data=request.data)
 
+    logger.info(f"[Receipt Upload] Received new file upload request from user.")
     if not serializer.is_valid():
+        logger.warning(f"[Receipt Upload] Validation failed for uploaded file. Errors: {serializer.errors}")
         return Response({"errors": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
     uploaded_file = serializer.validated_data["file"]
@@ -131,6 +133,7 @@ def upload_receipt(request):
             "file_size": uploaded_file.size,
             "uploaded_at": receipt.uploaded_at,
         }
+        logger.info(f"[Receipt Upload] Successfully created Receipt object ID: {receipt.id} and queued processing task.")
         return Response(response_data, status=status.HTTP_201_CREATED)
 
     except ReceiptError as e:
