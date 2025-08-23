@@ -99,19 +99,12 @@ const App = {
 
     // Setup logout button
     initLogout: function() {
-        console.log("Initializing logout...");
         const logoutBtn = document.getElementById('logout-btn');
-
-        if (logoutBtn) {
-            logoutBtn.style.display = 'block';
-            logoutBtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                console.log("Logout clicked");
-                window.location.href = '/admin/logout/';
-            });
-        } else {
-            console.warn("Logout button not found on this page. Skipping logout button initialization.");
-        }
+        logoutBtn.style.display = 'block';
+        logoutBtn.onclick = () => {
+            API.logout();
+            window.location.reload();
+        };
     },
     
     // Update current date display

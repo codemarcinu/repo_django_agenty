@@ -46,25 +46,9 @@ const AnalyticsModule = {
             const wasteData = await API.getWasteData();
             
             // Render charts and data
-            if (analyticsData) {
-                this.renderCharts(analyticsData);
-            } else {
-                console.error("No analytics data received.");
-                this.showError("Nie udało się załadować danych analitycznych.");
-            }
-            
-            if (topProducts) {
-                this.renderTopProducts(topProducts);
-            } else {
-                console.warn("No top products data received.");
-            }
-
-            if (wasteData) {
-                this.renderWasteData(wasteData);
-            } else {
-                console.warn("No waste data received.");
-            }
-
+            this.renderCharts(analyticsData);
+            this.renderTopProducts(topProducts);
+            this.renderWasteData(wasteData);
         } catch (error) {
             console.error('Error loading analytics data:', error);
             this.showError('Błąd ładowania danych analitycznych.');
@@ -123,34 +107,13 @@ const AnalyticsModule = {
         this.destroyCharts();
         
         // Render spending chart
-        if (data && data.spending) {
-            this.renderSpendingChart(data.spending);
-        } else {
-            const canvas = document.getElementById('spending-chart');
-            if (canvas) {
-                canvas.parentElement.innerHTML = '<p class="text-center text-gray-500">Brak danych o wydatkach.</p>';
-            }
-        }
+        this.renderSpendingChart(data.spending);
         
         // Render category chart
-        if (data && data.categories) {
-            this.renderCategoryChart(data.categories);
-        } else {
-            const canvas = document.getElementById('category-chart');
-            if (canvas) {
-                canvas.parentElement.innerHTML = '<p class="text-center text-gray-500">Brak danych o kategoriach.</p>';
-            }
-        }
+        this.renderCategoryChart(data.categories);
         
         // Render consumption chart
-        if (data && data.consumption) {
-            this.renderConsumptionChart(data.consumption);
-        } else {
-            const canvas = document.getElementById('consumption-chart');
-            if (canvas) {
-                canvas.parentElement.innerHTML = '<p class="text-center text-gray-500">Brak danych o zużyciu.</p>';
-            }
-        }
+        this.renderConsumptionChart(data.consumption);
     },
     
     // Destroy existing charts
