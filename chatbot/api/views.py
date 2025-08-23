@@ -23,7 +23,7 @@ from rest_framework.generics import ListAPIView
 from inventory.models import InventoryItem, Receipt, ConsumptionEvent
 
 from ..conversation_manager import conversation_manager
-from ..models import Agent, Document  # Import Document model
+from chatbot.models import Agent, Document  # Import Document model
 from ..services.agent_factory import agent_factory
 from ..services.exceptions import (
     AgentNotFoundError,  # Corrected import # Corrected import
