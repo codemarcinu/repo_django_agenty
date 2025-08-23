@@ -1,98 +1,85 @@
-{# templates/chatbot/base.html #}
+{% extends "base.html" %}
+
 {% load static %}
-<!DOCTYPE html>
-<html lang="pl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Twój Asystent AI{% endblock %}</title>
-    <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{% static 'css/output.css' %}">
-    <link rel="stylesheet" href="{% static 'css/components.css' %}">
-    <style>
-        .glass-effect {
-            backdrop-filter: blur(10px);
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
 
-        .gradient-bg {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        }
+{% block title %}{% block page_title %}Twój Asystent AI{% endblock %}{% endblock %}
 
-        .gradient-text {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-    </style>
+{% block extra_head %}
+<style>
+    /* No custom styles needed here */
+</style>
     {% block extra_css %}{% endblock %}
-</head>
-<body class="bg-gradient-to-br from-slate-50 to-slate-100 font-sans min-h-screen">
-    <nav class="gradient-bg text-white shadow-2xl backdrop-blur-sm">
-        <div class="container mx-auto px-4 py-4">
-            <div class="flex flex-wrap items-center justify-between">
-                <a href="{% url 'chatbot:dashboard' %}" class="flex items-center space-x-2 font-bold text-xl hover:text-blue-200 transition-all duration-300 transform hover:scale-105">
-                    <span class="text-2xl animate-bounce-gentle">🤖</span>
-                    <span>Twój Asystent AI</span>
-                </a>
-                <div class="flex flex-wrap gap-1 lg:gap-2 text-sm lg:text-base">
-                    <a href="{% url 'chatbot:dashboard' %}" class="nav-item flex items-center space-x-1 px-3 py-2 rounded-lg hover:bg-white/20 transition-all duration-300 transform hover:scale-105 glass-effect">
-                        <span>🏠</span><span class="hidden sm:inline">Dashboard</span>
-                    </a>
-                    <a href="{% url 'chatbot:chat' %}" class="nav-item flex items-center space-x-1 px-3 py-2 rounded-lg hover:bg-white/20 transition-all duration-300 transform hover:scale-105 glass-effect">
-                        <span>💬</span><span class="hidden sm:inline">Chat</span>
-                    </a>
-                    <a href="{% url 'chatbot:document_list' %}" class="nav-item flex items-center space-x-1 px-3 py-2 rounded-lg hover:bg-white/20 transition-all duration-300 transform hover:scale-105 glass-effect">
-                        <span>📄</span><span class="hidden sm:inline">Dokumenty</span>
-                    </a>
-                    <a href="{% url 'chatbot:receipt_upload' %}" class="nav-item flex items-center space-x-1 px-3 py-2 rounded-lg hover:bg-white/20 transition-all duration-300 transform hover:scale-105 glass-effect">
-                        <span>🧾</span><span class="hidden sm:inline">Paragony</span>
-                    </a>
-                    <a href="{% url 'inventory:inventory_by_location' location='pantry' %}" class="nav-item flex items-center space-x-1 px-3 py-2 rounded-lg hover:bg-white/20 transition-all duration-300 transform hover:scale-105 glass-effect">
-                        <span>🏪</span><span class="hidden sm:inline">Spiżarnia</span>
-                    </a>
-                    <a href="{% url 'chatbot:logs_viewer' %}" class="nav-item flex items-center space-x-1 px-3 py-2 rounded-lg hover:bg-white/20 transition-all duration-300 transform hover:scale-105 glass-effect">
-                        <span>📊</span><span class="hidden sm:inline">Logi</span>
-                    </a>
-                    <button onclick="UI.toggleDarkMode()" class="nav-item flex items-center space-x-1 px-3 py-2 rounded-lg hover:bg-white/20 transition-all duration-300 transform hover:scale-105 glass-effect" title="Przełącz motyw">
-                        <span id="theme-icon">🌙</span><span class="hidden sm:inline">Motyw</span>
-                    </button>
-                    <a href="/admin" class="nav-item flex items-center space-x-1 px-3 py-2 rounded-lg hover:bg-white/20 transition-all duration-300 transform hover:scale-105 glass-effect">
-                        <span>⚙️</span><span class="hidden sm:inline">Admin</span>
-                    </a>
+{% endblock %}
+
+{% block content %}
+    <div class="min-h-screen flex flex-col">
+        <!-- Chatbot-specific navigation -->
+        <nav class="bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg">
+            <div class="max-w-7xl mx-auto px-4 py-3">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
+                            <span class="text-xl">🤖</span>
+                        </div>
+                        <span class="text-xl font-semibold">Twój Asystent AI</span>
+                    </div>
+                    <div class="flex flex-wrap gap-2 text-sm">
+                        <a href="{% url 'chatbot:dashboard' %}" class="flex items-center space-x-1 px-3 py-2 rounded-lg hover:bg-white/20 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            <span>🏠</span><span class="hidden sm:inline">Dashboard</span>
+                        </a>
+                        <a href="{% url 'chatbot:chat' %}" class="flex items-center space-x-1 px-3 py-2 rounded-lg hover:bg-white/20 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            <span>💬</span><span class="hidden sm:inline">Chat</span>
+                        </a>
+                        <a href="{% url 'chatbot:document_list' %}" class="flex items-center space-x-1 px-3 py-2 rounded-lg hover:bg-white/20 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            <span>📄</span><span class="hidden sm:inline">Dokumenty</span>
+                        </a>
+                        <a href="{% url 'chatbot:receipt_upload' %}" class="flex items-center space-x-1 px-3 py-2 rounded-lg hover:bg-white/20 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            <span>🧾</span><span class="hidden sm:inline">Paragony</span>
+                        </a>
+                        <a href="{% url 'inventory:inventory_by_location' location='pantry' %}" class="flex items-center space-x-1 px-3 py-2 rounded-lg hover:bg-white/20 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            <span>🏪</span><span class="hidden sm:inline">Spiżarnia</span>
+                        </a>
+                        <a href="{% url 'chatbot:logs_viewer' %}" class="flex items-center space-x-1 px-3 py-2 rounded-lg hover:bg-white/20 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            <span>📊</span><span class="hidden sm:inline">Logi</span>
+                        </a>
+                        <a href="/admin" class="flex items-center space-x-1 px-3 py-2 rounded-lg hover:bg-white/20 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            <span>⚙️</span><span class="hidden sm:inline">Admin</span>
+                        </a>
+                    </div>
                 </div>
             </div>
-        </div>
-    </nav>
-    <main class="min-h-screen">
-        {% block content %}
-        {% endblock %}
-    </main>
+        </nav>
 
-    <footer class="mt-auto bg-secondary-800 text-secondary-300 py-6">
-        <div class="container mx-auto px-4 text-center">
-            <div class="flex flex-col md:flex-row justify-between items-center space-y-2 md:space-y-0">
-                <div class="flex items-center space-x-2">
-                    <span class="text-lg">🤖</span>
-                    <span class="font-medium">Twój Osobisty Asystent AI</span>
-                </div>
-                <div class="flex items-center space-x-4 text-sm">
-                    <span>Wersja 2.0</span>
-                    <span>•</span>
-                    <span>Sierpień 2025</span>
-                    <span>•</span>
-                    <span class="flex items-center space-x-1">
-                        <span>🚀</span>
-                        <span>GPU Enabled</span>
-                    </span>
+        <!-- Main content -->
+        <main class="flex-1">
+            {% block chatbot_content %}{% endblock %}
+        </main>
+
+        <!-- Footer -->
+        <footer class="mt-auto bg-gray-800 text-gray-400 py-6">
+            <div class="max-w-7xl mx-auto px-4 text-center">
+                <div class="flex flex-col md:flex-row justify-between items-center space-y-2 md:space-y-0">
+                    <div class="flex items-center space-x-2">
+                        <span class="text-lg">🤖</span>
+                        <span class="font-medium text-gray-400">Twój Osobisty Asystent AI</span>
+                    </div>
+                    <div class="flex items-center space-x-4 text-sm">
+                        <span>Wersja 2.0</span>
+                        <span>•</span>
+                        <span>Sierpień 2025</span>
+                        <span>•</span>
+                        <span class="flex items-center space-x-1">
+                            <span>🚀</span>
+                            <span>GPU Enabled</span>
+                        </span>
+                    </div>
                 </div>
             </div>
-        </div>
-    </footer>
+        </footer>
+    </div>
+{% endblock %}
 
+{% block extra_js %}
     <!-- Global JavaScript -->
     <script>
         // Global utilities
@@ -101,22 +88,22 @@
             showToast(message, type = 'info') {
                 const toast = document.createElement('div');
                 const bgColor = {
-                    'success': 'bg-success-500',
-                    'error': 'bg-error-500',
-                    'warning': 'bg-warning-500',
-                    'info': 'bg-primary-500'
+                    'success': 'bg-green-500',
+                    'error': 'bg-red-500',
+                    'warning': 'bg-yellow-500',
+                    'info': 'bg-blue-500'
                 }[type];
-                
+
                 toast.className = `fixed top-4 right-4 ${bgColor} text-white px-6 py-3 rounded-lg shadow-lg z-50 transform translate-x-full transition-transform duration-300`;
                 toast.textContent = message;
-                
+
                 document.body.appendChild(toast);
-                
+
                 // Slide in
                 setTimeout(() => {
                     toast.classList.remove('translate-x-full');
                 }, 100);
-                
+
                 // Slide out and remove
                 setTimeout(() => {
                     toast.classList.add('translate-x-full');
@@ -157,10 +144,10 @@
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', () => {
             UI.animateOnScroll();
-            
+
             // Add smooth scroll behavior
             document.documentElement.style.scrollBehavior = 'smooth';
-            
+
             // Add click ripple effect to buttons
             document.querySelectorAll('button, .btn').forEach(btn => {
                 btn.addEventListener('click', function(e) {
@@ -169,7 +156,7 @@
                     const size = Math.max(rect.width, rect.height);
                     const x = e.clientX - rect.left - size / 2;
                     const y = e.clientY - rect.top - size / 2;
-                    
+
                     ripple.style.cssText = `
                         position: absolute;
                         width: ${size}px;
@@ -182,11 +169,11 @@
                         animation: ripple 0.6s linear;
                         pointer-events: none;
                     `;
-                    
+
                     this.style.position = 'relative';
                     this.style.overflow = 'hidden';
                     this.appendChild(ripple);
-                    
+
                     setTimeout(() => {
                         if (ripple.parentNode) {
                             ripple.parentNode.removeChild(ripple);
@@ -210,6 +197,5 @@
     </script>
 
     <script src="{% static 'js/ui-components.js' %}"></script>
-    {% block extra_js %}{% endblock %}
-</body>
-</html>
+    {% block chatbot_extra_js %}{% endblock %}
+{% endblock %}

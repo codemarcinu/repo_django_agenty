@@ -2,10 +2,11 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   content: [
+    './templates/**/*.html',
     './chatbot/templates/**/*.html',
     './inventory/templates/**/*.html',
     './static/**/*.js',
-    './**/*.html'
+    './chatbot/static/**/*.js'
   ],
   theme: {
     extend: {

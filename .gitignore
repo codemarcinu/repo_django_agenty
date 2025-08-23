@@ -28,3 +28,12 @@ benchmark_results_*.json
 .coverage
 .ruff_cache/
 inspiration/
+
+# Environment files
+.env
+
+# Node.js dependencies
+node_modules/
+
+# Build artifacts
+staticfiles/

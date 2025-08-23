@@ -135,7 +135,7 @@ echo "---"
 
 # Function to setup frontend assets
 setup_frontend_assets() {
-    echo "🎨 Konfiguracja zasobów frontendowych..."
+    echo "🎨 Konfiguracja zasobów frontendowych (Tailwind CSS + Alpine.js)..."
 
     # Check if Node.js and npm are available
     if command -v node &> /dev/null && command -v npm &> /dev/null; then
@@ -157,9 +157,18 @@ setup_frontend_assets() {
                 echo "✅ Zależności npm już zainstalowane"
             fi
 
-            # Build frontend assets if build script exists
-            if npm run build 2>/dev/null; then
-                echo "🔨 Kompilowanie zasobów frontendowych..."
+            # Build Tailwind CSS assets
+            echo "🎨 Kompilowanie Tailwind CSS..."
+            if npm run build-css 2>/dev/null; then
+                npm run build-css
+                if [ $? -eq 0 ]; then
+                    echo "✅ Tailwind CSS skompilowany pomyślnie"
+                else
+                    echo "❌ Błąd podczas kompilacji Tailwind CSS"
+                    exit 1
+                fi
+            else
+                echo "⚠️  Brak skryptu build-css, używam ogólnego build..."
                 npm run build
                 if [ $? -eq 0 ]; then
                     echo "✅ Zasoby frontendowe skompilowane pomyślnie"
@@ -167,8 +176,6 @@ setup_frontend_assets() {
                     echo "❌ Błąd podczas kompilacji zasobów frontendowych"
                     exit 1
                 fi
-            else
-                echo "ℹ️  Brak skryptu build - pomijam kompilację"
             fi
         else
             echo "ℹ️  Brak pliku package.json - pomijam instalację npm"

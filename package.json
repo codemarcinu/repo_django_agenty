@@ -1,12 +1,13 @@
 {
-  "name": "agenty-ui",
+  "name": "django-agenty",
   "version": "1.0.0",
   "description": "Modern UI/UX for Django Agenty Application",
   "main": "index.js",
   "scripts": {
-    "build": "tailwindcss -i ./chatbot/static/css/input.css -o ./chatbot/static/css/output.css --watch=false --minify",
-    "dev": "tailwindcss -i ./chatbot/static/css/input.css -o ./chatbot/static/css/output.css --watch",
-    "watch": "tailwindcss -i ./chatbot/static/css/input.css -o ./chatbot/static/css/output.css --watch"
+    "build-css": "tailwindcss -i ./static/src/input.css -o ./staticfiles/css/output.css --minify",
+    "dev": "tailwindcss -i ./static/src/input.css -o ./staticfiles/css/output.css --watch",
+    "watch": "tailwindcss -i ./static/src/input.css -o ./staticfiles/css/output.css --watch",
+    "build": "tailwindcss -i ./static/src/input.css -o ./staticfiles/css/output.css --minify"
   },
   "keywords": [
     "django",
@@ -20,6 +21,8 @@
   "devDependencies": {
     "@tailwindcss/forms": "^0.5.7",
     "@tailwindcss/typography": "^0.5.10",
-    "tailwindcss": "^3.4.0"
+    "tailwindcss": "^3.4.0",
+    "autoprefixer": "^10.4.16",
+    "postcss": "^8.4.32"
   }
 }
