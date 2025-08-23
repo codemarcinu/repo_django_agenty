@@ -45,26 +45,24 @@ const AnalyticsModule = {
             const topProducts = await API.getTopProducts(10);
             const wasteData = await API.getWasteData();
             
-            // FIX: Sprawdź, czy dane z API istnieją przed ich użyciem
-            if (analyticsData) { // Check for analyticsData
+            // Render charts and data with data existence checks
+            if (analyticsData) {
                 this.renderCharts(analyticsData);
             } else {
-                console.error("No analytics data received from API.");
+                console.error("No analytics data received.");
                 this.showError("Nie udało się załadować danych analitycznych.");
             }
-
-            if (topProducts) { // Check for topProducts
+            
+            if (topProducts) {
                 this.renderTopProducts(topProducts);
             } else {
-                console.warn("No top products data received from API.");
-                // Optionally, show a message for top products specifically
+                console.warn("No top products data received.");
             }
 
-            if (wasteData) { // Check for wasteData
+            if (wasteData) {
                 this.renderWasteData(wasteData);
             } else {
-                console.warn("No waste data received from API.");
-                // Optionally, show a message for waste data specifically
+                console.warn("No waste data received.");
             }
 
         } catch (error) {
@@ -124,34 +122,33 @@ const AnalyticsModule = {
         // Destroy previous charts if exist
         this.destroyCharts();
         
-        // FIX: Sprawdź istnienie danych dla każdego wykresu
-        if (data && data.spending) { // Check for data and data.spending
+        // Render spending chart
+        if (data && data.spending) {
             this.renderSpendingChart(data.spending);
         } else {
-            console.warn("Spending data is missing.");
             const canvas = document.getElementById('spending-chart');
             if (canvas) {
                 canvas.parentElement.innerHTML = '<p class="text-center text-gray-500">Brak danych o wydatkach.</p>';
             }
         }
-
-        if (data && data.categories) { // Check for data and data.categories
+        
+        // Render category chart
+        if (data && data.categories) {
             this.renderCategoryChart(data.categories);
         } else {
-            console.warn("Category data is missing.");
             const canvas = document.getElementById('category-chart');
             if (canvas) {
                 canvas.parentElement.innerHTML = '<p class="text-center text-gray-500">Brak danych o kategoriach.</p>';
             }
         }
-
-        if (data && data.consumption) { // Check for data and data.consumption
+        
+        // Render consumption chart
+        if (data && data.consumption) {
             this.renderConsumptionChart(data.consumption);
         } else {
-            console.warn("Consumption data is missing.");
             const canvas = document.getElementById('consumption-chart');
             if (canvas) {
-                canvas.parentElement.innerHTML = '<p class="text-center text-gray-500">Brak danych o konsumpcji.</p>';
+                canvas.parentElement.innerHTML = '<p class="text-center text-gray-500">Brak danych o zużyciu.</p>';
             }
         }
     },
