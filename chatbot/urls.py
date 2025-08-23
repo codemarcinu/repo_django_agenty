@@ -1,20 +1,16 @@
 """
 URL configuration for chatbot app.
+API-only endpoints - frontend layer has been removed.
 """
 
 from django.urls import path
 
 from . import views, views_logs, views_monitoring
-from .api import views as api_views
 
 app_name = "chatbot"
 
 urlpatterns = [
-    # Dashboard
-    path("", views.DashboardView.as_view(), name="dashboard"),
-    # Main chat interface
-    path("chat/", views.ChatView.as_view(), name="chat"),
-    # API endpoints
+    # API endpoints for agent interaction
     path("api/agents/", views.AgentListView.as_view(), name="agent_list"),
     path(
         "api/conversations/",
@@ -32,44 +28,29 @@ urlpatterns = [
         views.ConversationInfoView.as_view(),
         name="conversation_info",
     ),
-    # RAG Document Upload
-    path("documents/", views.DocumentListView.as_view(), name="document_list"),
-    path(
-        "documents/upload/", views.DocumentUploadView.as_view(), name="document_upload"
-    ),
-    # Receipt and Pantry Management
-    path("receipts/upload/", views.ReceiptUploadView.as_view(), name="receipt_upload"),
-    path(
-        "receipts/<int:receipt_id>/status/",
-        views.ReceiptStatusView.as_view(),
-        name="receipt_status",
-    ),
+    
+    # API endpoints for receipt processing
+    path("api/receipts/upload/", views.ReceiptUploadAPI.as_view(), name="receipt_upload_api"),
     path(
         "api/receipts/<int:receipt_id>/status/",
-        api_views.ReceiptStatusAPIView.as_view(),
+        views.ReceiptStatusAPI.as_view(),
         name="receipt_status_api",
     ),
     path(
-        "receipts/<int:receipt_id>/review/",
-        views.ReceiptReviewView.as_view(),
-        name="receipt_review",
+        "api/receipts/<int:receipt_id>/ocr-review/",
+        views.OCRReviewAPI.as_view(),
+        name="receipt_ocr_review_api",
     ),
     path(
-        "receipts/<int:receipt_id>/ocr-review/",
-        views.OCRReviewView.as_view(),
-        name="receipt_ocr_review",
+        "api/receipts/<int:receipt_id>/review/",
+        views.ReceiptReviewAPI.as_view(),
+        name="receipt_review_api",
     ),
 
-    # Log Viewer
-    path("logs/", views_logs.LogViewerView.as_view(), name="logs_viewer"),
-    path("logs/stream/", views_logs.LogStreamView.as_view(), name="logs_stream"),
-    path("logs/search/", views_logs.LogSearchView.as_view(), name="logs_search"),
-
-    # Monitoring Dashboard
-    path("monitoring/", views_monitoring.monitoring_dashboard, name="monitoring_dashboard"),
-    path("monitoring/api/health/", views_monitoring.api_health_status, name="monitoring_api_health"),
-    path("monitoring/api/metrics/", views_monitoring.api_metrics, name="monitoring_api_metrics"),
-    path("monitoring/api/alerts/", views_monitoring.api_alerts, name="monitoring_api_alerts"),
-    path("monitoring/api/timeline/", views_monitoring.api_processing_timeline, name="monitoring_api_timeline"),
+    # Monitoring API endpoints
+    path("api/monitoring/health/", views_monitoring.api_health_status, name="monitoring_api_health"),
+    path("api/monitoring/metrics/", views_monitoring.api_metrics, name="monitoring_api_metrics"),
+    path("api/monitoring/alerts/", views_monitoring.api_alerts, name="monitoring_api_alerts"),
+    path("api/monitoring/timeline/", views_monitoring.api_processing_timeline, name="monitoring_api_timeline"),
     path("api/monitoring/stats/", views_monitoring.monitoring_stats_api, name="monitoring_stats_api"),
 ]

@@ -1,6 +1,6 @@
 """
-URLs for inventory app views.
-Part of Prompt 8: Dashboard i widoki użytkownika.
+URLs for inventory app API views.
+Frontend layer has been removed - these URLs only provide API functionality.
 """
 
 from django.urls import path
@@ -10,50 +10,51 @@ from . import views
 app_name = "inventory"
 
 urlpatterns = [
-    # Dashboard
-    path("", views.dashboard, name="dashboard"),
-    path("monitoring/", views.monitoring_dashboard, name="monitoring_dashboard"),
-    # Inventory items
-    path("inventory/", views.InventoryListView.as_view(), name="inventory_list"),
-    path("inventory/expiring/", views.expiring_items, name="expiring_items"),
-    path("inventory/low-stock/", views.low_stock_items, name="low_stock_items"),
+    # API endpoints for dashboard and monitoring
+    path("api/dashboard/", views.dashboard_api, name="dashboard_api"),
+    path("api/monitoring/", views.monitoring_api, name="monitoring_api"),
+    
+    # API endpoints for inventory items
+    path("api/inventory/", views.InventoryItemsAPI.as_view(), name="inventory_api"),
+    path("api/inventory/expiring/", views.expiring_items_api, name="expiring_items_api"),
+    path("api/inventory/low-stock/", views.low_stock_items_api, name="low_stock_items_api"),
     path(
-        "inventory/location/<str:location>/",
-        views.inventory_by_location,
-        name="inventory_by_location",
+        "api/inventory/location/<str:location>/",
+        views.inventory_by_location_api,
+        name="inventory_by_location_api",
     ),
-    # Products
-    path("products/", views.ProductListView.as_view(), name="product_list"),
+    
+    # API endpoints for products
+    path("api/products/", views.ProductsAPI.as_view(), name="products_api"),
     path(
-        "products/<int:pk>/", views.ProductDetailView.as_view(), name="product_detail"
+        "api/products/<int:pk>/", views.ProductDetailAPI.as_view(), name="product_detail_api"
     ),
-    # Receipts
-    path("receipts/", views.ReceiptListView.as_view(), name="receipt_list"),
+    
+    # API endpoints for receipts
+    path("api/receipts/", views.ReceiptsAPI.as_view(), name="receipts_api"),
     path(
-        "receipts/<int:pk>/", views.ReceiptDetailView.as_view(), name="receipt_detail"
+        "api/receipts/<int:pk>/", views.ReceiptDetailAPI.as_view(), name="receipt_detail_api"
     ),
-    path("receipts/recent/", views.recent_receipts, name="recent_receipts"),
-    path("receipts/upload/", views.upload_receipt, name="upload_receipt"),
+    path("api/receipts/recent/", views.recent_receipts_api, name="recent_receipts_api"),
+    path("api/receipts/upload/", views.upload_receipt_api, name="upload_receipt_api"),
     path(
-        "receipts/<int:receipt_id>/status/",
+        "api/receipts/<int:receipt_id>/status/",
         views.receipt_processing_status,
         name="receipt_processing_status",
-    ),
-    path(
-        "receipts/<int:receipt_id>/review/",
-        views.receipt_review,
-        name="receipt_review",
     ),
     path(
         "api/receipts/<int:receipt_id>/correct/",
         views.correct_receipt_data,
         name="correct_receipt_data",
     ),
+    
+    # API endpoint for monitoring data
     path(
-        "api/monitoring_data/",
+        "api/monitoring/data/",
         views.get_monitoring_data,
         name="get_monitoring_data",
     ),
-    # Categories
-    path("categories/", views.CategoryListView.as_view(), name="category_list"),
+    
+    # API endpoint for categories
+    path("api/categories/", views.CategoriesAPI.as_view(), name="categories_api"),
 ]

@@ -1,19 +1,17 @@
 """
-Inventory app views implementing user interface for receipt processing pipeline.
-Part of Prompt 8: Dashboard i widoki użytkownika.
+Inventory app API views for the receipt processing pipeline.
+Frontend layer has been removed - these views only provide API functionality.
 """
 
 import json
 from datetime import date, timedelta
 
 from celery.result import AsyncResult
-from django.core.paginator import Paginator
 from django.db import transaction
 from django.db.models import Count, F, Q, Sum
-from django.http import JsonResponse
-from django.shortcuts import render
+from django.http import Http404, JsonResponse
+from django.views import View
 from django.views.decorators.csrf import csrf_exempt  # For API endpoint
-from django.views.generic import DetailView, ListView
 
 from chatbot.services.inventory_service import get_inventory_service
 from chatbot.services.optimized_queries import (
@@ -31,41 +29,66 @@ from .models import (
 )
 
 
-def dashboard(request):
-    """Main dashboard view with inventory summary and alerts."""
+def dashboard_api(request):
+    """API endpoint for dashboard data with inventory summary and alerts."""
     inventory_service = get_inventory_service()
 
     # Get inventory summary
     summary = inventory_service.get_inventory_summary()
 
     # Get expiring items (next 7 days)
-    expiring_items = inventory_service.get_expiring_items(days=7)[:5]
+    expiring_items_data = []
+    for item in inventory_service.get_expiring_items(days=7)[:5]:
+        expiring_items_data.append({
+            'id': item.id,
+            'product_name': item.product.name if item.product else None,
+            'quantity_remaining': float(item.quantity_remaining),
+            'expiry_date': item.expiry_date.isoformat() if item.expiry_date else None,
+            'days_until_expiry': (item.expiry_date - date.today()).days if item.expiry_date else None,
+        })
 
     # Get low stock items
-    low_stock_items = inventory_service.get_low_stock_items()[:5]
+    low_stock_items_data = []
+    for item in inventory_service.get_low_stock_items()[:5]:
+        low_stock_items_data.append({
+            'id': item.id,
+            'product_name': item.product.name if item.product else None,
+            'quantity_remaining': float(item.quantity_remaining),
+            'reorder_point': float(item.product.reorder_point) if item.product and item.product.reorder_point else 0,
+        })
 
-    # Get recent receipts (optimized)
-    recent_receipts = get_receipts_for_listing().filter(status="completed")[:5]
+    # Get recent receipts
+    recent_receipts_data = []
+    for receipt in get_receipts_for_listing().filter(status="completed")[:5]:
+        recent_receipts_data.append({
+            'id': receipt.id,
+            'store_name': receipt.store_name,
+            'receipt_date': receipt.receipt_date.isoformat() if receipt.receipt_date else None,
+            'total_amount': float(receipt.total_amount) if receipt.total_amount else None,
+        })
 
-    # Get advanced statistics (Prompt 10 features)
+    # Get advanced statistics
     top_categories = inventory_service.get_top_spending_categories(days=30)
     heatmap_data = inventory_service.get_consumption_heatmap_data(days=30)
     recent_activity = inventory_service.get_recent_activity(days=7)
-
-    context = {
+    
+    # Convert data to JSON-serializable format
+    top_categories_data = [{'category': c[0], 'amount': float(c[1])} for c in top_categories]
+    
+    response_data = {
         "summary": summary,
-        "expiring_items": expiring_items,
-        "low_stock_items": low_stock_items,
-        "recent_receipts": recent_receipts,
-        "top_categories": top_categories,
+        "expiring_items": expiring_items_data,
+        "low_stock_items": low_stock_items_data,
+        "recent_receipts": recent_receipts_data,
+        "top_categories": top_categories_data,
         "heatmap_data": heatmap_data,
         "recent_activity": recent_activity,
     }
 
-    return render(request, "inventory/dashboard.html", context)
+    return JsonResponse(response_data)
 
-def monitoring_dashboard(request):
-    """Monitoring dashboard view with receipt processing statistics."""
+def monitoring_api(request):
+    """API endpoint for monitoring dashboard data with receipt processing statistics."""
     # Aggregate data
     receipt_status_counts = Receipt.objects.values('status').annotate(count=Count('id'))
     receipt_step_counts = Receipt.objects.values('processing_step').annotate(count=Count('id'))
@@ -88,44 +111,30 @@ def monitoring_dashboard(request):
 
     # Calculate average processing time
     # This requires a bit more complex query, let's simplify for now
-    # For a more accurate average, we'd need to calculate timedelta for each completed receipt
-    # and then average them. For simplicity, we'll just get counts for now.
     total_completed = status_data.get('completed', 0)
-    total_processing_time = 0 # Placeholder for actual calculation
-    if total_completed > 0:
-        # This is a simplified average. A more accurate one would iterate through completed receipts
-        # and sum (processed_at - uploaded_at) or (updated_at - created_at)
-        # For now, we'll just indicate it's not directly calculated here.
-        average_processing_time = "N/A"
-    else:
-        average_processing_time = "N/A"
+    average_processing_time = "N/A"  # Placeholder for actual calculation
 
-    context = {
-        'status_counts_json': json.dumps(status_data),
-        'step_counts_json': json.dumps(step_data),
-        'error_receipts_json': json.dumps(error_receipts_data),
+    response_data = {
+        'status_counts': status_data,
+        'step_counts': step_data,
+        'error_receipts': error_receipts_data,
         'average_processing_time': average_processing_time,
         'total_pending': status_data.get('pending', 0) + status_data.get('review_pending', 0),
         'total_processing': status_data.get('processing', 0),
         'total_errors': status_data.get('error', 0),
     }
+    
+    return JsonResponse(response_data)
 
-    return render(request, "inventory/monitoring_dashboard.html", context)
 
+class InventoryItemsAPI(View):
+    """API view for inventory items with filtering and pagination."""
 
-class InventoryListView(ListView):
-    """List view for inventory items with filtering and pagination."""
-
-    model = InventoryItem
-    template_name = "inventory/inventory_list.html"
-    context_object_name = "items"
-    paginate_by = 20
-
-    def get_queryset(self):
+    def get(self, request):
         queryset = get_inventory_items_for_listing()
 
         # Filter by search query
-        search = self.request.GET.get("search")
+        search = request.GET.get("search")
         if search:
             queryset = queryset.filter(
                 Q(product__name__icontains=search)
@@ -134,17 +143,17 @@ class InventoryListView(ListView):
             )
 
         # Filter by location
-        location = self.request.GET.get("location")
+        location = request.GET.get("location")
         if location:
             queryset = queryset.filter(storage_location=location)
 
         # Filter by category
-        category = self.request.GET.get("category")
+        category = request.GET.get("category")
         if category:
             queryset = queryset.filter(product__category_id=category)
 
         # Filter by status
-        status = self.request.GET.get("status")
+        status = request.GET.get("status")
         if status == "expiring":
             expiry_threshold = date.today() + timedelta(days=7)
             queryset = queryset.filter(expiry_date__lte=expiry_threshold)
@@ -155,37 +164,62 @@ class InventoryListView(ListView):
                 quantity_remaining__lte=F("product__reorder_point")
             )
 
-        return queryset
+        # Pagination
+        page_size = int(request.GET.get("page_size", 20))
+        page = int(request.GET.get("page", 1))
+        paginator = Paginator(queryset, page_size)
+        page_obj = paginator.get_page(page)
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
+        # Format response data
+        items_data = []
+        for item in page_obj:
+            items_data.append({
+                "id": item.id,
+                "product_id": item.product.id if item.product else None,
+                "product_name": item.product.name if item.product else None,
+                "product_brand": item.product.brand if item.product else None,
+                "category": item.product.category.name if item.product and item.product.category else None,
+                "quantity_remaining": float(item.quantity_remaining),
+                "storage_location": item.storage_location,
+                "storage_location_display": item.get_storage_location_display(),
+                "expiry_date": item.expiry_date.isoformat() if item.expiry_date else None,
+            })
 
-        # Add filter options
-        context["categories"] = Category.objects.all().order_by("name")
-        context["locations"] = InventoryItem.STORAGE_CHOICES
+        # Get filter options
+        categories = [{"id": c.id, "name": c.name} for c in Category.objects.all().order_by("name")]
+        locations = [{"value": choice[0], "display": choice[1]} for choice in InventoryItem.STORAGE_CHOICES]
 
-        # Add current filters
-        context["current_search"] = self.request.GET.get("search", "")
-        context["current_location"] = self.request.GET.get("location", "")
-        context["current_category"] = self.request.GET.get("category", "")
-        context["current_status"] = self.request.GET.get("status", "")
+        response_data = {
+            "items": items_data,
+            "total_items": paginator.count,
+            "page": page,
+            "page_size": page_size,
+            "total_pages": paginator.num_pages,
+            "has_next": page_obj.has_next(),
+            "has_previous": page_obj.has_previous(),
+            "filter_options": {
+                "categories": categories,
+                "locations": locations,
+            },
+            "filters_applied": {
+                "search": search or "",
+                "location": location or "",
+                "category": category or "",
+                "status": status or "",
+            }
+        }
 
-        return context
+        return JsonResponse(response_data)
 
 
-class ProductListView(ListView):
-    """List view for products with filtering."""
+class ProductsAPI(View):
+    """API view for products with filtering and pagination."""
 
-    model = Product
-    template_name = "inventory/product_list.html"
-    context_object_name = "products"
-    paginate_by = 20
-
-    def get_queryset(self):
+    def get(self, request):
         queryset = (
             Product.objects.select_related("category")
             .annotate(
-                                inventory_count=Count(
+                inventory_count=Count(
                     "inventory_items", filter=Q(inventory_items__quantity_remaining__gt=0)
                 ),
                 total_quantity=Sum(
@@ -197,7 +231,7 @@ class ProductListView(ListView):
         )
 
         # Filter by search query
-        search = self.request.GET.get("search")
+        search = request.GET.get("search")
         if search:
             queryset = queryset.filter(
                 Q(name__icontains=search)
@@ -206,88 +240,226 @@ class ProductListView(ListView):
             )
 
         # Filter by category
-        category = self.request.GET.get("category")
+        category = request.GET.get("category")
         if category:
             queryset = queryset.filter(category_id=category)
 
-        return queryset
+        # Pagination
+        page_size = int(request.GET.get("page_size", 20))
+        page = int(request.GET.get("page", 1))
+        paginator = Paginator(queryset, page_size)
+        page_obj = paginator.get_page(page)
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["categories"] = Category.objects.all().order_by("name")
-        context["current_search"] = self.request.GET.get("search", "")
-        context["current_category"] = self.request.GET.get("category", "")
-        return context
+        # Format response data
+        products_data = []
+        for product in page_obj:
+            products_data.append({
+                "id": product.id,
+                "name": product.name,
+                "brand": product.brand,
+                "category_id": product.category.id if product.category else None,
+                "category_name": product.category.name if product.category else None,
+                "is_active": product.is_active,
+                "reorder_point": float(product.reorder_point) if product.reorder_point else None,
+                "inventory_count": product.inventory_count,
+                "total_quantity": float(product.total_quantity) if product.total_quantity else 0,
+            })
+
+        # Get categories for filter options
+        categories = [{"id": c.id, "name": c.name} for c in Category.objects.all().order_by("name")]
+
+        response_data = {
+            "products": products_data,
+            "total_products": paginator.count,
+            "page": page,
+            "page_size": page_size,
+            "total_pages": paginator.num_pages,
+            "has_next": page_obj.has_next(),
+            "has_previous": page_obj.has_previous(),
+            "filter_options": {
+                "categories": categories,
+            },
+            "filters_applied": {
+                "search": search or "",
+                "category": category or "",
+            }
+        }
+
+        return JsonResponse(response_data)
 
 
-class ProductDetailView(DetailView):
-    """Detail view for a single product with inventory history."""
+class ProductDetailAPI(View):
+    """API view for a single product with inventory history."""
 
-    model = Product
-    template_name = "inventory/product_detail.html"
-    context_object_name = "product"
+    def get(self, request, pk):
+        try:
+            # Use optimized query to get the product with all related data
+            product = get_product_details(pk)
+            
+            # Prepare product data for JSON response
+            inventory_items = []
+            for item in product.inventory_items.all():
+                inventory_items.append({
+                    "id": item.id,
+                    "quantity_remaining": float(item.quantity_remaining),
+                    "storage_location": item.storage_location,
+                    "storage_location_display": item.get_storage_location_display(),
+                    "expiry_date": item.expiry_date.isoformat() if item.expiry_date else None,
+                    "created_at": item.created_at.isoformat() if item.created_at else None,
+                    "updated_at": item.updated_at.isoformat() if item.updated_at else None
+                })
+            
+            # Get aliases
+            aliases = []
+            if hasattr(product, 'aliases'):
+                for alias in product.aliases.all():
+                    aliases.append({
+                        "id": alias.id,
+                        "name": alias.name,
+                        "confidence": float(alias.confidence) if alias.confidence else None,
+                        "count": alias.count
+                    })
+            
+            # Build response data
+            response_data = {
+                "product": {
+                    "id": product.id,
+                    "name": product.name,
+                    "brand": product.brand,
+                    "category_id": product.category.id if product.category else None,
+                    "category_name": product.category.name if product.category else None,
+                    "is_active": product.is_active,
+                    "reorder_point": float(product.reorder_point) if product.reorder_point else None,
+                    "created_at": product.created_at.isoformat() if product.created_at else None,
+                    "updated_at": product.updated_at.isoformat() if product.updated_at else None
+                },
+                "inventory_items": inventory_items,
+                "aliases": aliases,
+                "total_inventory_count": len(inventory_items),
+                "total_quantity": sum(float(item["quantity_remaining"]) for item in inventory_items)
+            }
+            
+            return JsonResponse(response_data)
+        except Product.DoesNotExist:
+            return JsonResponse({"error": "Product not found"}, status=404)
 
-    def get_object(self, queryset=None):
-        """Use optimized query to get the product with all related data."""
-        if queryset is None:
-            queryset = self.get_queryset()
-        return get_product_details(self.kwargs['pk'])
 
+class ReceiptsAPI(View):
+    """API view for receipts with filtering and pagination."""
 
-class ReceiptListView(ListView):
-    """List view for receipts."""
-
-    model = Receipt
-    template_name = "inventory/receipt_list.html"
-    context_object_name = "receipts"
-    paginate_by = 20
-
-    def get_queryset(self):
+    def get(self, request):
         queryset = get_receipts_for_listing()
 
         # Filter by search query
-        search = self.request.GET.get("search")
+        search = request.GET.get("search")
         if search:
             queryset = queryset.filter(
                 Q(store_name__icontains=search) | Q(processing_notes__icontains=search)
             )
 
         # Filter by status
-        status = self.request.GET.get("status")
+        status = request.GET.get("status")
         if status:
             queryset = queryset.filter(status=status)
 
-        return queryset
+        # Pagination
+        page_size = int(request.GET.get("page_size", 20))
+        page = int(request.GET.get("page", 1))
+        paginator = Paginator(queryset, page_size)
+        page_obj = paginator.get_page(page)
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["status_choices"] = Receipt.STATUS_CHOICES
-        context["current_search"] = self.request.GET.get("search", "")
-        context["current_status"] = self.request.GET.get("status", "")
-        return context
+        # Format response data
+        receipts_data = []
+        for receipt in page_obj:
+            receipts_data.append({
+                "id": receipt.id,
+                "store_name": receipt.store_name,
+                "receipt_date": receipt.receipt_date.isoformat() if receipt.receipt_date else None,
+                "total_amount": float(receipt.total_amount) if receipt.total_amount else None,
+                "status": receipt.status,
+                "status_display": receipt.get_status_display() if hasattr(receipt, 'get_status_display') else receipt.status,
+                "processing_step": receipt.processing_step,
+                "item_count": receipt.line_items.count(),
+                "created_at": receipt.created_at.isoformat() if receipt.created_at else None,
+                "updated_at": receipt.updated_at.isoformat() if receipt.updated_at else None,
+            })
+
+        # Status choices for filter options
+        status_choices = [{"value": status[0], "display": status[1]} for status in Receipt.STATUS_CHOICES]
+
+        response_data = {
+            "receipts": receipts_data,
+            "total_receipts": paginator.count,
+            "page": page,
+            "page_size": page_size,
+            "total_pages": paginator.num_pages,
+            "has_next": page_obj.has_next(),
+            "has_previous": page_obj.has_previous(),
+            "filter_options": {
+                "status_choices": status_choices,
+            },
+            "filters_applied": {
+                "search": search or "",
+                "status": status or "",
+            }
+        }
+
+        return JsonResponse(response_data)
 
 
-class ReceiptDetailView(DetailView):
-    """Detail view for a single receipt."""
+class ReceiptDetailAPI(View):
+    """API view for a single receipt with its line items."""
 
-    model = Receipt
-    template_name = "inventory/receipt_detail.html"
-    context_object_name = "receipt"
+    def get(self, request, pk):
+        try:
+            receipt = Receipt.objects.get(pk=pk)
+            
+            # Get line items
+            line_items = receipt.line_items.select_related(
+                "matched_product", "matched_product__category"
+            ).order_by("id")
+            
+            # Prepare receipt data for JSON response
+            line_items_data = []
+            for item in line_items:
+                line_items_data.append({
+                    "id": item.id,
+                    "product_name": item.product_name,
+                    "quantity": float(item.quantity) if item.quantity else None,
+                    "unit_price": float(item.unit_price) if item.unit_price else None,
+                    "line_total": float(item.line_total) if item.line_total else None,
+                    "matched_product_id": item.matched_product.id if item.matched_product else None,
+                    "matched_product_name": item.matched_product.name if item.matched_product else None,
+                    "matched_product_brand": item.matched_product.brand if item.matched_product else None,
+                    "matched_product_category": item.matched_product.category.name if item.matched_product and item.matched_product.category else None,
+                })
+            
+            # Build response data
+            response_data = {
+                "receipt": {
+                    "id": receipt.id,
+                    "store_name": receipt.store_name,
+                    "receipt_date": receipt.receipt_date.isoformat() if receipt.receipt_date else None,
+                    "receipt_file": receipt.receipt_file.url if receipt.receipt_file else None,
+                    "status": receipt.status,
+                    "status_display": receipt.get_status_display() if hasattr(receipt, 'get_status_display') else receipt.status,
+                    "processing_step": receipt.processing_step,
+                    "processing_notes": receipt.processing_notes,
+                    "total_amount": float(receipt.total_amount) if receipt.total_amount else None,
+                    "created_at": receipt.created_at.isoformat() if receipt.created_at else None,
+                    "updated_at": receipt.updated_at.isoformat() if receipt.updated_at else None,
+                },
+                "line_items": line_items_data,
+                "total_items": len(line_items_data),
+            }
+            
+            return JsonResponse(response_data)
+        except Receipt.DoesNotExist:
+            return JsonResponse({"error": "Receipt not found"}, status=404)
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        receipt = self.get_object()
 
-        # Get line items
-        context["line_items"] = receipt.line_items.select_related(
-            "matched_product", "matched_product__category"
-        ).order_by("id")
-
-        return context
-
-
-def expiring_items(request):
-    """View for items that are expiring soon."""
+def expiring_items_api(request):
+    """API endpoint for items that are expiring soon."""
     days = request.GET.get("days", 7)
     try:
         days = int(days)
@@ -297,93 +469,201 @@ def expiring_items(request):
     inventory_service = get_inventory_service()
     items = inventory_service.get_expiring_items(days=days)
 
-    # Add pagination
-    paginator = Paginator(items, 20)
-    page_number = request.GET.get("page")
-    page_obj = paginator.get_page(page_number)
+    # Pagination
+    page_size = int(request.GET.get("page_size", 20))
+    page = int(request.GET.get("page", 1))
+    paginator = Paginator(items, page_size)
+    page_obj = paginator.get_page(page)
 
-    context = {
-        "items": page_obj,
-        "days": days,
-        "page_obj": page_obj,
+    # Format response data
+    items_data = []
+    for item in page_obj:
+        items_data.append({
+            "id": item.id,
+            "product_id": item.product.id if item.product else None,
+            "product_name": item.product.name if item.product else None,
+            "product_brand": item.product.brand if item.product else None,
+            "category": item.product.category.name if item.product and item.product.category else None,
+            "quantity_remaining": float(item.quantity_remaining),
+            "storage_location": item.storage_location,
+            "storage_location_display": item.get_storage_location_display(),
+            "expiry_date": item.expiry_date.isoformat() if item.expiry_date else None,
+            "days_until_expiry": (item.expiry_date - date.today()).days if item.expiry_date else None,
+        })
+
+    response_data = {
+        "items": items_data,
+        "total_items": paginator.count,
+        "page": page,
+        "page_size": page_size,
+        "total_pages": paginator.num_pages,
+        "has_next": page_obj.has_next(),
+        "has_previous": page_obj.has_previous(),
+        "days": days
     }
 
-    return render(request, "inventory/expiring_items.html", context)
+    return JsonResponse(response_data)
 
 
-def low_stock_items(request):
-    """View for items with low stock."""
+def low_stock_items_api(request):
+    """API endpoint for items with low stock."""
     inventory_service = get_inventory_service()
     items = inventory_service.get_low_stock_items()
 
-    # Add pagination
-    paginator = Paginator(items, 20)
-    page_number = request.GET.get("page")
-    page_obj = paginator.get_page(page_number)
+    # Pagination
+    page_size = int(request.GET.get("page_size", 20))
+    page = int(request.GET.get("page", 1))
+    paginator = Paginator(items, page_size)
+    page_obj = paginator.get_page(page)
 
-    context = {
-        "items": page_obj,
-        "page_obj": page_obj,
+    # Format response data
+    items_data = []
+    for item in page_obj:
+        items_data.append({
+            "id": item.id,
+            "product_id": item.product.id if item.product else None,
+            "product_name": item.product.name if item.product else None,
+            "product_brand": item.product.brand if item.product else None,
+            "category": item.product.category.name if item.product and item.product.category else None,
+            "quantity_remaining": float(item.quantity_remaining),
+            "storage_location": item.storage_location,
+            "storage_location_display": item.get_storage_location_display(),
+            "reorder_point": float(item.product.reorder_point) if item.product and item.product.reorder_point else None,
+        })
+
+    response_data = {
+        "items": items_data,
+        "total_items": paginator.count,
+        "page": page,
+        "page_size": page_size,
+        "total_pages": paginator.num_pages,
+        "has_next": page_obj.has_next(),
+        "has_previous": page_obj.has_previous(),
     }
 
-    return render(request, "inventory/low_stock_items.html", context)
+    return JsonResponse(response_data)
 
 
-def inventory_by_location(request, location):
-    """View for inventory items filtered by storage location."""
+def inventory_by_location_api(request, location):
+    """API endpoint for inventory items filtered by storage location."""
     items = get_inventory_items_for_listing().filter(storage_location=location)
 
-    # Add pagination
-    paginator = Paginator(items, 20)
-    page_number = request.GET.get("page")
-    page_obj = paginator.get_page(page_number)
+    # Pagination
+    page_size = int(request.GET.get("page_size", 20))
+    page = int(request.GET.get("page", 1))
+    paginator = Paginator(items, page_size)
+    page_obj = paginator.get_page(page)
 
     # Get location display name
     location_display = dict(InventoryItem.STORAGE_CHOICES).get(location, location)
 
-    context = {
-        "items": page_obj,
+    # Format response data
+    items_data = []
+    for item in page_obj:
+        items_data.append({
+            "id": item.id,
+            "product_id": item.product.id if item.product else None,
+            "product_name": item.product.name if item.product else None,
+            "product_brand": item.product.brand if item.product else None,
+            "category": item.product.category.name if item.product and item.product.category else None,
+            "quantity_remaining": float(item.quantity_remaining),
+            "storage_location": item.storage_location,
+            "storage_location_display": item.get_storage_location_display(),
+            "expiry_date": item.expiry_date.isoformat() if item.expiry_date else None,
+        })
+
+    response_data = {
+        "items": items_data,
+        "total_items": paginator.count,
+        "page": page,
+        "page_size": page_size,
+        "total_pages": paginator.num_pages,
+        "has_next": page_obj.has_next(),
+        "has_previous": page_obj.has_previous(),
         "location": location,
         "location_display": location_display,
-        "page_obj": page_obj,
     }
 
-    return render(request, "inventory/inventory_by_location.html", context)
+    return JsonResponse(response_data)
 
 
-def recent_receipts(request):
-    """View for recent receipts."""
+def recent_receipts_api(request):
+    """API endpoint for recent receipts."""
     receipts = get_receipts_for_listing().filter(status="completed")[:20]
 
-    context = {
-        "receipts": receipts,
+    # Format response data
+    receipts_data = []
+    for receipt in receipts:
+        receipts_data.append({
+            "id": receipt.id,
+            "store_name": receipt.store_name,
+            "receipt_date": receipt.receipt_date.isoformat() if receipt.receipt_date else None,
+            "total_amount": float(receipt.total_amount) if receipt.total_amount else None,
+            "status": receipt.status,
+            "status_display": receipt.get_status_display() if hasattr(receipt, 'get_status_display') else receipt.status,
+            "created_at": receipt.created_at.isoformat() if receipt.created_at else None,
+        })
+
+    response_data = {
+        "receipts": receipts_data,
+        "count": len(receipts_data),
     }
 
-    return render(request, "inventory/recent_receipts.html", context)
+    return JsonResponse(response_data)
 
 
-class CategoryListView(ListView):
-    """List view for categories."""
+class CategoriesAPI(View):
+    """API view for categories."""
 
-    model = Category
-    template_name = "inventory/category_list.html"
-    context_object_name = "categories"
-
-    def get_queryset(self):
-        return Category.objects.annotate(
+    def get(self, request):
+        categories = Category.objects.annotate(
             product_count=Count("products"),
             inventory_count=Count(
                 "products__inventory_items",
                 filter=Q(products__inventory_items__quantity_remaining__gt=0),
             ),
         ).order_by("name")
+        
+        # Format response data
+        categories_data = []
+        for category in categories:
+            categories_data.append({
+                "id": category.id,
+                "name": category.name,
+                "product_count": category.product_count,
+                "inventory_count": category.inventory_count,
+            })
+        
+        response_data = {
+            "categories": categories_data,
+            "count": len(categories_data)
+        }
+        
+        return JsonResponse(response_data)
 
 
-def upload_receipt(request):
-    """Simple upload form for receipts."""
-    # This is a placeholder - the actual upload functionality
-    # is handled by the API endpoint
-    return render(request, "inventory/upload_receipt.html")
+def upload_receipt_api(request):
+    """API endpoint for getting receipt upload instructions."""
+    
+    # Return instructions for uploading receipts via API
+    response_data = {
+        "message": "Please use the POST endpoint to upload a receipt file",
+        "endpoint": "/api/receipts/upload/",
+        "method": "POST",
+        "content_type": "multipart/form-data",
+        "parameters": {
+            "receipt_file": "The receipt file to upload (image or PDF)"
+        },
+        "authentication": "Optional, depends on server configuration",
+        "response": {
+            "success": "Boolean indicating if the upload was successful",
+            "receipt_id": "ID of the created receipt if successful",
+            "message": "Status message",
+            "error": "Error message if unsuccessful"
+        }
+    }
+    
+    return JsonResponse(response_data)
 
 
 def receipt_processing_status(request, receipt_id):
