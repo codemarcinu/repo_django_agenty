@@ -1,11 +1,11 @@
-# Agenty - Inteligentny System Zarządzania Domem 🤖
+# Agenty - Inteligentny System Zarządzania Domem (Backend API) 🤖
 
-**Agenty** to zaawansowany system sztucznej inteligencji działający lokalnie na Twoim komputerze. Łączy nowoczesne technologie AI z praktycznym zarządzaniem gospodarstwem domowym.
+**Agenty** to zaawansowany system sztucznej inteligencji działający lokalnie na Twoim komputerze. Po refaktoryzacji funkcjonuje jako czysty backend API do zarządzania gospodarstwem domowym.
 
 ✨ **Prywatność przede wszystkim** - Wszystkie dane pozostają na Twoim komputerze  
 🚀 **GPU Acceleration** - Wykorzystuje karty graficzne NVIDIA dla maksymalnej wydajności  
 🧠 **Multi-Agent Architecture** - Inteligentny system routingu i specjalizowanych agentów AI  
-📊 **Advanced Analytics & Dashboard** - Zaawansowane analizy wydatków, konsumpcji i wizualizacje  
+📊 **RESTful API dla Analytics** - Zaawansowane analizy wydatków i konsumpcji dostępne przez API  
 🛒 **Complete Receipt Processing Pipeline** - Kompletny pipeline: OCR → Parse → Match → Inventory  
 🗄️ **Unified Inventory System** - Kompleksowy system zarządzania zapasami z alertami i śledzeniem dat ważności
 
@@ -911,18 +911,27 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ---
 
-## 🎉 Ready to Explore? Start Your AI Journey!
+## 🎉 Ready to Explore? Start Your API Journey!
 
-**Your intelligent home management system is ready!** 
+**Your intelligent home management API system is ready!** 
 
 ### 🚀 Quick Start Guide (3 Simple Steps):
 1. **🔥 Launch**: Open terminal and run `./start.sh`
-2. **🌐 Access**: Open http://127.0.0.1:8000/ in your browser
-3. **✨ Explore**: 
-   - **💬 Chat Interface**: Start conversation with multi-agent AI system
-   - **📄 Document Upload**: Upload PDFs/Word docs for intelligent analysis
-   - **🛒 Receipt Scanner**: Take photo of receipt for automatic inventory management
-   - **📊 Analytics Dashboard**: Monitor your household consumption patterns
+2. **🌐 Access API**: All functionality available via RESTful API endpoints at http://127.0.0.1:8000/api/
+3. **✨ Explore API Endpoints**: 
+   - **💬 Chat API**: `/api/chat/` - Multi-agent AI conversation system
+   - **📄 Document API**: `/api/documents/` - Intelligent document analysis
+   - **🛒 Receipt API**: `/api/receipts/upload/` - Automatic receipt processing 
+   - **📊 Analytics API**: `/api/dashboard/` - Household consumption data
+
+### ⚠️ IMPORTANT: Frontend Layer Removed
+As of the latest update, the frontend layer has been completely removed. The system now functions as a pure backend API. This means:
+- No HTML templates or user interface
+- All functionality accessible only through API endpoints
+- Perfect for integration with custom frontends or mobile apps
+- RESTful API design with JSON responses
+
+If you need a user interface, you'll need to create your own frontend application that connects to these API endpoints.
 
 ### 🗣️ Try These Sample Conversations:
 - "Cześć! Pokaż mi możliwości systemu" *(Show me system capabilities)*

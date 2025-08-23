@@ -1,10 +1,34 @@
-# Byte-code files
-*.pyc
+# Python
 __pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
 
-# Logs
+# Django
 *.log
-logs/
+*.pot
+*.pyc
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+media/
+staticfiles/
 
 # Databases
 *.sqlite3
@@ -14,26 +38,54 @@ chroma_db/
 
 # Virtual environment
 .venv/
+venv/
+ENV/
+env/
+.env
 
 # IDE files
 .idea/
+.vscode/
+*.swp
+*.swo
+.project
+.pydevproject
+.settings/
+*.sublime-workspace
+*.sublime-project
 
 # Media files (user uploads)
 media/
 
-# Benchmark results
+# Logs
+logs/
+*.log
+
+# Benchmark and test results
 benchmark_results_*.json
+.coverage
+htmlcov/
+.pytest_cache/
+.tox/
+.nox/
+.ruff_cache/
 
 # Other generated files
-.coverage
-.ruff_cache/
-inspiration/
-
-# Environment files
-.env
+*.bak
+*.tmp
+*~
+.DS_Store
+Thumbs.db
 
 # Node.js dependencies
 node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
 
 # Build artifacts
 staticfiles/
+
+# Project specific
+inspiration/

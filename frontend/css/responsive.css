@@ -1,0 +1,331 @@
+/* 
+ * Agenty - Responsive CSS
+ * Mobile-first responsive design
+ */
+
+/* Base Mobile Styles (default) */
+@media only screen and (max-width: 767px) {
+    :root {
+        /* Adjust spacing for mobile */
+        --spacing-lg: 1rem;
+        --spacing-xl: 1.5rem;
+    }
+    
+    /* Sidebar Mobile Handling */
+    .sidebar {
+        width: 100%;
+        height: auto;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        top: auto;
+        z-index: var(--z-index-fixed);
+        transform: translateY(calc(100% - 60px));
+        transition: transform var(--transition-normal);
+    }
+    
+    .sidebar.expanded {
+        transform: translateY(0);
+        height: 100vh;
+    }
+    
+    .mobile-menu-toggle {
+        display: block;
+    }
+    
+    .main-content {
+        margin-left: 0;
+        padding-bottom: 60px; /* Space for mobile nav */
+    }
+    
+    /* Dashboard Grid */
+    .dashboard-grid,
+    .analytics-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .full-width {
+        grid-column: auto;
+    }
+    
+    /* Chat Layout */
+    .chat-container {
+        flex-direction: column;
+        height: calc(100vh - 120px);
+    }
+    
+    .chat-sidebar {
+        width: 100%;
+        max-height: 30vh;
+        border-right: none;
+        border-bottom: 1px solid var(--color-gray-200);
+    }
+    
+    /* Receipt Table */
+    .receipts-table th:nth-child(2),
+    .receipts-table td:nth-child(2) {
+        display: none; /* Hide store column on mobile */
+    }
+    
+    /* Form Layout */
+    .form-actions {
+        flex-direction: column;
+        gap: var(--spacing-md);
+    }
+    
+    .form-actions button {
+        width: 100%;
+    }
+    
+    /* Filter Controls */
+    .filter-container {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .filter-container select,
+    .filter-container button {
+        width: 100%;
+        margin-bottom: var(--spacing-sm);
+    }
+}
+
+/* Tablet Styles */
+@media only screen and (min-width: 768px) and (max-width: 1023px) {
+    /* Sidebar */
+    .sidebar {
+        width: var(--sidebar-collapsed-width);
+    }
+    
+    .sidebar:hover {
+        width: var(--sidebar-width);
+    }
+    
+    .nav-item a span {
+        display: none;
+    }
+    
+    .sidebar:hover .nav-item a span {
+        display: inline;
+    }
+    
+    .main-content {
+        margin-left: var(--sidebar-collapsed-width);
+    }
+    
+    /* Dashboard Grid */
+    .dashboard-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+    
+    /* Chat Layout */
+    .chat-container {
+        flex-direction: row;
+    }
+    
+    .chat-sidebar {
+        width: 220px;
+    }
+}
+
+/* Desktop Styles */
+@media only screen and (min-width: 1024px) {
+    /* Full desktop layout is defined in main.css */
+    
+    /* Enhanced Desktop Styles (large screens) */
+    @media only screen and (min-width: 1440px) {
+        :root {
+            --sidebar-width: 280px;
+        }
+        
+        .main-content {
+            padding: var(--spacing-xl);
+        }
+        
+        .dashboard-grid {
+            grid-template-columns: repeat(4, 1fr);
+        }
+        
+        .stats-card,
+        .quick-actions-card {
+            grid-column: span 2;
+        }
+        
+        .expiring-soon-card,
+        .recent-receipts-card {
+            grid-column: span 2;
+        }
+        
+        .inventory-grid {
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+        }
+    }
+}
+
+/* Print Styles */
+@media print {
+    .sidebar,
+    .page-header,
+    button,
+    .action-button,
+    .action-icon,
+    .system-status {
+        display: none !important;
+    }
+    
+    .main-content {
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+    
+    .card {
+        box-shadow: none !important;
+        border: 1px solid #ddd !important;
+        break-inside: avoid;
+    }
+    
+    .page {
+        display: block !important;
+    }
+    
+    body {
+        font-size: 12pt;
+        color: #000;
+        background: #fff;
+    }
+    
+    a {
+        color: #000 !important;
+        text-decoration: underline;
+    }
+    
+    /* Force background colors to print */
+    * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+}
+
+/* Accessibility Styles */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+/* Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+    :root {
+        --color-white: #121212;
+        --color-light: #1e1e1e;
+        --color-gray-100: #2d2d2d;
+        --color-gray-200: #333333;
+        --color-gray-300: #444444;
+        --color-gray-400: #555555;
+        --color-gray-500: #777777;
+        --color-gray-600: #999999;
+        --color-gray-700: #aaaaaa;
+        --color-gray-800: #cccccc;
+        --color-gray-900: #eeeeee;
+        --color-dark: #f8f9fa;
+        
+        --glass-bg: rgba(0, 0, 0, 0.2);
+        --glass-border: rgba(255, 255, 255, 0.1);
+    }
+    
+    body {
+        color: var(--color-gray-300);
+        background-color: var(--color-dark);
+    }
+    
+    .card,
+    .modal-content,
+    .receipt-upload-area,
+    .receipt-list-container,
+    .inventory-filters,
+    .product-card,
+    .chat-sidebar,
+    .welcome-message {
+        background-color: var(--color-gray-100) !important;
+        border-color: var(--color-gray-300) !important;
+    }
+    
+    .nav-item a,
+    .product-name,
+    h1, h2, h3, h4, h5, h6 {
+        color: var(--color-gray-800) !important;
+    }
+    
+    .nav-item.active a {
+        color: var(--color-white) !important;
+    }
+    
+    .form-group input,
+    .form-group select,
+    .form-group textarea,
+    #chat-input {
+        background-color: var(--color-gray-200) !important;
+        color: var(--color-gray-800) !important;
+        border-color: var(--color-gray-400) !important;
+    }
+    
+    .upload-container {
+        border-color: var(--color-gray-400) !important;
+    }
+    
+    /* Invert specific icons for better visibility */
+    .sidebar i,
+    .action-button i {
+        color: var(--color-gray-600) !important;
+    }
+    
+    .action-button:hover i {
+        color: var(--color-white) !important;
+    }
+    
+    /* Ensure proper contrast for charts */
+    canvas {
+        filter: invert(0.85);
+    }
+}
+
+/* High Contrast Mode */
+@media (forced-colors: active) {
+    .sidebar,
+    .card,
+    .nav-item a,
+    button,
+    .modal-content,
+    .form-group input,
+    .form-group select {
+        border: 1px solid CanvasText !important;
+    }
+    
+    .nav-item.active a {
+        background-color: Highlight !important;
+        color: HighlightText !important;
+    }
+}
+
+/* Landscape Orientation (Mobile) */
+@media only screen and (max-width: 767px) and (orientation: landscape) {
+    .sidebar {
+        height: 100%;
+        transform: translateX(-100%);
+    }
+    
+    .sidebar.expanded {
+        transform: translateX(0);
+    }
+    
+    .main-content {
+        padding-bottom: 0;
+    }
+    
+    .inventory-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}

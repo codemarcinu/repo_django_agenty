@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agenty - Inteligentny System Zarządzania Domem</title>
+    <meta name="description" content="Inteligentny system AI do zarządzania gospodarstwem domowym z przetwarzaniem paragonów, zarządzaniem zapasami i asystentem AI.">
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/responsive.css">
+    <!-- Font Awesome dla ikon -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <nav class="sidebar">
+            <div class="sidebar-header">
+                <h1 class="logo">Agenty</h1>
+                <button class="mobile-menu-toggle" id="menu-toggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+            <ul class="nav-menu">
+                <li class="nav-item active" data-page="dashboard">
+                    <a href="#dashboard"><i class="fas fa-home"></i> Dashboard</a>
+                </li>
+                <li class="nav-item" data-page="chat">
+                    <a href="#chat"><i class="fas fa-comments"></i> Asystent AI</a>
+                </li>
+                <li class="nav-item" data-page="receipts">
+                    <a href="#receipts"><i class="fas fa-receipt"></i> Paragony</a>
+                </li>
+                <li class="nav-item" data-page="inventory">
+                    <a href="#inventory"><i class="fas fa-box"></i> Spiżarnia</a>
+                </li>
+                <li class="nav-item" data-page="analytics">
+                    <a href="#analytics"><i class="fas fa-chart-line"></i> Analityka</a>
+                </li>
+            </ul>
+            <div class="sidebar-footer">
+                <div class="system-status">
+                    <div class="status-indicator online"></div>
+                    <span>System aktywny</span>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Dashboard Page -->
+            <section id="dashboard" class="page active">
+                <div class="page-header">
+                    <h2>Dashboard</h2>
+                    <p class="date-display" id="current-date"></p>
+                </div>
+
+                <div class="dashboard-grid">
+                    <!-- Quick Stats -->
+                    <div class="card stats-card">
+                        <h3>Podsumowanie</h3>
+                        <div class="stats-grid">
+                            <div class="stat-item">
+                                <i class="fas fa-box"></i>
+                                <span class="stat-value" id="total-inventory-count">0</span>
+                                <span class="stat-label">Produktów</span>
+                            </div>
+                            <div class="stat-item">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                <span class="stat-value" id="expiring-soon-count">0</span>
+                                <span class="stat-label">Wygasa wkrótce</span>
+                            </div>
+                            <div class="stat-item">
+                                <i class="fas fa-shopping-cart"></i>
+                                <span class="stat-value" id="receipts-count">0</span>
+                                <span class="stat-label">Paragonów</span>
+                            </div>
+                            <div class="stat-item">
+                                <i class="fas fa-bell"></i>
+                                <span class="stat-value" id="alerts-count">0</span>
+                                <span class="stat-label">Alertów</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Expiring Soon -->
+                    <div class="card expiring-soon-card">
+                        <h3>Wygasa wkrótce</h3>
+                        <ul class="expiring-list" id="expiring-items-list">
+                            <li class="expiring-item">
+                                <span class="item-name">Ładowanie danych...</span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- Recent Receipts -->
+                    <div class="card recent-receipts-card">
+                        <h3>Ostatnie paragony</h3>
+                        <ul class="receipts-list" id="recent-receipts-list">
+                            <li class="receipt-item">
+                                <span class="receipt-date">Ładowanie danych...</span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- Quick Actions -->
+                    <div class="card quick-actions-card">
+                        <h3>Szybkie akcje</h3>
+                        <div class="actions-grid">
+                            <button class="action-button" data-page="chat">
+                                <i class="fas fa-comments"></i>
+                                <span>Zapytaj AI</span>
+                            </button>
+                            <button class="action-button" data-page="receipts">
+                                <i class="fas fa-receipt"></i>
+                                <span>Dodaj paragon</span>
+                            </button>
+                            <button class="action-button" data-page="inventory">
+                                <i class="fas fa-plus"></i>
+                                <span>Dodaj produkt</span>
+                            </button>
+                            <button class="action-button" data-page="analytics">
+                                <i class="fas fa-chart-line"></i>
+                                <span>Zobacz statystyki</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Chat Page -->
+            <section id="chat" class="page">
+                <div class="page-header">
+                    <h2>Asystent AI</h2>
+                </div>
+                
+                <div class="chat-container">
+                    <div class="chat-sidebar">
+                        <div class="chat-header">
+                            <h3>Konwersacje</h3>
+                            <button class="new-chat-btn" id="new-chat-btn">
+                                <i class="fas fa-plus"></i> Nowa rozmowa
+                            </button>
+                        </div>
+                        <ul class="conversation-list" id="conversation-list">
+                            <!-- Conversation history will be loaded here -->
+                            <li class="conversation-item">
+                                <span>Ładowanie rozmów...</span>
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <div class="chat-main">
+                        <div class="messages-container" id="messages-container">
+                            <!-- Messages will be displayed here -->
+                            <div class="welcome-message">
+                                <h3>Witaj w Asystencie AI!</h3>
+                                <p>Możesz zadać pytanie o:</p>
+                                <ul>
+                                    <li>Zawartość Twojej spiżarni</li>
+                                    <li>Pogodę w dowolnym mieście</li>
+                                    <li>Przesłać dokument do analizy</li>
+                                    <li>I wiele więcej!</li>
+                                </ul>
+                            </div>
+                        </div>
+                        
+                        <div class="chat-input-container">
+                            <div class="file-upload-container">
+                                <label for="file-upload" class="file-upload-label">
+                                    <i class="fas fa-paperclip"></i>
+                                </label>
+                                <input type="file" id="file-upload" class="file-upload-input" accept=".pdf,.jpg,.jpeg,.png">
+                            </div>
+                            
+                            <textarea id="chat-input" placeholder="Wpisz wiadomość..." rows="1"></textarea>
+                            
+                            <button id="send-message-btn" class="send-btn">
+                                <i class="fas fa-paper-plane"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Receipts Page -->
+            <section id="receipts" class="page">
+                <div class="page-header">
+                    <h2>Paragony</h2>
+                </div>
+                
+                <div class="receipts-container">
+                    <div class="receipt-upload-area" id="receipt-upload-area">
+                        <div class="upload-container">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                            <h3>Prześlij paragon</h3>
+                            <p>Przeciągnij plik tutaj lub kliknij, aby wybrać</p>
+                            <input type="file" id="receipt-file-upload" accept=".pdf,.jpg,.jpeg,.png" hidden>
+                            <button class="upload-btn" id="select-receipt-btn">Wybierz plik</button>
+                        </div>
+                    </div>
+                    
+                    <div class="receipt-processing-status" id="receipt-processing-status" style="display: none;">
+                        <h3>Przetwarzanie paragonu</h3>
+                        <div class="progress-container">
+                            <div class="progress-bar" id="receipt-progress-bar"></div>
+                        </div>
+                        <div class="status-text" id="receipt-status-text">
+                            Inicjalizacja przetwarzania...
+                        </div>
+                    </div>
+                    
+                    <div class="receipt-list-container">
+                        <h3>Historia paragonów</h3>
+                        <div class="receipts-table-container">
+                            <table class="receipts-table">
+                                <thead>
+                                    <tr>
+                                        <th>Data</th>
+                                        <th>Sklep</th>
+                                        <th>Kwota</th>
+                                        <th>Status</th>
+                                        <th>Akcje</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="receipts-table-body">
+                                    <tr>
+                                        <td colspan="5" class="loading-cell">Ładowanie paragonów...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Inventory Page -->
+            <section id="inventory" class="page">
+                <div class="page-header">
+                    <h2>Spiżarnia</h2>
+                </div>
+                
+                <div class="inventory-container">
+                    <div class="inventory-filters">
+                        <div class="search-container">
+                            <input type="text" id="inventory-search" placeholder="Szukaj produktu...">
+                            <i class="fas fa-search"></i>
+                        </div>
+                        
+                        <div class="filter-container">
+                            <select id="location-filter">
+                                <option value="all">Wszystkie lokalizacje</option>
+                                <option value="fridge">Lodówka</option>
+                                <option value="freezer">Zamrażarka</option>
+                                <option value="pantry">Spiżarnia</option>
+                                <option value="cabinet">Szafka</option>
+                                <option value="other">Inne</option>
+                            </select>
+                            
+                            <select id="expiry-filter">
+                                <option value="all">Wszystkie terminy</option>
+                                <option value="expired">Przeterminowane</option>
+                                <option value="today">Dziś</option>
+                                <option value="week">W tym tygodniu</option>
+                                <option value="month">W tym miesiącu</option>
+                            </select>
+                            
+                            <button id="add-product-btn" class="primary-btn">
+                                <i class="fas fa-plus"></i> Dodaj produkt
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="inventory-grid" id="inventory-grid">
+                        <!-- Products will be loaded here -->
+                        <div class="loading-indicator">
+                            <div class="spinner"></div>
+                            <span>Ładowanie produktów...</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Add Product Modal -->
+                <div class="modal" id="add-product-modal">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h3>Dodaj produkt</h3>
+                            <button class="close-btn" id="close-product-modal">&times;</button>
+                        </div>
+                        <div class="modal-body">
+                            <form id="add-product-form">
+                                <div class="form-group">
+                                    <label for="product-name">Nazwa produktu</label>
+                                    <input type="text" id="product-name" required>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="product-quantity">Ilość</label>
+                                    <input type="number" id="product-quantity" min="0.001" step="0.001" required>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="product-unit">Jednostka</label>
+                                    <select id="product-unit" required>
+                                        <option value="szt">Sztuki</option>
+                                        <option value="kg">Kilogramy</option>
+                                        <option value="g">Gramy</option>
+                                        <option value="l">Litry</option>
+                                        <option value="ml">Mililitry</option>
+                                        <option value="opak">Opakowania</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="product-location">Lokalizacja</label>
+                                    <select id="product-location" required>
+                                        <option value="fridge">Lodówka</option>
+                                        <option value="freezer">Zamrażarka</option>
+                                        <option value="pantry">Spiżarnia</option>
+                                        <option value="cabinet">Szafka</option>
+                                        <option value="other">Inne</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="product-expiry">Data ważności</label>
+                                    <input type="date" id="product-expiry">
+                                </div>
+                                
+                                <div class="form-actions">
+                                    <button type="button" class="secondary-btn" id="cancel-product-btn">Anuluj</button>
+                                    <button type="submit" class="primary-btn">Dodaj</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Analytics Page -->
+            <section id="analytics" class="page">
+                <div class="page-header">
+                    <h2>Analityka</h2>
+                </div>
+                
+                <div class="analytics-container">
+                    <div class="analytics-filters">
+                        <select id="time-range-filter">
+                            <option value="7days">Ostatnie 7 dni</option>
+                            <option value="30days">Ostatnie 30 dni</option>
+                            <option value="90days">Ostatnie 90 dni</option>
+                            <option value="year">Ostatni rok</option>
+                        </select>
+                    </div>
+                    
+                    <div class="analytics-grid">
+                        <!-- Spending Chart -->
+                        <div class="card chart-card">
+                            <h3>Wydatki</h3>
+                            <div class="chart-container">
+                                <canvas id="spending-chart"></canvas>
+                            </div>
+                        </div>
+                        
+                        <!-- Category Distribution -->
+                        <div class="card chart-card">
+                            <h3>Kategorie zakupów</h3>
+                            <div class="chart-container">
+                                <canvas id="category-chart"></canvas>
+                            </div>
+                        </div>
+                        
+                        <!-- Consumption Heatmap -->
+                        <div class="card chart-card full-width">
+                            <h3>Konsumpcja produktów</h3>
+                            <div class="chart-container">
+                                <canvas id="consumption-chart"></canvas>
+                            </div>
+                        </div>
+                        
+                        <!-- Top Products -->
+                        <div class="card">
+                            <h3>Najczęściej kupowane produkty</h3>
+                            <ul class="top-products-list" id="top-products-list">
+                                <li class="loading-item">Ładowanie danych...</li>
+                            </ul>
+                        </div>
+                        
+                        <!-- Waste Tracking -->
+                        <div class="card">
+                            <h3>Śledzenie marnotrawstwa</h3>
+                            <div class="waste-container" id="waste-container">
+                                <div class="loading-indicator">
+                                    <div class="spinner"></div>
+                                    <span>Ładowanie danych...</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script type="module" src="js/utils.js"></script>
+    <script type="module" src="js/api.js"></script>
+    <script type="module" src="js/chat.js"></script>
+    <script type="module" src="js/receipts.js"></script>
+    <script type="module" src="js/inventory.js"></script>
+    <script type="module" src="js/analytics.js"></script>
+    <script type="module" src="js/app.js"></script>
+</body>
+</html>
