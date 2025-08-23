@@ -162,12 +162,15 @@ FILE_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024  # 10MB
 DATA_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024  # 10MB
 
 # Logging configuration
+LOG_DIR = BASE_DIR / 'logs'
+LOG_DIR.mkdir(exist_ok=True)
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
     'formatters': {
         'verbose': {
-            'format': '{levelname} {asctime} {module} {message}',
+            'format': '{levelname} {asctime} {name} {process:d} {thread:d} {message}',
             'style': '{',
         },
         'simple': {
@@ -176,39 +179,64 @@ LOGGING = {
         },
     },
     'handlers': {
-        'file': {
-            'level': 'INFO',
-            'class': 'logging.FileHandler',
-            'filename': os.path.join(BASE_DIR, 'logs', 'django.log'),
-            'formatter': 'verbose',
-        },
         'console': {
             'level': 'INFO',
             'class': 'logging.StreamHandler',
             'formatter': 'simple',
         },
+        'django_file': {
+            'level': 'INFO',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': LOG_DIR / 'django.log',
+            'maxBytes': 1024 * 1024 * 5,  # 5 MB
+            'backupCount': 5,
+            'formatter': 'verbose',
+        },
+        'celery_file': {
+            'level': 'INFO',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': LOG_DIR / 'celery.log',
+            'maxBytes': 1024 * 1024 * 5,  # 5 MB
+            'backupCount': 5,
+            'formatter': 'verbose',
+        },
+        'app_file': {
+            'level': 'DEBUG',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': LOG_DIR / 'app.log',
+            'maxBytes': 1024 * 1024 * 5,  # 5 MB
+            'backupCount': 5,
+            'formatter': 'verbose',
+        },
     },
     'loggers': {
         'django': {
-            'handlers': ['file', 'console'],
+            'handlers': ['django_file', 'console'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+        'celery': {
+            'handlers': ['celery_file', 'console'],
             'level': 'INFO',
             'propagate': True,
         },
         'chatbot': {
-            'handlers': ['file', 'console'],
-            'level': 'INFO',
+            'handlers': ['app_file', 'console'],
+            'level': 'DEBUG',
             'propagate': True,
         },
         'inventory': {
-            'handlers': ['file', 'console'],
-            'level': 'INFO',
+            'handlers': ['app_file', 'console'],
+            'level': 'DEBUG',
             'propagate': True,
+        },
+        # Catch-all logger
+        'root': {
+            'handlers': ['django_file'],
+            'level': 'WARNING',
         },
     },
 }
-
-# Ensure logs directory exists
-os.makedirs(os.path.join(BASE_DIR, 'logs'), exist_ok=True)
 
 # Try to load local settings if they exist
 try:
