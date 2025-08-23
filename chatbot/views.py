@@ -11,6 +11,9 @@ from django.core.serializers.json import DjangoJSONEncoder
 from django.db import transaction
 from django.http import Http404, HttpRequest, JsonResponse
 from django.views import View
+import os
+from django.conf import settings
+from django.http import HttpResponse
 
 from inventory.models import Product, Receipt, ReceiptLineItem
 
@@ -398,3 +401,25 @@ class ConversationInfoView(View):
             return JsonResponse(
                 {"success": False, "error": "Internal server error"}, status=500
             )
+
+
+from django.views.generic import TemplateView
+
+class LiveLogsView(View):
+    """
+    A simple view to display live logs from the app.log file.
+    For development purposes only.
+    """
+    def get(self, request):
+        log_file_path = os.path.join(settings.LOG_DIR, 'app.log')
+        try:
+            with open(log_file_path, 'r') as f:
+                logs = f.read()
+            return HttpResponse(logs, content_type='text/plain')
+        except FileNotFoundError:
+            return HttpResponse("Log file not found.", status=404, content_type='text/plain')
+        except Exception as e:
+            return HttpResponse(f"Error reading log file: {e}", status=500, content_type='text/plain')
+
+class LiveLogsPageView(TemplateView):
+    template_name = "live_logs.html"
