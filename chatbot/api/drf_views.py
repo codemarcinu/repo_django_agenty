@@ -27,6 +27,16 @@ class AgentListAPIView(ListAPIView):
     serializer_class = AgentSerializer
     permission_classes = [AllowAny]  # Allow anonymous access for agent listing
 
+    def list(self, request, *args, **kwargs):
+        try:
+            return super().list(request, *args, **kwargs)
+        except Exception as e:
+            logger.error(f"Error listing agents: {str(e)}")
+            return Response(
+                {"success": False, "error": "Internal server error"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
 
 class ConversationCreateAPIView(APIView):
     """API view for creating new conversations with proper CSRF protection"""
