@@ -238,45 +238,46 @@ const App = {
     },
     
     // Load dashboard statistics
-    loadDashboardStatistics: function() {
-        // Get statistics from API or mock data
+    loadDashboardStatistics: async function() {
         try {
-            // For demo purposes, use mock data
-            const mockStats = API.getMockData('/api/inventory/statistics/');
+            const stats = await API.getInventoryStatistics();
             
             // Update statistics in the UI
-            document.getElementById('total-inventory-count').textContent = mockStats.total_items || 0;
-            document.getElementById('expiring-soon-count').textContent = mockStats.expiring_soon_count || 0;
-            document.getElementById('receipts-count').textContent = 2; // Mock value
-            document.getElementById('alerts-count').textContent = (mockStats.expired_count || 0) + (mockStats.low_stock_count || 0);
+            document.getElementById('total-inventory-count').textContent = stats.total_items || 0;
+            document.getElementById('expiring-soon-count').textContent = stats.expiring_soon_count || 0;
+            document.getElementById('receipts-count').textContent = stats.receipts_count || 0;
+            document.getElementById('alerts-count').textContent = (stats.expired_count || 0) + (stats.low_stock_count || 0);
             
-            // In a real implementation, we would use:
-            // const stats = await API.getInventoryStatistics();
         } catch (error) {
             console.error('Error loading dashboard statistics:', error);
             Utils.showToast('Nie udało się załadować statystyk.', 'error');
+            
+            // Set default values on error
+            document.getElementById('total-inventory-count').textContent = '0';
+            document.getElementById('expiring-soon-count').textContent = '0';
+            document.getElementById('receipts-count').textContent = '0';
+            document.getElementById('alerts-count').textContent = '0';
         }
     },
     
     // Load expiring items
-    loadExpiringItems: function() {
+    loadExpiringItems: async function() {
         const expiringList = document.getElementById('expiring-items-list');
         if (!expiringList) return;
         
         try {
-            // For demo purposes, use mock data
-            const mockItems = API.getMockData('/api/inventory/expiring/');
+            const expiringItems = await API.getExpiringItems(7);
             
             // Clear current list
             expiringList.innerHTML = '';
             
-            if (mockItems.length === 0) {
+            if (!expiringItems || expiringItems.length === 0) {
                 expiringList.innerHTML = '<li class="expiring-item">Brak produktów wygasających w najbliższym czasie.</li>';
                 return;
             }
             
             // Add items to list
-            mockItems.forEach(item => {
+            expiringItems.forEach(item => {
                 const li = document.createElement('li');
                 li.className = 'expiring-item';
                 
@@ -301,8 +302,6 @@ const App = {
                 expiringList.appendChild(li);
             });
             
-            // In a real implementation, we would use:
-            // const expiringItems = await API.getExpiringItems(7);
         } catch (error) {
             console.error('Error loading expiring items:', error);
             expiringList.innerHTML = '<li class="expiring-item">Błąd ładowania produktów.</li>';
@@ -310,24 +309,23 @@ const App = {
     },
     
     // Load recent receipts
-    loadRecentReceipts: function() {
+    loadRecentReceipts: async function() {
         const receiptsList = document.getElementById('recent-receipts-list');
         if (!receiptsList) return;
         
         try {
-            // For demo purposes, use mock data
-            const mockReceipts = API.getMockData('/api/receipts/');
+            const recentReceipts = await API.getRecentReceipts(5);
             
             // Clear current list
             receiptsList.innerHTML = '';
             
-            if (mockReceipts.length === 0) {
+            if (!recentReceipts || recentReceipts.length === 0) {
                 receiptsList.innerHTML = '<li class="receipt-item">Brak ostatnich paragonów.</li>';
                 return;
             }
             
             // Add items to list
-            mockReceipts.forEach(receipt => {
+            recentReceipts.forEach(receipt => {
                 const li = document.createElement('li');
                 li.className = 'receipt-item';
                 
@@ -345,8 +343,6 @@ const App = {
                 receiptsList.appendChild(li);
             });
             
-            // In a real implementation, we would use:
-            // const recentReceipts = await API.getRecentReceipts(5);
         } catch (error) {
             console.error('Error loading recent receipts:', error);
             receiptsList.innerHTML = '<li class="receipt-item">Błąd ładowania paragonów.</li>';

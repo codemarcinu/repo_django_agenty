@@ -61,14 +61,17 @@
     border-radius: var(--border-radius-md);
     cursor: pointer;
     transition: background-color var(--transition-fast);
+    border: 1px solid transparent;
 }
 
 .conversation-item:hover {
-    background-color: var(--color-gray-100);
+    background-color: var(--color-gray-200);
 }
 
 .conversation-item.active {
-    background-color: var(--color-gray-200);
+    background-color: var(--color-primary-light);
+    color: var(--color-white);
+    border: 1px solid var(--color-primary);
 }
 
 .chat-main {
@@ -128,18 +131,22 @@
     background-color: var(--color-primary);
     color: var(--color-white);
     border-bottom-right-radius: 0;
+    box-shadow: var(--shadow-sm);
 }
 
 .message.assistant .message-bubble {
     background-color: var(--color-white);
     border-bottom-left-radius: 0;
+    border: 1px solid var(--color-gray-300);
+    box-shadow: var(--shadow-sm);
 }
 
 .message-time {
     font-size: var(--font-size-xs);
-    color: var(--color-gray-600);
+    color: var(--color-gray-700);
     margin-top: var(--spacing-xs);
     text-align: right;
+    font-weight: 500;
 }
 
 .message.user .message-time {
@@ -153,10 +160,11 @@
 .chat-input-container {
     padding: var(--spacing-md);
     background-color: var(--color-white);
-    border-top: 1px solid var(--color-gray-200);
+    border-top: 1px solid var(--color-gray-300);
     display: flex;
     align-items: center;
     gap: var(--spacing-sm);
+    box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.03);
 }
 
 .file-upload-container {
@@ -169,14 +177,14 @@
     justify-content: center;
     width: 36px;
     height: 36px;
-    background-color: var(--color-gray-200);
+    background-color: var(--color-gray-300);
     border-radius: var(--border-radius-md);
     cursor: pointer;
     transition: background-color var(--transition-fast);
 }
 
 .file-upload-label:hover {
-    background-color: var(--color-gray-300);
+    background-color: var(--color-gray-400);
 }
 
 .file-upload-input {
@@ -253,16 +261,16 @@
 }
 
 .upload-container {
-    border: 2px dashed var(--color-gray-300);
+    border: 2px dashed var(--color-gray-400);
     border-radius: var(--border-radius-lg);
     padding: var(--spacing-xl);
     text-align: center;
-    transition: border-color var(--transition-fast);
+    transition: border-color var(--transition-fast), background-color var(--transition-fast);
 }
 
 .upload-container.drag-over {
     border-color: var(--color-primary);
-    background-color: rgba(0, 123, 255, 0.05);
+    background-color: rgba(0, 102, 204, 0.08);
 }
 
 .upload-container i {
@@ -375,28 +383,33 @@
 }
 
 .receipt-status.pending {
-    background-color: var(--color-gray-200);
-    color: var(--color-gray-800);
+    background-color: var(--color-gray-300);
+    color: var(--color-gray-900);
+    font-weight: 500;
 }
 
 .receipt-status.processing {
     background-color: var(--color-info);
     color: var(--color-white);
+    font-weight: 500;
 }
 
 .receipt-status.review {
     background-color: var(--color-warning);
     color: var(--color-gray-900);
+    font-weight: 600;
 }
 
 .receipt-status.completed {
     background-color: var(--color-success);
     color: var(--color-white);
+    font-weight: 500;
 }
 
 .receipt-status.error {
     background-color: var(--color-danger);
     color: var(--color-white);
+    font-weight: 500;
 }
 
 .action-icons {
@@ -410,16 +423,18 @@
     justify-content: center;
     width: 30px;
     height: 30px;
-    background-color: var(--color-gray-200);
+    background-color: var(--color-gray-300);
     border-radius: var(--border-radius-sm);
-    color: var(--color-gray-700);
+    color: var(--color-gray-800);
     transition: all var(--transition-fast);
     cursor: pointer;
+    border: 1px solid var(--color-gray-400);
 }
 
 .action-icon:hover {
     background-color: var(--color-primary);
     color: var(--color-white);
+    border-color: var(--color-primary-dark);
 }
 
 /* Inventory Components */
@@ -462,7 +477,7 @@
     left: 12px;
     top: 50%;
     transform: translateY(-50%);
-    color: var(--color-gray-500);
+    color: var(--color-gray-700);
 }
 
 .filter-container {
@@ -525,22 +540,25 @@
     padding: var(--spacing-xs) var(--spacing-sm);
     border-radius: var(--border-radius-pill);
     font-size: var(--font-size-xs);
-    font-weight: 600;
+    font-weight: 700;
 }
 
 .expiry-good {
     background-color: var(--color-success);
     color: var(--color-white);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 .expiry-warning {
     background-color: var(--color-warning);
     color: var(--color-gray-900);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 .expiry-expired {
     background-color: var(--color-danger);
     color: var(--color-white);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 .product-details {
@@ -586,27 +604,29 @@
     border-radius: var(--border-radius-md);
     padding: var(--spacing-xs) var(--spacing-sm);
     font-size: var(--font-size-sm);
+    font-weight: 600;
     cursor: pointer;
     transition: background-color var(--transition-fast);
 }
 
 .consume-btn:hover {
-    background-color: #218838;
+    background-color: #1a7530;
 }
 
 .edit-btn {
-    background-color: var(--color-gray-200);
-    color: var(--color-gray-800);
+    background-color: var(--color-gray-300);
+    color: var(--color-gray-900);
     border: none;
     border-radius: var(--border-radius-md);
     padding: var(--spacing-xs) var(--spacing-sm);
     font-size: var(--font-size-sm);
+    font-weight: 600;
     cursor: pointer;
     transition: background-color var(--transition-fast);
 }
 
 .edit-btn:hover {
-    background-color: var(--color-gray-300);
+    background-color: var(--color-gray-400);
 }
 
 /* Analytics Components */

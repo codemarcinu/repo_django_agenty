@@ -219,6 +219,7 @@
 /* Dark Mode Support */
 @media (prefers-color-scheme: dark) {
     :root {
+        /* Enhanced dark mode colors for better contrast */
         --color-white: #121212;
         --color-light: #1e1e1e;
         --color-gray-100: #2d2d2d;
@@ -227,18 +228,29 @@
         --color-gray-400: #555555;
         --color-gray-500: #777777;
         --color-gray-600: #999999;
-        --color-gray-700: #aaaaaa;
-        --color-gray-800: #cccccc;
-        --color-gray-900: #eeeeee;
+        --color-gray-700: #bbbbbb;
+        --color-gray-800: #dddddd;
+        --color-gray-900: #f5f5f5;
         --color-dark: #f8f9fa;
         
-        --glass-bg: rgba(0, 0, 0, 0.2);
-        --glass-border: rgba(255, 255, 255, 0.1);
+        /* Adjust color palette for dark mode */
+        --color-primary: #2b8dff;
+        --color-primary-light: #5aa5ff;
+        --color-primary-dark: #0066cc;
+        
+        --color-success: #2ecc71;
+        --color-danger: #e74c3c;
+        --color-warning: #f39c12;
+        --color-info: #3498db;
+        
+        --glass-bg: rgba(0, 0, 0, 0.3);
+        --glass-border: rgba(255, 255, 255, 0.15);
+        --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.3);
     }
     
     body {
-        color: var(--color-gray-300);
-        background-color: var(--color-dark);
+        color: var(--color-gray-800);
+        background-color: var(--color-white);
     }
     
     .card,
@@ -251,6 +263,7 @@
     .welcome-message {
         background-color: var(--color-gray-100) !important;
         border-color: var(--color-gray-300) !important;
+        box-shadow: var(--shadow-md) !important;
     }
     
     .nav-item a,
@@ -260,6 +273,7 @@
     }
     
     .nav-item.active a {
+        background-color: var(--color-primary) !important;
         color: var(--color-white) !important;
     }
     
@@ -276,14 +290,47 @@
         border-color: var(--color-gray-400) !important;
     }
     
+    .stat-item,
+    .action-button {
+        background-color: var(--color-gray-200) !important;
+        border-color: var(--color-gray-400) !important;
+    }
+    
+    /* Ensure proper contrast for text */
+    p, .stat-label, .date-display {
+        color: var(--color-gray-700) !important;
+    }
+    
+    .stat-value {
+        color: var(--color-gray-900) !important;
+    }
+    
+    /* Improve contrast for interactive elements */
+    .primary-btn, .send-btn, .new-chat-btn {
+        background-color: var(--color-primary) !important;
+        color: var(--color-white) !important;
+    }
+    
+    .secondary-btn, .file-upload-label, .action-icon {
+        background-color: var(--color-gray-300) !important;
+        color: var(--color-gray-900) !important;
+        border-color: var(--color-gray-400) !important;
+    }
+    
     /* Invert specific icons for better visibility */
     .sidebar i,
-    .action-button i {
-        color: var(--color-gray-600) !important;
+    .action-button i,
+    .stat-item i {
+        color: var(--color-primary) !important;
     }
     
     .action-button:hover i {
         color: var(--color-white) !important;
+    }
+    
+    /* Enhanced status indicators */
+    .receipt-status, .product-expiry-tag {
+        font-weight: 600 !important;
     }
     
     /* Ensure proper contrast for charts */
@@ -300,13 +347,33 @@
     button,
     .modal-content,
     .form-group input,
-    .form-group select {
+    .form-group select,
+    .product-card,
+    .action-icon,
+    .file-upload-label,
+    .message-bubble,
+    .upload-container,
+    .stat-item {
         border: 1px solid CanvasText !important;
     }
     
-    .nav-item.active a {
+    .nav-item.active a,
+    .primary-btn,
+    .send-btn,
+    .new-chat-btn,
+    .receipt-status,
+    .product-expiry-tag {
         background-color: Highlight !important;
         color: HighlightText !important;
+    }
+    
+    /* Ensure all interactive elements have clear focus states */
+    button:focus,
+    a:focus,
+    input:focus,
+    select:focus,
+    textarea:focus {
+        outline: 2px solid Highlight !important;
     }
 }
 

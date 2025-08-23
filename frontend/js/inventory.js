@@ -65,45 +65,28 @@ const InventoryModule = {
     },
     
     // Load inventory items
-    loadInventoryItems: function() {
+    loadInventoryItems: async function() {
         const inventoryGrid = document.getElementById('inventory-grid');
         if (!inventoryGrid) return;
         
         // Show loading state
         inventoryGrid.innerHTML = '<div class="loading-indicator"><div class="spinner"></div><span>Ładowanie produktów...</span></div>';
         
-        // For demo purposes, use mock data
-        setTimeout(() => {
-            // Get mock data from API
-            const mockData = API.getMockData('/api/inventory/items/');
+        try {
+            const response = await API.getInventoryItems();
             
-            // Process mock data
-            if (mockData && mockData.items) {
-                this.inventoryItems = mockData.items;
+            if (response && response.items && response.items.length > 0) {
+                this.inventoryItems = response.items;
                 this.filteredItems = [...this.inventoryItems];
                 this.renderInventoryItems();
             } else {
-                // No items or error
+                // No items
                 inventoryGrid.innerHTML = '<div class="empty-state">Brak produktów w spiżarni.</div>';
             }
-        }, 500);
-        
-        // In a real implementation, we would use:
-        // try {
-        //     const response = await API.getInventoryItems();
-        //     
-        //     if (response && response.items && response.items.length > 0) {
-        //         this.inventoryItems = response.items;
-        //         this.filteredItems = [...this.inventoryItems];
-        //         this.renderInventoryItems();
-        //     } else {
-        //         // No items
-        //         inventoryGrid.innerHTML = '<div class="empty-state">Brak produktów w spiżarni.</div>';
-        //     }
-        // } catch (error) {
-        //     console.error('Error loading inventory items:', error);
-        //     inventoryGrid.innerHTML = '<div class="error-state">Błąd ładowania produktów.</div>';
-        // }
+        } catch (error) {
+            console.error('Error loading inventory items:', error);
+            inventoryGrid.innerHTML = '<div class="error-state">Błąd ładowania produktów.</div>';
+        }
     },
     
     // Render inventory items
@@ -260,7 +243,7 @@ const InventoryModule = {
     },
     
     // Handle add product form submission
-    handleAddProduct: function(event) {
+    handleAddProduct: async function(event) {
         event.preventDefault();
         
         // Get form data
@@ -276,71 +259,39 @@ const InventoryModule = {
             return;
         }
         
-        // For demo purposes, simulate adding product
-        const newItemId = Date.now();
-        const newItem = {
-            id: newItemId,
-            product: {
-                id: newItemId,
+        try {
+            const productData = {
                 name: productName,
-                category: null
-            },
-            quantity_remaining: productQuantity,
-            unit: productUnit,
-            purchase_date: new Date().toISOString().split('T')[0],
-            expiry_date: productExpiry || null,
-            storage_location: productLocation
-        };
-        
-        // Add to local data
-        this.inventoryItems.unshift(newItem);
-        
-        // Reapply filters
-        this.applyFilters();
-        
-        // Close modal
-        this.closeModal('add-product-modal');
-        
-        // Reset form
-        document.getElementById('add-product-form').reset();
-        
-        // Show success message
-        Utils.showToast(`Produkt "${productName}" został dodany.`, 'success');
-        
-        // In a real implementation, we would use:
-        // try {
-        //     const productData = {
-        //         name: productName,
-        //         quantity: productQuantity,
-        //         unit: productUnit,
-        //         storage_location: productLocation,
-        //         expiry_date: productExpiry || null
-        //     };
-        //     
-        //     const response = await API.addInventoryItem(productData);
-        //     
-        //     // Add new item to list
-        //     this.inventoryItems.unshift(response.item);
-        //     
-        //     // Reapply filters
-        //     this.applyFilters();
-        //     
-        //     // Close modal
-        //     this.closeModal('add-product-modal');
-        //     
-        //     // Reset form
-        //     document.getElementById('add-product-form').reset();
-        //     
-        //     // Show success message
-        //     Utils.showToast(`Produkt "${productName}" został dodany.`, 'success');
-        // } catch (error) {
-        //     console.error('Error adding product:', error);
-        //     Utils.showToast('Błąd dodawania produktu: ' + error.message, 'error');
-        // }
+                quantity: productQuantity,
+                unit: productUnit,
+                storage_location: productLocation,
+                expiry_date: productExpiry || null
+            };
+            
+            const response = await API.addInventoryItem(productData);
+            
+            // Add new item to list
+            this.inventoryItems.unshift(response.item);
+            
+            // Reapply filters
+            this.applyFilters();
+            
+            // Close modal
+            this.closeModal('add-product-modal');
+            
+            // Reset form
+            document.getElementById('add-product-form').reset();
+            
+            // Show success message
+            Utils.showToast(`Produkt "${productName}" został dodany.`, 'success');
+        } catch (error) {
+            console.error('Error adding product:', error);
+            Utils.showToast('Błąd dodawania produktu: ' + error.message, 'error');
+        }
     },
     
     // Show consume modal
-    showConsumeModal: function(item) {
+    showConsumeModal: async function(item) {
         // For demo purposes, use simple confirm dialog
         const consumeQuantity = prompt(`Ile ${item.unit} produktu "${item.product.name}" chcesz zużyć? (maksymalnie ${item.quantity_remaining})`, '1');
         
@@ -363,14 +314,18 @@ const InventoryModule = {
             return;
         }
         
-        // For demo purposes, update local data
-        const itemIndex = this.inventoryItems.findIndex(i => i.id === item.id);
-        if (itemIndex !== -1) {
-            this.inventoryItems[itemIndex].quantity_remaining -= quantity;
+        try {
+            await API.consumeInventoryItem(item.id, quantity);
             
-            // If quantity is 0, remove item
-            if (this.inventoryItems[itemIndex].quantity_remaining <= 0) {
-                this.inventoryItems.splice(itemIndex, 1);
+            // Update local data
+            const itemIndex = this.inventoryItems.findIndex(i => i.id === item.id);
+            if (itemIndex !== -1) {
+                this.inventoryItems[itemIndex].quantity_remaining -= quantity;
+                
+                // If quantity is 0, remove item
+                if (this.inventoryItems[itemIndex].quantity_remaining <= 0) {
+                    this.inventoryItems.splice(itemIndex, 1);
+                }
             }
             
             // Reapply filters
@@ -378,32 +333,10 @@ const InventoryModule = {
             
             // Show success message
             Utils.showToast(`Zużyto ${quantity} ${item.unit} produktu "${item.product.name}".`, 'success');
+        } catch (error) {
+            console.error('Error consuming item:', error);
+            Utils.showToast('Błąd zużycia produktu: ' + error.message, 'error');
         }
-        
-        // In a real implementation, we would use:
-        // try {
-        //     await API.consumeInventoryItem(item.id, quantity);
-        //     
-        //     // Update local data
-        //     const itemIndex = this.inventoryItems.findIndex(i => i.id === item.id);
-        //     if (itemIndex !== -1) {
-        //         this.inventoryItems[itemIndex].quantity_remaining -= quantity;
-        //         
-        //         // If quantity is 0, remove item
-        //         if (this.inventoryItems[itemIndex].quantity_remaining <= 0) {
-        //             this.inventoryItems.splice(itemIndex, 1);
-        //         }
-        //     }
-        //     
-        //     // Reapply filters
-        //     this.applyFilters();
-        //     
-        //     // Show success message
-        //     Utils.showToast(`Zużyto ${quantity} ${item.unit} produktu "${item.product.name}".`, 'success');
-        // } catch (error) {
-        //     console.error('Error consuming item:', error);
-        //     Utils.showToast('Błąd zużycia produktu: ' + error.message, 'error');
-        // }
     },
     
     // Show edit modal

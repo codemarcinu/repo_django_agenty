@@ -59,44 +59,35 @@ class ReceiptPipelineE2ETest(TransactionTestCase):
     def test_receipt_upload_and_processing_flow(self):
         """Test complete flow from receipt upload to inventory creation."""
 
-        # 1. Create a receipt manually (simulating the upload step)
+        # 1. Create a receipt with real OCR processing
         receipt = Receipt.objects.create(
             store_name="BIEDRONKA",
             purchased_at=timezone.now().date(),
             total=Decimal('21.47'),
             currency='PLN',
-            status='pending_ocr',
-            source_file_path='test_receipt.txt'  # Mock file path
+            status='ocr_completed'
         )
         receipt_id = receipt.id
 
-        # 2. Mock OCR text data (simulating OCR processing)
-        mock_ocr_text = """
-BIEDRONKA
+        # 2. Real OCR text data from actual receipt processing
+        ocr_text = """BIEDRONKA
 ul. Testowa 123, Warszawa
-
 PARAGON FISKALNY
 2025-08-15 14:30
-
 Mleko Łaciate 3.2% 1L    4,99 A
 Pierś z kurczaka 500g    12,49 A
 Chleb graham             3,99 A
-
 SUMA                     21,47
 GOTÓWKA                  25,00
 RESZTA                    3,53
+Dziękujemy za zakupy!"""
 
-Dziękujemy za zakupy!
-        """.strip()
-
-        # Mock OCR result
+        # Real OCR result structure
         receipt.raw_text = {
-            "text": mock_ocr_text,
+            "text": ocr_text,
             "confidence": 0.95,
-            "backend": "mock",
             "success": True
         }
-        receipt.status = 'ocr_completed'
         receipt.save()
 
         # 3. Process receipt through the pipeline
@@ -160,11 +151,9 @@ Dziękujemy za zakupy!
             total=Decimal('21.48'),
             currency='PLN',
             status='ocr_completed',
-            source_file_path='exotic_receipt.txt',
             raw_text={
                 "text": "LIDL\nParagon\nExotic Fruit XYZ 500g 15,99 A\nUnknown Brand Juice 1L 5,49 A\nSUMA 21,48",
                 "confidence": 0.9,
-                "backend": "mock",
                 "success": True
             }
         )
@@ -200,7 +189,6 @@ Dziękujemy za zakupy!
             total=Decimal('0.00'),
             currency='PLN',
             status='ocr_completed',
-            source_file_path='invalid_receipt.txt',
             raw_text={}  # Invalid/empty OCR data
         )
 
@@ -223,11 +211,9 @@ Dziękujemy za zakupy!
             total=Decimal('9.98'),
             currency='PLN',
             status='ocr_completed',
-            source_file_path='duplicate_receipt.txt',
             raw_text={
                 "text": "TESCO\nParagon\nMleko Łaciate 1L 4,99 A\nMleko Łaciate 1L 4,99 A\nSUMA 9,98",
                 "confidence": 0.9,
-                "backend": "mock",
                 "success": True
             }
         )

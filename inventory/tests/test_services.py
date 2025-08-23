@@ -1,7 +1,6 @@
 import pytest
 from datetime import date, timedelta
 from decimal import Decimal
-from unittest.mock import patch, MagicMock
 
 from django.test import TestCase, TransactionTestCase
 from django.utils import timezone

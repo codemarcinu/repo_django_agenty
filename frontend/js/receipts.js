@@ -147,63 +147,35 @@ const ReceiptsModule = {
     },
     
     // Upload receipt
-    uploadReceipt: function(file) {
-        // For demo purposes, simulate upload
-        let progress = 0;
-        const interval = setInterval(() => {
-            progress += 5;
-            this.updateProgress(Math.min(progress, 100));
+    uploadReceipt: async function(file) {
+        try {
+            const response = await API.uploadReceipt(file, (progress) => {
+                this.updateProgress(progress);
+            });
             
-            if (progress >= 100) {
-                clearInterval(interval);
-                
-                // Simulate processing time
-                setTimeout(() => {
-                    // Generate mock receipt ID
-                    const receiptId = Date.now();
-                    this.currentReceiptId = receiptId;
-                    
-                    // Update processing status
-                    const processingStatus = document.getElementById('receipt-processing-status');
-                    if (processingStatus) {
-                        processingStatus.dataset.receiptId = receiptId;
-                    }
-                    
-                    // Simulate processing steps
-                    this.simulateProcessingSteps(receiptId);
-                }, 500);
+            // Update current receipt ID
+            this.currentReceiptId = response.receipt_id;
+            
+            // Update processing status
+            const processingStatus = document.getElementById('receipt-processing-status');
+            if (processingStatus) {
+                processingStatus.dataset.receiptId = response.receipt_id;
             }
-        }, 150);
-        
-        // In a real implementation, we would use:
-        // try {
-        //     const response = await API.uploadReceipt(file, (progress) => {
-        //         this.updateProgress(progress);
-        //     });
-        //     
-        //     // Update current receipt ID
-        //     this.currentReceiptId = response.receipt_id;
-        //     
-        //     // Update processing status
-        //     const processingStatus = document.getElementById('receipt-processing-status');
-        //     if (processingStatus) {
-        //         processingStatus.dataset.receiptId = response.receipt_id;
-        //     }
-        //     
-        //     // Start polling for status
-        //     this.pollReceiptStatus(response.receipt_id);
-        //     
-        //     // Show success message
-        //     Utils.showToast('Paragon został przesłany. Trwa przetwarzanie...', 'info');
-        // } catch (error) {
-        //     console.error('Error uploading receipt:', error);
-        //     
-        //     // Show error message
-        //     Utils.showToast('Błąd przesyłania paragonu: ' + error.message, 'error');
-        //     
-        //     // Hide processing status and show upload area
-        //     this.resetUploadArea();
-        // }
+            
+            // Start polling for status
+            this.pollReceiptStatus(response.receipt_id);
+            
+            // Show success message
+            Utils.showToast('Paragon został przesłany. Trwa przetwarzanie...', 'info');
+        } catch (error) {
+            console.error('Error uploading receipt:', error);
+            
+            // Show error message
+            Utils.showToast('Błąd przesyłania paragonu: ' + error.message, 'error');
+            
+            // Hide processing status and show upload area
+            this.resetUploadArea();
+        }
     },
     
     // Poll receipt status
@@ -343,57 +315,20 @@ const ReceiptsModule = {
     },
     
     // Load receipts list
-    loadReceiptsList: function() {
+    loadReceiptsList: async function() {
         const tableBody = document.getElementById('receipts-table-body');
         if (!tableBody) return;
         
         // Show loading state
         tableBody.innerHTML = '<tr><td colspan="5" class="loading-cell">Ładowanie paragonów...</td></tr>';
         
-        // For demo purposes, use mock data
-        setTimeout(() => {
-            const mockReceipts = [
-                {
-                    id: 1,
-                    store_name: 'Lidl',
-                    purchased_at: '2025-08-21T14:23:45',
-                    total: 156.78,
-                    currency: 'PLN',
-                    status: 'completed',
-                    line_items_count: 12
-                },
-                {
-                    id: 2,
-                    store_name: 'Biedronka',
-                    purchased_at: '2025-08-18T10:15:30',
-                    total: 87.45,
-                    currency: 'PLN',
-                    status: 'completed',
-                    line_items_count: 8
-                },
-                {
-                    id: 3,
-                    store_name: 'Auchan',
-                    purchased_at: '2025-08-15T16:40:12',
-                    total: 211.30,
-                    currency: 'PLN',
-                    status: 'error',
-                    error_message: 'Błąd rozpoznawania OCR',
-                    line_items_count: 0
-                }
-            ];
-            
-            this.renderReceiptsList(mockReceipts);
-        }, 500);
-        
-        // In a real implementation, we would use:
-        // try {
-        //     const response = await API.getRecentReceipts(50); // Get up to 50 receipts
-        //     this.renderReceiptsList(response);
-        // } catch (error) {
-        //     console.error('Error loading receipts:', error);
-        //     tableBody.innerHTML = '<tr><td colspan="5" class="loading-cell">Błąd ładowania paragonów.</td></tr>';
-        // }
+        try {
+            const response = await API.getRecentReceipts(50); // Get up to 50 receipts
+            this.renderReceiptsList(response);
+        } catch (error) {
+            console.error('Error loading receipts:', error);
+            tableBody.innerHTML = '<tr><td colspan="5" class="loading-cell">Błąd ładowania paragonów.</td></tr>';
+        }
     },
     
     // Render receipts list
@@ -528,33 +463,24 @@ const ReceiptsModule = {
     },
     
     // Confirm delete receipt
-    confirmDeleteReceipt: function(receiptId) {
+    confirmDeleteReceipt: async function(receiptId) {
         console.log('Confirm delete receipt:', receiptId);
         
-        // For demo purposes, just show confirmation
         if (confirm('Czy na pewno chcesz usunąć ten paragon?')) {
-            // For demo, remove from local list and update UI
-            this.receiptsList = this.receiptsList.filter(r => r.id !== receiptId);
-            this.renderReceiptsList(this.receiptsList);
-            
-            // Show success message
-            Utils.showToast('Paragon został usunięty.', 'success');
+            try {
+                await API.deleteReceipt(receiptId);
+                
+                // Update local list
+                this.receiptsList = this.receiptsList.filter(r => r.id !== receiptId);
+                this.renderReceiptsList(this.receiptsList);
+                
+                // Show success message
+                Utils.showToast('Paragon został usunięty.', 'success');
+            } catch (error) {
+                console.error('Error deleting receipt:', error);
+                Utils.showToast('Błąd usuwania paragonu.', 'error');
+            }
         }
-        
-        // In a real implementation, we would:
-        // try {
-        //     await API.deleteReceipt(receiptId);
-        //     
-        //     // Update local list
-        //     this.receiptsList = this.receiptsList.filter(r => r.id !== receiptId);
-        //     this.renderReceiptsList(this.receiptsList);
-        //     
-        //     // Show success message
-        //     Utils.showToast('Paragon został usunięty.', 'success');
-        // } catch (error) {
-        //     console.error('Error deleting receipt:', error);
-        //     Utils.showToast('Błąd usuwania paragonu.', 'error');
-        // }
     },
     
     // Simulate processing steps for demo

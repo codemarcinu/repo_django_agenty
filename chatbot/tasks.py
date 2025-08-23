@@ -320,25 +320,19 @@ def continue_receipt_processing_after_ocr_review(receipt_id: int):
         # Use the updated OCR text (if user edited it)
         ocr_text = receipt.raw_ocr_text
 
-        # Create a mock OCRResult with the updated text
-        class MockOCRResult:
-            def __init__(self, text):
-                self.text = text
-                self.success = True
-
-        ocr_result = MockOCRResult(ocr_text)
+        # Create a proper OCRResult with the updated text
+        ocr_result = OCRResult(
+            text=ocr_text,
+            confidence=0.9,
+            backend="user_reviewed",
+            processing_time=0.0,
+            metadata={"source": "user_edited"},
+            success=True
+        )
 
         # --- KROK 2: QUALITY GATE ---
         logger.info(f" [2/4] QUALITY GATE | Receipt ID: {receipt_id}")
         receipt.mark_as_processing(step="quality_gate")
-
-        if not isinstance(ocr_result, OCRResult):
-            # Convert mock result to proper OCRResult
-            ocr_result = OCRResult(
-                full_text=ocr_text,
-                lines=ocr_text.split('\n'),
-                confidences=[0.8] * len(ocr_text.split('\n'))  # Default confidence
-            )
 
         quality_gate = QualityGateService(ocr_result)
         quality_score = quality_gate.calculate_quality_score()

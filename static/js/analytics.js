@@ -36,35 +36,23 @@ const AnalyticsModule = {
     },
     
     // Load analytics data
-    loadAnalyticsData: function() {
+    loadAnalyticsData: async function() {
         // Show loading indicators
         this.showLoadingState();
         
-        // For demo purposes, use mock data
-        setTimeout(() => {
-            // Generate mock data
-            const mockData = this.generateMockData();
+        try {
+            const analyticsData = await API.getAnalyticsData(this.timeRange);
+            const topProducts = await API.getTopProducts(10);
+            const wasteData = await API.getWasteData();
             
             // Render charts and data
-            this.renderCharts(mockData);
-            this.renderTopProducts(mockData.topProducts);
-            this.renderWasteData(mockData.wasteData);
-        }, 800);
-        
-        // In a real implementation, we would use:
-        // try {
-        //     const analyticsData = await API.getAnalyticsData(this.timeRange);
-        //     const topProducts = await API.getTopProducts(10);
-        //     const wasteData = await API.getWasteData();
-        //     
-        //     // Render charts and data
-        //     this.renderCharts(analyticsData);
-        //     this.renderTopProducts(topProducts);
-        //     this.renderWasteData(wasteData);
-        // } catch (error) {
-        //     console.error('Error loading analytics data:', error);
-        //     this.showError('Błąd ładowania danych analitycznych.');
-        // }
+            this.renderCharts(analyticsData);
+            this.renderTopProducts(topProducts);
+            this.renderWasteData(wasteData);
+        } catch (error) {
+            console.error('Error loading analytics data:', error);
+            this.showError('Błąd ładowania danych analitycznych.');
+        }
     },
     
     // Show loading state
@@ -368,75 +356,6 @@ const AnalyticsModule = {
         });
     },
     
-    // Generate mock data for demo
-    generateMockData: function() {
-        // Generate dates array based on time range
-        const dates = this.generateDateLabels();
-        
-        // Spending data
-        const spending = {
-            labels: dates,
-            values: dates.map(() => Math.floor(Math.random() * 200) + 50)
-        };
-        
-        // Category data
-        const categories = {
-            labels: ['Nabiał', 'Pieczywo', 'Owoce', 'Warzywa', 'Mięso', 'Napoje', 'Słodycze'],
-            values: [350, 275, 320, 230, 480, 190, 120]
-        };
-        
-        // Consumption data
-        const consumption = {
-            labels: dates,
-            datasets: [
-                {
-                    label: 'Nabiał',
-                    data: dates.map(() => Math.floor(Math.random() * 5) + 1),
-                    backgroundColor: 'rgba(0, 123, 255, 0.6)'
-                },
-                {
-                    label: 'Pieczywo',
-                    data: dates.map(() => Math.floor(Math.random() * 3) + 1),
-                    backgroundColor: 'rgba(40, 167, 69, 0.6)'
-                },
-                {
-                    label: 'Owoce',
-                    data: dates.map(() => Math.floor(Math.random() * 4) + 2),
-                    backgroundColor: 'rgba(255, 193, 7, 0.6)'
-                }
-            ]
-        };
-        
-        // Top products
-        const topProducts = [
-            { name: 'Mleko 3.2%', category: 'Nabiał', count: 12 },
-            { name: 'Chleb pszenny', category: 'Pieczywo', count: 10 },
-            { name: 'Banany', category: 'Owoce', count: 8 },
-            { name: 'Jogurt naturalny', category: 'Nabiał', count: 7 },
-            { name: 'Pomidory', category: 'Warzywa', count: 6 },
-            { name: 'Woda mineralna', category: 'Napoje', count: 5 },
-            { name: 'Ser żółty', category: 'Nabiał', count: 5 },
-            { name: 'Jabłka', category: 'Owoce', count: 4 },
-            { name: 'Masło', category: 'Nabiał', count: 4 },
-            { name: 'Ziemniaki', category: 'Warzywa', count: 3 }
-        ];
-        
-        // Waste data
-        const wasteData = [
-            { product: 'Chleb pszenny', date: '2025-08-15', quantity: 0.5, unit: 'szt' },
-            { product: 'Jogurt naturalny', date: '2025-08-10', quantity: 2, unit: 'szt' },
-            { product: 'Sałata', date: '2025-08-08', quantity: 1, unit: 'szt' },
-            { product: 'Mleko 3.2%', date: '2025-08-05', quantity: 0.3, unit: 'l' }
-        ];
-        
-        return {
-            spending,
-            categories,
-            consumption,
-            topProducts,
-            wasteData
-        };
-    },
     
     // Generate date labels based on selected time range
     generateDateLabels: function() {

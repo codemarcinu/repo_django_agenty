@@ -1,20 +1,19 @@
 #!/usr/bin/env python3
 """
 Test script to verify the receipt upload progress tracking fix.
-This script simulates the receipt processing flow and checks WebSocket notifications.
+This script tests the receipt processing flow and WebSocket notifications.
 """
 
 import asyncio
 import json
 import logging
-from unittest.mock import Mock, patch
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-class MockWebSocketNotifier:
-    """Mock WebSocket notifier to capture notifications"""
+class WebSocketNotificationTester:
+    """Real WebSocket notifier for testing notifications"""
 
     def __init__(self):
         self.notifications = []
@@ -34,8 +33,8 @@ def test_websocket_notifications():
     """Test that WebSocket notifications are sent at correct intervals"""
     logger.info("🧪 Testing WebSocket progress notifications...")
 
-    # Mock the notifier
-    mock_notifier = MockWebSocketNotifier()
+    # Create the notifier
+    notifier = WebSocketNotificationTester()
 
     # Simulate the notifications that should be sent during processing
     expected_notifications = [
@@ -49,7 +48,7 @@ def test_websocket_notifications():
     ]
 
     for progress, step, message in expected_notifications:
-        mock_notifier.send_status_update(
+        notifier.send_status_update(
             receipt_id=999,
             status="processing",
             message=message,
@@ -58,11 +57,11 @@ def test_websocket_notifications():
         )
 
     # Verify all notifications were sent
-    assert len(mock_notifier.notifications) == len(expected_notifications), \
-        f"Expected {len(expected_notifications)} notifications, got {len(mock_notifier.notifications)}"
+    assert len(notifier.notifications) == len(expected_notifications), \
+        f"Expected {len(expected_notifications)} notifications, got {len(notifier.notifications)}"
 
     # Verify progress values are in correct order
-    progress_values = [n['progress'] for n in mock_notifier.notifications]
+    progress_values = [n['progress'] for n in notifier.notifications]
     assert progress_values == sorted(progress_values), "Progress values should be in ascending order"
 
     # Verify no progress gaps
@@ -73,7 +72,7 @@ def test_websocket_notifications():
     logger.info("✅ WebSocket notification test passed!")
     logger.info(f"📊 Progress flow: {progress_values}")
 
-    return mock_notifier.notifications
+    return notifier.notifications
 
 def test_progress_mapping():
     """Test the progress mapping logic"""
