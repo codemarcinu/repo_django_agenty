@@ -86,6 +86,15 @@ const API = {
     async getAgents() {
         return this.fetch(`${this.BASE_URL}/agents/`);
     },
+
+    /**
+     * Get list of conversations
+     * @returns {Promise} Promise resolving to conversations list
+     */
+    async getConversations() {
+        const response = await this.fetch(`${this.BASE_URL}/conversations/`);
+        return response.success ? response.conversations : [];
+    },
     
     /**
      * Create a new conversation with an agent
@@ -232,8 +241,8 @@ const API = {
      * @returns {Promise} Promise resolving to receipts list
      */
     async getRecentReceipts(limit = 10) {
-        // Note: This endpoint would need to be added to the backend
-        return this.fetch(`${this.BASE_URL}/receipts/?limit=${limit}`);
+        const response = await this.fetch(`${this.BASE_URL}/receipts/?limit=${limit}`);
+        return response.success ? response.receipts : [];
     },
     
     /**
@@ -264,11 +273,11 @@ const API = {
             .filter(([_, value]) => value !== null && value !== undefined && value !== '')
             .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`)
             .join('&');
-        
+
         const queryString = queryParams ? `?${queryParams}` : '';
-        
-        // Note: This endpoint would need to be added to the backend
-        return this.fetch(`${this.BASE_URL}/inventory/items/${queryString}`);
+
+        const response = await this.fetch(`${this.BASE_URL}/inventory/items/${queryString}`);
+        return response.success ? response.items : [];
     },
     
     /**
@@ -289,47 +298,47 @@ const API = {
      * @returns {Promise} Promise resolving to inventory statistics
      */
     async getInventoryStatistics() {
-        // Note: This endpoint would need to be added to the backend
-        return this.fetch(`${this.BASE_URL}/inventory/statistics/`);
+        const response = await this.fetch(`${this.BASE_URL}/inventory/statistics/`);
+        return response.success ? response.statistics : {};
     },
-    
+
     /**
      * Get expiring items
      * @param {number} days - Days threshold
      * @returns {Promise} Promise resolving to expiring items
      */
     async getExpiringItems(days = 7) {
-        // Note: This endpoint would need to be added to the backend
-        return this.fetch(`${this.BASE_URL}/inventory/expiring/?days=${days}`);
+        const response = await this.fetch(`${this.BASE_URL}/inventory/expiring/?days=${days}`);
+        return response.success ? response.items : [];
     },
-    
+
     /**
      * Get analytics data
      * @param {string} timeRange - Time range for analytics
      * @returns {Promise} Promise resolving to analytics data
      */
     async getAnalyticsData(timeRange = '30days') {
-        // Note: This endpoint would need to be added to the backend
-        return this.fetch(`${this.BASE_URL}/analytics/?time_range=${timeRange}`);
+        const response = await this.fetch(`${this.BASE_URL}/analytics/?time_range=${timeRange}`);
+        return response.success ? response.analytics : {};
     },
-    
+
     /**
      * Get top purchased products
      * @param {number} limit - Maximum number of products
      * @returns {Promise} Promise resolving to top products
      */
     async getTopProducts(limit = 10) {
-        // Note: This endpoint would need to be added to the backend
-        return this.fetch(`${this.BASE_URL}/analytics/top-products/?limit=${limit}`);
+        const response = await this.fetch(`${this.BASE_URL}/analytics/top-products/?limit=${limit}`);
+        return response.success ? response.analytics.top_products : [];
     },
-    
+
     /**
      * Get waste tracking data
      * @returns {Promise} Promise resolving to waste data
      */
     async getWasteData() {
-        // Note: This endpoint would need to be added to the backend
-        return this.fetch(`${this.BASE_URL}/analytics/waste/`);
+        const response = await this.fetch(`${this.BASE_URL}/analytics/waste/`);
+        return response.success ? response.analytics : { waste_items: 0 };
     },
     
     /**

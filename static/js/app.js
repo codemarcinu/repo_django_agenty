@@ -241,17 +241,21 @@ const App = {
     loadDashboardStatistics: async function() {
         try {
             const stats = await API.getInventoryStatistics();
-            
+
             // Update statistics in the UI
             document.getElementById('total-inventory-count').textContent = stats.total_items || 0;
             document.getElementById('expiring-soon-count').textContent = stats.expiring_soon_count || 0;
             document.getElementById('receipts-count').textContent = stats.receipts_count || 0;
             document.getElementById('alerts-count').textContent = (stats.expired_count || 0) + (stats.low_stock_count || 0);
-            
+
         } catch (error) {
             console.error('Error loading dashboard statistics:', error);
+            // Check if it's a 500 error from the backend
+            if (error.message && error.message.includes('500')) {
+                console.warn('Backend API returned 500 error for inventory statistics - this might be expected if database is not set up');
+            }
             Utils.showToast('Nie udało się załadować statystyk.', 'error');
-            
+
             // Set default values on error
             document.getElementById('total-inventory-count').textContent = '0';
             document.getElementById('expiring-soon-count').textContent = '0';
@@ -280,11 +284,11 @@ const App = {
             expiringItems.forEach(item => {
                 const li = document.createElement('li');
                 li.className = 'expiring-item';
-                
-                const daysUntil = Utils.daysUntilExpiry(item.expiry_date);
+
+                const daysUntil = item.days_until_expiry;
                 const expiryText = Utils.getExpiryText(item.expiry_date);
                 const statusClass = Utils.getExpiryStatusClass(item.expiry_date);
-                
+
                 li.innerHTML = `
                     <div class="expiring-item-header">
                         <span class="item-name">${item.product.name}</span>
@@ -293,12 +297,12 @@ const App = {
                     <div class="expiring-item-details">
                         <span class="item-quantity">${item.quantity_remaining} ${item.unit}</span>
                         <span class="item-location">
-                            <i class="fas ${this.getLocationIcon(item.storage_location)}"></i>
-                            ${this.getLocationName(item.storage_location)}
+                            <i class="fas fa-clock"></i>
+                            ${daysUntil} dni
                         </span>
                     </div>
                 `;
-                
+
                 expiringList.appendChild(li);
             });
             
@@ -328,18 +332,25 @@ const App = {
             recentReceipts.forEach(receipt => {
                 const li = document.createElement('li');
                 li.className = 'receipt-item';
-                
+
+                // Use available fields from backend response
+                const storeName = receipt.store_name || receipt.filename || 'Nieznany sklep';
+                const totalAmount = receipt.total_amount || receipt.total || 0;
+                const currency = receipt.currency || 'PLN';
+                const purchaseDate = receipt.purchased_at || receipt.created_at;
+                const lineItemsCount = receipt.line_items_count || 'Nieznana';
+
                 li.innerHTML = `
                     <div class="receipt-item-header">
-                        <span class="receipt-store">${receipt.store_name}</span>
-                        <span class="receipt-total">${Utils.formatCurrency(receipt.total, receipt.currency)}</span>
+                        <span class="receipt-store">${storeName}</span>
+                        <span class="receipt-total">${Utils.formatCurrency(totalAmount, currency)}</span>
                     </div>
                     <div class="receipt-item-details">
-                        <span class="receipt-date">${Utils.formatDate(receipt.purchased_at, true)}</span>
-                        <span class="receipt-items-count">${receipt.line_items_count} produktów</span>
+                        <span class="receipt-date">${Utils.formatDate(purchaseDate, true)}</span>
+                        <span class="receipt-items-count">${lineItemsCount} produktów</span>
                     </div>
                 `;
-                
+
                 receiptsList.appendChild(li);
             });
             

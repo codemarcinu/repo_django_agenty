@@ -20,7 +20,7 @@ from rest_framework.decorators import (
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.generics import ListAPIView
 
-from inventory.models import InventoryItem, Receipt
+from inventory.models import InventoryItem, Receipt, ConsumptionEvent
 
 from ..conversation_manager import conversation_manager
 from ..models import Agent, Document  # Import Document model
@@ -269,6 +269,36 @@ class ConversationInfoView(View):
             )
 
 
+class ConversationListView(View):
+    """API view for listing conversations"""
+
+    async def get(self, request: HttpRequest):
+        try:
+            # Get user_id from request (for now, use anonymous)
+            user_id = request.GET.get("user_id", "anonymous")
+
+            # Get conversations from conversation manager
+            conversations_data = await conversation_manager.get_user_conversations(user_id)
+
+            # Format conversations for frontend
+            conversations = []
+            for conv in conversations_data:
+                conversations.append({
+                    "id": conv.get("session_id"),
+                    "title": conv.get("title", "Nowa rozmowa"),
+                    "timestamp": conv.get("created_at"),
+                    "last_message": conv.get("last_message", ""),
+                    "message_count": conv.get("message_count", 0)
+                })
+
+            return JsonResponse({"success": True, "conversations": conversations})
+        except Exception as e:
+            logger.error(f"Error listing conversations: {str(e)}")
+            return JsonResponse(
+                {"success": False, "error": "Internal server error"}, status=500
+            )
+
+
 class ConsumeInventoryView(View):
     """API endpoint for consuming inventory items - POST /api/inventory/{id}/consume"""
 
@@ -351,3 +381,281 @@ class ConsumeInventoryView(View):
 class DocumentListAPIView(ListAPIView):
     queryset = Document.objects.all()
     serializer_class = DocumentSerializer
+
+
+class InventoryItemsView(View):
+    """API view for listing inventory items"""
+
+    def get(self, request: HttpRequest):
+        try:
+            # Get query parameters
+            limit = int(request.GET.get('limit', 50))
+            offset = int(request.GET.get('offset', 0))
+
+            # Get inventory items with product information
+            inventory_items = InventoryItem.objects.select_related('product').order_by('-created_at')[offset:offset+limit]
+
+            items = []
+            for item in inventory_items:
+                items.append({
+                    'id': item.id,
+                    'product': {
+                        'id': item.product.id,
+                        'name': item.product.name,
+                        'category': item.product.category.name if item.product.category else None
+                    },
+                    'quantity_remaining': float(item.quantity_remaining),
+                    'unit': item.unit,
+                    'expiry_date': item.expiry_date.isoformat() if item.expiry_date else None,
+                    'created_at': item.created_at.isoformat(),
+                    'notes': item.notes
+                })
+
+            return JsonResponse({
+                'success': True,
+                'items': items,
+                'count': len(items)
+            })
+        except Exception as e:
+            logger.error(f"Error listing inventory items: {str(e)}")
+            return JsonResponse(
+                {'success': False, 'error': 'Internal server error'}, status=500
+            )
+
+    def post(self, request: HttpRequest):
+        try:
+            data = json.loads(request.body.decode("utf-8"))
+
+            # Validate required fields
+            required_fields = ['product_id', 'quantity', 'unit']
+            for field in required_fields:
+                if field not in data:
+                    return JsonResponse(
+                        {'success': False, 'error': f'{field} is required'},
+                        status=400
+                    )
+
+            # Create inventory item
+            inventory_item = InventoryItem.objects.create(
+                product_id=data['product_id'],
+                quantity_remaining=data['quantity'],
+                unit=data['unit'],
+                expiry_date=data.get('expiry_date'),
+                notes=data.get('notes', '')
+            )
+
+            return JsonResponse({
+                'success': True,
+                'message': 'Inventory item created successfully',
+                'item_id': inventory_item.id
+            }, status=201)
+
+        except json.JSONDecodeError:
+            return JsonResponse(
+                {'success': False, 'error': 'Invalid JSON in request body'},
+                status=400
+            )
+        except Exception as e:
+            logger.error(f"Error creating inventory item: {str(e)}")
+            return JsonResponse(
+                {'success': False, 'error': 'Internal server error'}, status=500
+            )
+
+
+class InventoryStatisticsView(View):
+    """API view for inventory statistics"""
+
+    def get(self, request: HttpRequest):
+        try:
+            from django.db.models import Sum, Count
+            from django.utils import timezone
+            import datetime
+
+            # Calculate statistics
+            total_items = InventoryItem.objects.count()
+            total_value = InventoryItem.objects.aggregate(
+                total=Sum('quantity_remaining')
+            )['total'] or 0
+
+            # Expiring items (next 7 days)
+            week_from_now = timezone.now() + datetime.timedelta(days=7)
+            expiring_count = InventoryItem.objects.filter(
+                expiry_date__lte=week_from_now,
+                expiry_date__gte=timezone.now()
+            ).count()
+
+            # Low stock items (less than 1)
+            low_stock_count = InventoryItem.objects.filter(
+                quantity_remaining__lt=1
+            ).count()
+
+            return JsonResponse({
+                'success': True,
+                'statistics': {
+                    'total_items': total_items,
+                    'total_quantity': float(total_value),
+                    'expiring_items': expiring_count,
+                    'low_stock_items': low_stock_count
+                }
+            })
+        except Exception as e:
+            logger.error(f"Error getting inventory statistics: {str(e)}")
+            return JsonResponse(
+                {'success': False, 'error': 'Internal server error'}, status=500
+            )
+
+
+class ExpiringItemsView(View):
+    """API view for getting expiring items"""
+
+    def get(self, request: HttpRequest):
+        try:
+            from django.utils import timezone
+            import datetime
+
+            # Get days parameter (default 7)
+            days = int(request.GET.get('days', 7))
+            target_date = timezone.now() + datetime.timedelta(days=days)
+
+            # Get expiring items
+            expiring_items = InventoryItem.objects.select_related('product').filter(
+                expiry_date__lte=target_date,
+                expiry_date__gte=timezone.now(),
+                quantity_remaining__gt=0
+            ).order_by('expiry_date')
+
+            items = []
+            for item in expiring_items:
+                days_until_expiry = (item.expiry_date - timezone.now()).days
+                items.append({
+                    'id': item.id,
+                    'product': {
+                        'id': item.product.id,
+                        'name': item.product.name
+                    },
+                    'quantity_remaining': float(item.quantity_remaining),
+                    'unit': item.unit,
+                    'expiry_date': item.expiry_date.isoformat(),
+                    'days_until_expiry': days_until_expiry,
+                    'notes': item.notes
+                })
+
+            return JsonResponse({
+                'success': True,
+                'items': items,
+                'count': len(items)
+            })
+        except Exception as e:
+            logger.error(f"Error getting expiring items: {str(e)}")
+            return JsonResponse(
+                {'success': False, 'error': 'Internal server error'}, status=500
+            )
+
+
+class RecentReceiptsView(View):
+    """API view for getting recent receipts"""
+
+    def get(self, request: HttpRequest):
+        try:
+            limit = int(request.GET.get('limit', 10))
+
+            # Get recent receipts
+            receipts = Receipt.objects.order_by('-created_at')[:limit]
+
+            receipts_list = []
+            for receipt in receipts:
+                receipts_list.append({
+                    'id': receipt.id,
+                    'filename': receipt.receipt_file.name if receipt.receipt_file else 'Nieznany plik',
+                    'store_name': receipt.store_name,
+                    'status': receipt.status,
+                    'total_amount': float(receipt.total) if receipt.total else None,
+                    'currency': receipt.currency,
+                    'created_at': receipt.created_at.isoformat(),
+                    'purchased_at': receipt.purchased_at.isoformat() if receipt.purchased_at else None,
+                    'processed_at': receipt.processed_at.isoformat() if receipt.processed_at else None,
+                    'processing_notes': receipt.processing_notes,
+                    'line_items_count': receipt.line_items.count()
+                })
+
+            return JsonResponse({
+                'success': True,
+                'receipts': receipts_list,
+                'count': len(receipts_list)
+            })
+        except Exception as e:
+            logger.error(f"Error getting recent receipts: {str(e)}")
+            return JsonResponse(
+                {'success': False, 'error': 'Internal server error'}, status=500
+            )
+
+
+class AnalyticsView(View):
+    """API view for analytics data"""
+
+    def get(self, request: HttpRequest):
+        try:
+            from django.utils import timezone
+            import datetime
+            from django.db.models import Sum
+
+            # Get time range
+            time_range = request.GET.get('time_range', '30days')
+
+            # Calculate date range
+            if time_range == '7days':
+                days = 7
+            elif time_range == '30days':
+                days = 30
+            elif time_range == '90days':
+                days = 90
+            else:
+                days = 30
+
+            start_date = timezone.now() - datetime.timedelta(days=days)
+
+            # Get consumption data
+            consumption_events = ConsumptionEvent.objects.filter(
+                consumed_at__gte=start_date
+            ).select_related('inventory_item__product')
+
+            # Calculate analytics
+            total_consumed = consumption_events.aggregate(
+                total=Sum('consumed_quantity')
+            )['total'] or 0
+
+            # Get top consumed products
+            top_products_data = consumption_events.values(
+                'inventory_item__product__name'
+            ).annotate(
+                total_consumed=Sum('consumed_quantity')
+            ).order_by('-total_consumed')[:10]
+
+            top_products = [
+                {
+                    'product_name': item['inventory_item__product__name'],
+                    'total_consumed': float(item['total_consumed'])
+                }
+                for item in top_products_data
+            ]
+
+            # Calculate waste data (items with 0 quantity)
+            waste_items = InventoryItem.objects.filter(
+                quantity_remaining=0,
+                updated_at__gte=start_date
+            ).count()
+
+            return JsonResponse({
+                'success': True,
+                'analytics': {
+                    'time_range': time_range,
+                    'total_consumed': float(total_consumed),
+                    'waste_items': waste_items,
+                    'top_products': top_products
+                }
+            })
+        except Exception as e:
+            logger.error(f"Error getting analytics: {str(e)}")
+            return JsonResponse(
+                {'success': False, 'error': 'Internal server error'}, status=500
+            )

@@ -9,6 +9,11 @@ urlpatterns = [
     path("agents/", views.AgentListView.as_view(), name="agent-list"),
     # Conversation endpoints
     path(
+        "conversations/",
+        views.ConversationListView.as_view(),
+        name="conversation-list",
+    ),
+    path(
         "conversations/create/",
         views.ConversationCreateView.as_view(),
         name="conversation-create",
@@ -42,9 +47,46 @@ urlpatterns = [
     ),
     # Inventory endpoints (Prompt 9)
     path(
+        "inventory/items/",
+        views.InventoryItemsView.as_view(),
+        name="inventory-items",
+    ),
+    path(
+        "inventory/statistics/",
+        views.InventoryStatisticsView.as_view(),
+        name="inventory-statistics",
+    ),
+    path(
+        "inventory/expiring/",
+        views.ExpiringItemsView.as_view(),
+        name="inventory-expiring",
+    ),
+    path(
         "inventory/<int:inventory_id>/consume/",
         views.ConsumeInventoryView.as_view(),
         name="inventory-consume",
+    ),
+    # Receipt endpoints
+    path(
+        "receipts/",
+        views.RecentReceiptsView.as_view(),
+        name="receipts-list",
+    ),
+    # Analytics endpoints
+    path(
+        "analytics/",
+        views.AnalyticsView.as_view(),
+        name="analytics-data",
+    ),
+    path(
+        "analytics/top-products/",
+        views.AnalyticsView.as_view(),
+        name="analytics-top-products",
+    ),
+    path(
+        "analytics/waste/",
+        views.AnalyticsView.as_view(),
+        name="analytics-waste",
     ),
     # Document endpoints
     path("documents/", views.DocumentListAPIView.as_view(), name="document-list"),
