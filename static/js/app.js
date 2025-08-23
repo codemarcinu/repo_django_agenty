@@ -84,6 +84,9 @@ const App = {
 
         // Setup logout button
         this.initLogout();
+
+        // Setup live logs button (NEW LINE)
+        this.initLiveLogsButton();
         
         // Listen for hash changes
         window.addEventListener('hashchange', this.handleHashChange.bind(this));
@@ -113,6 +116,15 @@ const App = {
             });
         } else {
             console.warn("Logout button not found on this page.");
+        },
+    
+    // Setup live logs button
+    initLiveLogsButton: function() {
+        const liveLogsBtn = document.getElementById('live-logs-btn');
+        if (liveLogsBtn) {
+            liveLogsBtn.addEventListener('click', () => {
+                window.open('/chatbot/logs/', '_blank');
+            });
         }
     },
     
