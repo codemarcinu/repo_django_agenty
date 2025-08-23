@@ -101,9 +101,7 @@ const App = {
     initLogout: function() {
         console.log("Initializing logout...");
         const logoutBtn = document.getElementById('logout-btn');
-        const userMenu = document.getElementById('user-menu');
 
-        // FIX: Ten warunek jest niezbędny, aby uniknąć błędu na stronach bez przycisku wylogowania.
         if (logoutBtn) {
             logoutBtn.style.display = 'block';
             logoutBtn.addEventListener('click', (e) => {
@@ -112,11 +110,7 @@ const App = {
                 window.location.href = '/admin/logout/';
             });
         } else {
-            console.warn("Logout button not found on this page.");
-        }
-
-        if (userMenu) {
-            // ... reszta kodu
+            console.warn("Logout button not found on this page. Skipping logout button initialization.");
         }
     },
     
