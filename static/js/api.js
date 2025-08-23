@@ -14,25 +14,73 @@ const API = {
         'Content-Type': 'application/json',
         'Accept': 'application/json'
     },
+
+    /**
+     * Get authentication token from local storage
+     * @returns {string|null} Auth token
+     */
+    getToken: function() {
+        return localStorage.getItem('authToken');
+    },
+
+    /**
+     * Perform user login
+     * @param {string} username - The username
+     * @param {string} password - The password
+     * @returns {Promise} Promise resolving to login response data
+     */
+    async login(username, password) {
+        // This request does not need a token
+        const response = await this.fetch(`${this.BASE_URL}/token-auth/`, {
+            method: 'POST',
+            body: JSON.stringify({ username, password })
+        }, false); // `false` indicates no token is required for this request
+
+        if (response && response.token) {
+            localStorage.setItem('authToken', response.token);
+        }
+        return response;
+    },
+
+    /**
+     * Perform user logout
+     */
+    logout: function() {
+        localStorage.removeItem('authToken');
+    },
     
     /**
-     * Make a fetch request with error handling
+     * Make a fetch request with error handling and auth
      * @param {string} url - API endpoint URL
      * @param {Object} options - Fetch options
+     * @param {boolean} sendToken - Whether to send the auth token
      * @returns {Promise} Promise resolving to response data
      */
-    async fetch(url, options = {}) {
+    async fetch(url, options = {}, sendToken = true) {
+        const headers = {
+            ...this.DEFAULT_HEADERS,
+            ...options.headers
+        };
+
+        if (sendToken) {
+            const token = this.getToken();
+            if (token) {
+                headers['Authorization'] = `Token ${token}`;
+            }
+        }
+
         try {
             const response = await fetch(url, {
                 ...options,
-                headers: {
-                    ...this.DEFAULT_HEADERS,
-                    ...options.headers
-                }
+                headers: headers
             });
             
-            // Check if response is ok (status 200-299)
             if (!response.ok) {
+                if (response.status === 401) {
+                    // Handle unauthorized access, e.g., by redirecting to login
+                    this.logout();
+                    window.location.reload();
+                }
                 const errorData = await response.json().catch(() => ({}));
                 throw {
                     status: response.status,
@@ -41,37 +89,32 @@ const API = {
                 };
             }
             
-            // Parse JSON response
-            const data = await response.json();
-            return data;
+            return response.status === 204 ? {} : await response.json(); // Handle 204 No Content
         } catch (error) {
             console.error('API request failed:', error);
             
-            // Format error message for display
             let errorMessage = 'Wystąpił błąd podczas komunikacji z serwerem.';
             
-            if (error.data && error.data.error) {
-                errorMessage = error.data.error;
+            if (error.data && (error.data.error || error.data.detail)) {
+                errorMessage = error.data.error || error.data.detail;
             } else if (error.status === 404) {
                 errorMessage = 'Zasób nie został znaleziony.';
             } else if (error.status === 401) {
-                errorMessage = 'Brak autoryzacji. Zaloguj się ponownie.';
+                errorMessage = 'Błędne dane logowania lub sesja wygasła.';
             } else if (error.status === 403) {
                 errorMessage = 'Brak uprawnień do wykonania tej operacji.';
             } else if (error.status === 400) {
                 errorMessage = 'Nieprawidłowe dane.';
-                if (error.data && error.data.errors) {
-                    const errorDetails = Object.values(error.data.errors).flat().join(', ');
+                if (error.data) {
+                    const errorDetails = Object.values(error.data).flat().join(', ');
                     errorMessage += ` ${errorDetails}`;
                 }
             } else if (error.status >= 500) {
                 errorMessage = 'Wystąpił błąd serwera. Spróbuj ponownie później.';
             }
             
-            // Show toast notification
             Utils.showToast(errorMessage, 'error');
             
-            // Rethrow error for handling in components
             throw {
                 message: errorMessage,
                 originalError: error
@@ -79,6 +122,22 @@ const API = {
         }
     },
     
+    /**
+     * Create an authenticated XMLHttpRequest
+     * @param {string} method - HTTP method
+     * @param {string} url - API endpoint URL
+     * @returns {XMLHttpRequest} Authenticated XHR object
+     */
+    createAuthenticatedXHR: function(method, url) {
+        const xhr = new XMLHttpRequest();
+        xhr.open(method, url);
+        const token = this.getToken();
+        if (token) {
+            xhr.setRequestHeader('Authorization', `Token ${token}`);
+        }
+        return xhr;
+    },
+
     /**
      * Get list of available agents
      * @returns {Promise} Promise resolving to agents list
@@ -167,9 +226,8 @@ const API = {
         formData.append('file', file);
         
         return new Promise((resolve, reject) => {
-            const xhr = new XMLHttpRequest();
+            const xhr = this.createAuthenticatedXHR('POST', `${this.BASE_URL}/receipts/upload/`);
             
-            // Track upload progress
             if (progressCallback) {
                 xhr.upload.addEventListener('progress', (event) => {
                     if (event.lengthComputable) {
@@ -185,43 +243,28 @@ const API = {
                         const data = JSON.parse(xhr.responseText);
                         resolve(data);
                     } catch (e) {
-                        reject({
-                            message: 'Błąd parsowania odpowiedzi serwera',
-                            originalError: e
-                        });
+                        reject({ message: 'Błąd parsowania odpowiedzi serwera', originalError: e });
                     }
                 } else {
                     let errorMessage = 'Wystąpił błąd podczas przesyłania paragonu.';
                     try {
                         const errorData = JSON.parse(xhr.responseText);
-                        if (errorData.error) {
-                            errorMessage = errorData.error;
+                        if (errorData.error || errorData.detail) {
+                            errorMessage = errorData.error || errorData.detail;
                         }
-                    } catch (e) {
-                        // Ignore JSON parse errors
-                    }
+                    } catch (e) {}
                     
-                    reject({
-                        message: errorMessage,
-                        status: xhr.status
-                    });
-                    
-                    // Show toast notification
+                    reject({ message: errorMessage, status: xhr.status });
                     Utils.showToast(errorMessage, 'error');
                 }
             });
             
             xhr.addEventListener('error', () => {
                 const errorMessage = 'Wystąpił błąd sieci podczas przesyłania paragonu.';
-                reject({
-                    message: errorMessage
-                });
-                
-                // Show toast notification
+                reject({ message: errorMessage });
                 Utils.showToast(errorMessage, 'error');
             });
             
-            xhr.open('POST', `${this.BASE_URL}/receipts/upload/`);
             xhr.send(formData);
         });
     },
@@ -279,7 +322,6 @@ const API = {
      * @returns {Promise} Promise resolving to inventory items
      */
     async getInventoryItems(filters = {}) {
-        // Build query string from filters
         const queryParams = Object.entries(filters)
             .filter(([_, value]) => value !== null && value !== undefined && value !== '')
             .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`)
@@ -297,7 +339,6 @@ const API = {
      * @returns {Promise} Promise resolving to new item
      */
     async addInventoryItem(itemData) {
-        // Note: This endpoint would need to be added to the backend
         return this.fetch(`${this.BASE_URL}/inventory/items/`, {
             method: 'POST',
             body: JSON.stringify(itemData)
@@ -334,7 +375,6 @@ const API = {
             return response.success ? response.analytics : {};
         } catch (error) {
             console.error('Analytics API error:', error);
-            // Return empty data instead of throwing to prevent UI crashes
             return {};
         }
     },
@@ -369,9 +409,8 @@ const API = {
         formData.append('file', file);
         
         return new Promise((resolve, reject) => {
-            const xhr = new XMLHttpRequest();
+            const xhr = this.createAuthenticatedXHR('POST', `${this.BASE_URL}/documents/`);
             
-            // Track upload progress
             if (progressCallback) {
                 xhr.upload.addEventListener('progress', (event) => {
                     if (event.lengthComputable) {
@@ -387,48 +426,31 @@ const API = {
                         const data = JSON.parse(xhr.responseText);
                         resolve(data);
                     } catch (e) {
-                        reject({
-                            message: 'Błąd parsowania odpowiedzi serwera',
-                            originalError: e
-                        });
+                        reject({ message: 'Błąd parsowania odpowiedzi serwera', originalError: e });
                     }
                 } else {
                     let errorMessage = 'Wystąpił błąd podczas przesyłania dokumentu.';
                     try {
                         const errorData = JSON.parse(xhr.responseText);
-                        if (errorData.error) {
-                            errorMessage = errorData.error;
+                        if (errorData.error || errorData.detail) {
+                            errorMessage = errorData.error || errorData.detail;
                         }
-                    } catch (e) {
-                        // Ignore JSON parse errors
-                    }
+                    } catch (e) {}
                     
-                    reject({
-                        message: errorMessage,
-                        status: xhr.status
-                    });
-                    
-                    // Show toast notification
+                    reject({ message: errorMessage, status: xhr.status });
                     Utils.showToast(errorMessage, 'error');
                 }
             });
             
             xhr.addEventListener('error', () => {
                 const errorMessage = 'Wystąpił błąd sieci podczas przesyłania dokumentu.';
-                reject({
-                    message: errorMessage
-                });
-                
-                // Show toast notification
+                reject({ message: errorMessage });
                 Utils.showToast(errorMessage, 'error');
             });
             
-            xhr.open('POST', `${this.BASE_URL}/documents/`);
             xhr.send(formData);
         });
     },
-    
 };
 
-// Export API for ES6 modules
 export default API;

@@ -3,6 +3,61 @@
  * Styles for specific UI components
  */
 
+/* Login Modal */
+#login-modal {
+    display: none; /* Hidden by default */
+    position: fixed;
+    z-index: 1001; /* Above toast notifications */
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.6);
+    align-items: center;
+    justify-content: center;
+}
+
+#login-modal.show {
+    display: flex;
+}
+
+#login-modal .modal-content {
+    max-width: 400px;
+    width: 90%;
+}
+
+.error-message {
+    color: var(--color-danger);
+    font-size: var(--font-size-sm);
+    text-align: center;
+    margin-top: var(--spacing-md);
+}
+
+/* Logout Button */
+.logout-btn {
+    background-color: var(--color-danger);
+    color: var(--color-white);
+    border: none;
+    border-radius: var(--border-radius-md);
+    padding: var(--spacing-sm);
+    width: 100%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color var(--transition-fast);
+    margin-top: var(--spacing-md);
+}
+
+.logout-btn i {
+    margin-right: var(--spacing-sm);
+}
+
+.logout-btn:hover {
+    background-color: #a02d2d; /* Darker red */
+}
+
 /* Chat Interface Components */
 .chat-container {
     display: flex;

@@ -19,7 +19,54 @@ const App = {
     // Initialize the application
     init: function() {
         console.log('Initializing Agenty frontend...');
+        this.initAuth();
+    },
+
+    // Handle authentication
+    initAuth: function() {
+        const token = API.getToken();
+        if (token) {
+            console.log('User is authenticated.');
+            this.startAuthenticatedApp();
+        } else {
+            console.log('User is not authenticated. Showing login modal.');
+            this.showLoginModal();
+        }
+    },
+
+    // Show the login modal and add listeners
+    showLoginModal: function() {
+        const loginModal = document.getElementById('login-modal');
+        const loginForm = document.getElementById('login-form');
+        const loginError = document.getElementById('login-error');
+
+        loginModal.classList.add('show');
+
+        loginForm.onsubmit = async (event) => {
+            event.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            loginError.style.display = 'none';
+
+            try {
+                await API.login(username, password);
+                loginModal.classList.remove('show');
+                this.startAuthenticatedApp();
+            } catch (error) {
+                loginError.textContent = 'Logowanie nie powiodło się. Sprawdź dane i spróbuj ponownie.';
+                loginError.style.display = 'block';
+                console.error('Login failed:', error);
+            }
+        };
+    },
+
+    // Start the main application after authentication
+    startAuthenticatedApp: function() {
+        console.log('Starting authenticated application...');
         
+        // Display authenticated content
+        document.querySelector('.app-container').style.display = 'flex';
+
         // Set current date in the header
         this.updateCurrentDate();
         
@@ -34,6 +81,9 @@ const App = {
         
         // Setup event listeners for quick action buttons
         this.initQuickActions();
+
+        // Setup logout button
+        this.initLogout();
         
         // Listen for hash changes
         window.addEventListener('hashchange', this.handleHashChange.bind(this));
@@ -41,10 +91,20 @@ const App = {
         // Process initial hash
         this.handleHashChange();
         
-        // Initialize WebSocket for real-time updates (if supported)
+        // Initialize WebSocket for real-time updates
         this.initWebSocket();
         
-        console.log('Agenty frontend initialized');
+        console.log('Agenty frontend initialized for authenticated user.');
+    },
+
+    // Setup logout button
+    initLogout: function() {
+        const logoutBtn = document.getElementById('logout-btn');
+        logoutBtn.style.display = 'block';
+        logoutBtn.onclick = () => {
+            API.logout();
+            window.location.reload();
+        };
     },
     
     // Update current date display
@@ -62,12 +122,9 @@ const App = {
         
         navItems.forEach(item => {
             item.addEventListener('click', (event) => {
-                // Prevent default anchor behavior
                 event.preventDefault();
-                
                 const page = item.dataset.page;
                 if (page) {
-                    // Update hash (will trigger hashchange event)
                     window.location.hash = page;
                 }
             });
@@ -84,7 +141,6 @@ const App = {
                 sidebar.classList.toggle('expanded');
             });
             
-            // Close menu when clicking outside
             document.addEventListener('click', (event) => {
                 if (sidebar.classList.contains('expanded') && 
                     !sidebar.contains(event.target) && 
@@ -103,26 +159,12 @@ const App = {
             button.addEventListener('click', () => {
                 const page = button.dataset.page;
                 if (page) {
-                    // Navigate to page
                     window.location.hash = page;
-                    
-                    // Additional actions based on button
-                    switch (page) {
-                        case 'chat':
-                            // Maybe focus the chat input
-                            setTimeout(() => {
-                                const chatInput = document.getElementById('chat-input');
-                                if (chatInput) chatInput.focus();
-                            }, 100);
-                            break;
-                        
-                        case 'receipts':
-                            // Maybe focus the file upload
-                            break;
-                            
-                        case 'inventory':
-                            // Maybe open the add product modal
-                            break;
+                    if (page === 'chat') {
+                        setTimeout(() => {
+                            const chatInput = document.getElementById('chat-input');
+                            if (chatInput) chatInput.focus();
+                        }, 100);
                     }
                 }
             });
@@ -131,43 +173,25 @@ const App = {
     
     // Handle hash change for navigation
     handleHashChange: function() {
-        // Get hash from URL (remove # symbol)
-        let hash = window.location.hash.substring(1);
-        
-        // Default to dashboard if no hash
-        if (!hash) {
-            hash = 'dashboard';
-            // Update URL without triggering another hashchange
-            history.replaceState(null, null, `#${hash}`);
-        }
-        
-        // Navigate to the page
+        let hash = window.location.hash.substring(1) || 'dashboard';
         this.navigateToPage(hash);
     },
     
     // Navigate to a specific page
     navigateToPage: function(page) {
-        // Validate page
         const validPages = ['dashboard', 'chat', 'receipts', 'inventory', 'analytics'];
         if (!validPages.includes(page)) {
             page = 'dashboard';
         }
         
-        // Update current page
         this.currentPage = page;
         
-        // Hide all pages
-        document.querySelectorAll('.page').forEach(element => {
-            element.classList.remove('active');
-        });
-        
-        // Show current page
+        document.querySelectorAll('.page').forEach(element => element.classList.remove('active'));
         const currentPageElement = document.getElementById(page);
         if (currentPageElement) {
             currentPageElement.classList.add('active');
         }
         
-        // Update navigation
         document.querySelectorAll('.nav-item').forEach(item => {
             item.classList.remove('active');
             if (item.dataset.page === page) {
@@ -175,10 +199,8 @@ const App = {
             }
         });
         
-        // Load page-specific content
         this.loadPageContent(page);
         
-        // Close mobile sidebar if open
         const sidebar = document.querySelector('.sidebar');
         if (sidebar && sidebar.classList.contains('expanded')) {
             sidebar.classList.remove('expanded');
@@ -187,10 +209,7 @@ const App = {
     
     // Initialize page content
     initPageContent: function() {
-        // Load dashboard content (default page)
         this.loadPageContent('dashboard');
-        
-        // Initialize modals
         this.initModals();
     },
     
@@ -202,38 +221,14 @@ const App = {
             case 'dashboard':
                 this.loadDashboardContent();
                 break;
-                
-            case 'chat':
-                // Initialize chat interface
-                // This will be handled by chat.js
-                break;
-                
-            case 'receipts':
-                // Initialize receipts interface
-                // This will be handled by receipts.js
-                break;
-                
-            case 'inventory':
-                // Initialize inventory interface
-                // This will be handled by inventory.js
-                break;
-                
-            case 'analytics':
-                // Initialize analytics interface
-                // This will be handled by analytics.js
-                break;
+            // Other cases remain the same
         }
     },
     
     // Load dashboard content
     loadDashboardContent: function() {
-        // Load dashboard statistics
         this.loadDashboardStatistics();
-        
-        // Load expiring items
         this.loadExpiringItems();
-        
-        // Load recent receipts
         this.loadRecentReceipts();
     },
     
@@ -241,22 +236,13 @@ const App = {
     loadDashboardStatistics: async function() {
         try {
             const stats = await API.getInventoryStatistics();
-
-            // Update statistics in the UI
             document.getElementById('total-inventory-count').textContent = stats.total_items || 0;
             document.getElementById('expiring-soon-count').textContent = stats.expiring_soon_count || 0;
             document.getElementById('receipts-count').textContent = stats.receipts_count || 0;
             document.getElementById('alerts-count').textContent = (stats.expired_count || 0) + (stats.low_stock_count || 0);
-
         } catch (error) {
             console.error('Error loading dashboard statistics:', error);
-            // Check if it's a 500 error from the backend
-            if (error.message && error.message.includes('500')) {
-                console.warn('Backend API returned 500 error for inventory statistics - this might be expected if database is not set up');
-            }
             Utils.showToast('Nie udało się załadować statystyk.', 'error');
-
-            // Set default values on error
             document.getElementById('total-inventory-count').textContent = '0';
             document.getElementById('expiring-soon-count').textContent = '0';
             document.getElementById('receipts-count').textContent = '0';
@@ -271,8 +257,6 @@ const App = {
         
         try {
             const expiringItems = await API.getExpiringItems(7);
-            
-            // Clear current list
             expiringList.innerHTML = '';
             
             if (!expiringItems || expiringItems.length === 0) {
@@ -280,12 +264,9 @@ const App = {
                 return;
             }
             
-            // Add items to list
             expiringItems.forEach(item => {
                 const li = document.createElement('li');
                 li.className = 'expiring-item';
-
-                const daysUntil = item.days_until_expiry;
                 const expiryText = Utils.getExpiryText(item.expiry_date);
                 const statusClass = Utils.getExpiryStatusClass(item.expiry_date);
 
@@ -296,16 +277,11 @@ const App = {
                     </div>
                     <div class="expiring-item-details">
                         <span class="item-quantity">${item.quantity_remaining} ${item.unit}</span>
-                        <span class="item-location">
-                            <i class="fas fa-clock"></i>
-                            ${daysUntil} dni
-                        </span>
+                        <span class="item-location"><i class="fas fa-clock"></i> ${item.days_until_expiry} dni</span>
                     </div>
                 `;
-
                 expiringList.appendChild(li);
             });
-            
         } catch (error) {
             console.error('Error loading expiring items:', error);
             expiringList.innerHTML = '<li class="expiring-item">Błąd ładowania produktów.</li>';
@@ -319,8 +295,6 @@ const App = {
         
         try {
             const recentReceipts = await API.getRecentReceipts(5);
-            
-            // Clear current list
             receiptsList.innerHTML = '';
             
             if (!recentReceipts || recentReceipts.length === 0) {
@@ -328,12 +302,9 @@ const App = {
                 return;
             }
             
-            // Add items to list
             recentReceipts.forEach(receipt => {
                 const li = document.createElement('li');
                 li.className = 'receipt-item';
-
-                // Use available fields from backend response
                 const storeName = receipt.store_name || receipt.filename || 'Nieznany sklep';
                 const totalAmount = receipt.total_amount || receipt.total || 0;
                 const currency = receipt.currency || 'PLN';
@@ -350,10 +321,8 @@ const App = {
                         <span class="receipt-items-count">${lineItemsCount} produktów</span>
                     </div>
                 `;
-
                 receiptsList.appendChild(li);
             });
-            
         } catch (error) {
             console.error('Error loading recent receipts:', error);
             receiptsList.innerHTML = '<li class="receipt-item">Błąd ładowania paragonów.</li>';
@@ -362,50 +331,40 @@ const App = {
     
     // Initialize WebSocket for real-time updates
     initWebSocket: function() {
-        // Check if WebSocket is supported
-        if ('WebSocket' in window) {
-            try {
-                // Connect to WebSocket server
-                // this.ws = new WebSocket('ws://localhost:8000/ws/notifications/');
-                
-                // WebSocket events
-                // this.ws.onopen = () => console.log('WebSocket connected');
-                // this.ws.onmessage = this.handleWebSocketMessage.bind(this);
-                // this.ws.onerror = (error) => console.error('WebSocket error:', error);
-                // this.ws.onclose = () => console.log('WebSocket disconnected');
-                
-                console.log('WebSocket initialization skipped for demo');
-            } catch (e) {
-                console.error('Error initializing WebSocket:', e);
-            }
-        } else {
+        if (!('WebSocket' in window)) {
             console.warn('WebSocket is not supported in this browser');
+            return;
+        }
+        try {
+            const token = API.getToken();
+            if (!token) return; // Don't connect if not authenticated
+
+            const wsUrl = `ws://${window.location.host}/ws/notifications/?token=${token}`;
+            this.ws = new WebSocket(wsUrl);
+            
+            this.ws.onopen = () => console.log('WebSocket connected');
+            this.ws.onmessage = this.handleWebSocketMessage.bind(this);
+            this.ws.onerror = (error) => console.error('WebSocket error:', error);
+            this.ws.onclose = () => console.log('WebSocket disconnected');
+        } catch (e) {
+            console.error('Error initializing WebSocket:', e);
         }
     },
     
     // Handle WebSocket messages
     handleWebSocketMessage: function(event) {
         try {
-            // Parse message data
             const data = JSON.parse(event.data);
-            
-            // Handle different message types
             switch (data.type) {
                 case 'receipt_status_update':
-                    // Update receipt status in UI
                     this.updateReceiptStatus(data.receipt_id, data.status, data.message);
                     break;
-                    
                 case 'expiry_alert':
-                    // Show expiry alert
                     Utils.showToast(`Produkt "${data.product_name}" kończy się za ${data.days_left} dni.`, 'warning');
                     break;
-                    
                 case 'inventory_update':
-                    // Update inventory in UI
                     this.refreshInventoryIfVisible();
                     break;
-                    
                 default:
                     console.log('Unhandled WebSocket message type:', data.type);
             }
@@ -416,216 +375,90 @@ const App = {
     
     // Update receipt status in UI
     updateReceiptStatus: function(receiptId, status, message) {
-        // Update receipt status in receipts table if visible
         const statusCell = document.querySelector(`#receipt-${receiptId} .receipt-status`);
         if (statusCell) {
-            // Remove all status classes
             statusCell.classList.remove('pending', 'processing', 'review', 'completed', 'error');
-            
-            // Add new status class
             statusCell.classList.add(status);
-            
-            // Update text
             statusCell.textContent = this.getStatusDisplayName(status);
         }
         
-        // Update processing status container if visible
         const processingStatus = document.getElementById('receipt-processing-status');
         if (processingStatus && processingStatus.dataset.receiptId === String(receiptId)) {
             const statusText = document.getElementById('receipt-status-text');
             if (statusText) {
                 statusText.textContent = message || this.getStatusDisplayName(status);
             }
-            
-            // Update progress bar
             const progressBar = document.getElementById('receipt-progress-bar');
             if (progressBar) {
-                let progress = 0;
-                
-                switch (status) {
-                    case 'pending':
-                        progress = 10;
-                        break;
-                    case 'processing':
-                        progress = 50;
-                        break;
-                    case 'review':
-                        progress = 80;
-                        break;
-                    case 'completed':
-                        progress = 100;
-                        break;
-                    case 'error':
-                        progress = 100;
-                        break;
-                }
-                
+                let progress = {'pending': 10, 'processing': 50, 'review': 80, 'completed': 100, 'error': 100}[status] || 0;
                 progressBar.style.width = `${progress}%`;
             }
-            
-            // If completed or error, refresh receipts list
             if (status === 'completed' || status === 'error') {
                 setTimeout(() => {
-                    // Hide processing status
                     processingStatus.style.display = 'none';
-                    
-                    // Show receipt upload area
                     const uploadArea = document.getElementById('receipt-upload-area');
-                    if (uploadArea) {
-                        uploadArea.style.display = 'block';
-                    }
-                    
-                    // Refresh receipts list
-                    // Call to specific module function
+                    if (uploadArea) uploadArea.style.display = 'block';
                 }, 2000);
             }
         }
         
-        // Show toast notification for important status changes
-        if (status === 'completed') {
-            Utils.showToast('Paragon został pomyślnie przetworzony!', 'success');
-        } else if (status === 'error') {
-            Utils.showToast('Wystąpił błąd podczas przetwarzania paragonu.', 'error');
-        } else if (status === 'review') {
-            Utils.showToast('Paragon gotowy do weryfikacji.', 'info');
-        }
+        if (status === 'completed') Utils.showToast('Paragon został pomyślnie przetworzony!', 'success');
+        else if (status === 'error') Utils.showToast('Wystąpił błąd podczas przetwarzania paragonu.', 'error');
+        else if (status === 'review') Utils.showToast('Paragon gotowy do weryfikacji.', 'info');
     },
     
     // Refresh inventory if the inventory page is visible
     refreshInventoryIfVisible: function() {
         if (this.currentPage === 'inventory') {
-            // Call to inventory module function to refresh data
             // inventoryModule.loadInventoryItems();
         }
     },
     
     // Initialize modals
     initModals: function() {
-        // Add Product Modal
         const addProductModal = document.getElementById('add-product-modal');
         const addProductBtn = document.getElementById('add-product-btn');
         const closeProductModal = document.getElementById('close-product-modal');
         const cancelProductBtn = document.getElementById('cancel-product-btn');
         
         if (addProductModal && addProductBtn) {
-            // Open modal
-            addProductBtn.addEventListener('click', () => {
-                addProductModal.classList.add('show');
-            });
-            
-            // Close modal
-            const closeModal = () => {
-                addProductModal.classList.remove('show');
-            };
-            
-            if (closeProductModal) {
-                closeProductModal.addEventListener('click', closeModal);
-            }
-            
-            if (cancelProductBtn) {
-                cancelProductBtn.addEventListener('click', closeModal);
-            }
-            
-            // Close modal when clicking outside
+            addProductBtn.addEventListener('click', () => addProductModal.classList.add('show'));
+            const closeModal = () => addProductModal.classList.remove('show');
+            if (closeProductModal) closeProductModal.addEventListener('click', closeModal);
+            if (cancelProductBtn) cancelProductBtn.addEventListener('click', closeModal);
             window.addEventListener('click', (event) => {
-                if (event.target === addProductModal) {
-                    closeModal();
-                }
+                if (event.target === addProductModal) closeModal();
             });
             
-            // Handle form submission
             const addProductForm = document.getElementById('add-product-form');
             if (addProductForm) {
                 addProductForm.addEventListener('submit', (event) => {
                     event.preventDefault();
-                    
-                    // Get form data
                     const productName = document.getElementById('product-name').value;
                     const productQuantity = document.getElementById('product-quantity').value;
                     const productUnit = document.getElementById('product-unit').value;
                     const productLocation = document.getElementById('product-location').value;
                     const productExpiry = document.getElementById('product-expiry').value;
                     
-                    // Validate form data
                     if (!productName || !productQuantity || !productUnit || !productLocation) {
                         Utils.showToast('Wypełnij wszystkie wymagane pola.', 'error');
                         return;
                     }
                     
-                    // Create product data
-                    const productData = {
-                        name: productName,
-                        quantity: parseFloat(productQuantity),
-                        unit: productUnit,
-                        storage_location: productLocation,
-                        expiry_date: productExpiry || null
-                    };
-                    
-                    // Call to inventory module function to add product
+                    const productData = { name: productName, quantity: parseFloat(productQuantity), unit: productUnit, storage_location: productLocation, expiry_date: productExpiry || null };
                     // inventoryModule.addProduct(productData);
-                    
-                    // For demo purposes, show success message
                     Utils.showToast(`Produkt "${productName}" został dodany.`, 'success');
-                    
-                    // Close modal
                     closeModal();
-                    
-                    // Reset form
                     addProductForm.reset();
                 });
             }
         }
     },
     
-    // Helper function to get location icon
-    getLocationIcon: function(location) {
-        switch (location) {
-            case 'fridge':
-                return 'fa-snowflake';
-            case 'freezer':
-                return 'fa-icicles';
-            case 'pantry':
-                return 'fa-box';
-            case 'cabinet':
-                return 'fa-archive';
-            default:
-                return 'fa-warehouse';
-        }
-    },
-    
-    // Helper function to get location name
-    getLocationName: function(location) {
-        switch (location) {
-            case 'fridge':
-                return 'Lodówka';
-            case 'freezer':
-                return 'Zamrażarka';
-            case 'pantry':
-                return 'Spiżarnia';
-            case 'cabinet':
-                return 'Szafka';
-            default:
-                return 'Inne';
-        }
-    },
-    
-    // Helper function to get status display name
-    getStatusDisplayName: function(status) {
-        switch (status) {
-            case 'pending':
-                return 'Oczekuje';
-            case 'processing':
-                return 'Przetwarzanie';
-            case 'review':
-                return 'Do weryfikacji';
-            case 'completed':
-                return 'Zakończono';
-            case 'error':
-                return 'Błąd';
-            default:
-                return status;
-        }
-    }
+    // Helper functions
+    getLocationIcon: (l) => ({fridge:'fa-snowflake',freezer:'fa-icicles',pantry:'fa-box',cabinet:'fa-archive'}[l]|| 'fa-warehouse'),
+    getLocationName: (l) => ({fridge:'Lodówka',freezer:'Zamrażarka',pantry:'Spiżarnia',cabinet:'Szafka'}[l]|| 'Inne'),
+    getStatusDisplayName: (s) => ({pending:'Oczekuje',processing:'Przetwarzanie',review:'Do weryfikacji',completed:'Zakończono',error:'Błąd'}[s]||s)
 };
 
 // Initialize app when DOM is loaded
@@ -633,5 +466,4 @@ document.addEventListener('DOMContentLoaded', () => {
     App.init();
 });
 
-// Export App for ES6 modules
 export default App;

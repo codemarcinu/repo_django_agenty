@@ -5,6 +5,8 @@ from . import receipt_views, views
 app_name = "chatbot_api"
 
 urlpatterns = [
+    # Auth endpoint
+    path("token-auth/", obtain_auth_token, name="api-token-auth"),
     # Agent endpoints
     path("agents/", views.AgentListView.as_view(), name="agent-list"),
     # Conversation endpoints
